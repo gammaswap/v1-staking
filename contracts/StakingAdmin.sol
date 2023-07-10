@@ -176,7 +176,7 @@ contract StakingAdmin is Ownable2Step, IStakingAdmin {
         lpVesters[_gsPool] = _lpVester;
     }
 
-    function execute(address _stakingContract, bytes memory data) external onlyOwner {
+    function execute(address _stakingContract, bytes memory _data) external onlyOwner {
         require(
             _stakingContract.supportsInterface(type(IRewardTracker).interfaceId) ||
             _stakingContract.supportsInterface(type(IRewardDistributor).interfaceId) ||
@@ -184,7 +184,7 @@ contract StakingAdmin is Ownable2Step, IStakingAdmin {
             "StakingAdmin: cannot execute"
         );
 
-        (bool success, bytes memory result) = _stakingContract.call(data);
+        (bool success, bytes memory result) = _stakingContract.call(_data);
         if (!success) {
             if (result.length == 0) revert("StakingAdmin: execute failed");
             assembly {
