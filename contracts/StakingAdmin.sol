@@ -3,6 +3,7 @@
 pragma solidity 0.8.18;
 
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 
 import "./interfaces/IRewardDistributor.sol";
 import "./interfaces/IRewardTracker.sol";
@@ -11,6 +12,7 @@ import "./interfaces/IStakingAdmin.sol";
 import "./deployers/DeployerUtils.sol";
 
 contract StakingAdmin is Ownable2Step, IStakingAdmin {
+    using ERC165Checker for address;
     using DeployerUtils for address;
 
     address public immutable weth;
@@ -40,8 +42,6 @@ contract StakingAdmin is Ownable2Step, IStakingAdmin {
     // GammaPool -> Vester
     mapping (address => IVester) public lpVesters;
 
-    mapping (address => bool) public isHandler;
-
     constructor(
         address _weth,
         address _gs,
@@ -64,10 +64,6 @@ contract StakingAdmin is Ownable2Step, IStakingAdmin {
         rewardTrackerDeployer = _rewardTrackerDeployer;
         rewardDistributorDeployer = _rewardDistributorDeployer;
         vesterDeployer = _vesterDeployer;
-    }
-
-    function setHandler(address _handler, bool _isActive) external onlyOwner {
-        isHandler[_handler] = _isActive;
     }
 
     function setupGsStaking() external onlyOwner {
@@ -180,7 +176,20 @@ contract StakingAdmin is Ownable2Step, IStakingAdmin {
         lpVesters[_gsPool] = _lpVester;
     }
 
-    function _validateHandler() internal view {
-        require(isHandler[msg.sender], "StakingRouter: forbidden");
+    function execute(address _stakingContract, bytes memory data) external onlyOwner {
+        require(
+            _stakingContract.supportsInterface(type(IRewardTracker).interfaceId) ||
+            _stakingContract.supportsInterface(type(IRewardDistributor).interfaceId) ||
+            _stakingContract.supportsInterface(type(IVester).interfaceId),
+            "StakingAdmin: cannot execute"
+        );
+
+        (bool success, bytes memory result) = _stakingContract.call(data);
+        if (!success) {
+            if (result.length == 0) revert("StakingAdmin: execute failed");
+            assembly {
+                revert(add(32, result), mload(result))
+            }
+        }
     }
 }

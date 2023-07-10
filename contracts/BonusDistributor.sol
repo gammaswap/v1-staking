@@ -21,21 +21,9 @@ contract BonusDistributor is Ownable2Step, IRewardDistributor {
     uint256 public lastDistributionTime;
     address public rewardTracker;
 
-    address public admin;
-
-    modifier onlyAdmin() {
-        require(msg.sender == admin, "BonusDistributor: forbidden");
-        _;
-    }
-
     constructor(address _rewardToken, address _rewardTracker) {
         rewardToken = _rewardToken;
         rewardTracker = _rewardTracker;
-        admin = msg.sender;
-    }
-
-    function setAdmin(address _admin) external onlyOwner {
-        admin = _admin;
     }
 
     // to help users who accidentally send their tokens to this contract
@@ -43,11 +31,11 @@ contract BonusDistributor is Ownable2Step, IRewardDistributor {
         IERC20(_token).safeTransfer(_account, _amount);
     }
 
-    function updateLastDistributionTime() external onlyAdmin {
+    function updateLastDistributionTime() external onlyOwner {
         lastDistributionTime = block.timestamp;
     }
 
-    function setBonusMultiplier(uint256 _bonusMultiplierBasisPoints) external onlyAdmin {
+    function setBonusMultiplier(uint256 _bonusMultiplierBasisPoints) external onlyOwner {
         require(lastDistributionTime != 0, "BonusDistributor: invalid lastDistributionTime");
 
         IRewardTracker(rewardTracker).updateRewards();
