@@ -23,9 +23,6 @@ contract BonusDistributor is Ownable2Step, IRewardDistributor {
 
     address public admin;
 
-    event Distribute(uint256 amount);
-    event BonusMultiplierChange(uint256 amount);
-
     modifier onlyAdmin() {
         require(msg.sender == admin, "BonusDistributor: forbidden");
         _;
@@ -52,8 +49,10 @@ contract BonusDistributor is Ownable2Step, IRewardDistributor {
 
     function setBonusMultiplier(uint256 _bonusMultiplierBasisPoints) external onlyAdmin {
         require(lastDistributionTime != 0, "BonusDistributor: invalid lastDistributionTime");
+
         IRewardTracker(rewardTracker).updateRewards();
         bonusMultiplierBasisPoints = _bonusMultiplierBasisPoints;
+
         emit BonusMultiplierChange(_bonusMultiplierBasisPoints);
     }
 
@@ -86,6 +85,7 @@ contract BonusDistributor is Ownable2Step, IRewardDistributor {
         IERC20(rewardToken).safeTransfer(msg.sender, amount);
 
         emit Distribute(amount);
+
         return amount;
     }
 }

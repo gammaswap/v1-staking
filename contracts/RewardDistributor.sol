@@ -17,10 +17,6 @@ contract RewardDistributor is Ownable2Step, IRewardDistributor {
     uint256 public lastDistributionTime;
     address public rewardTracker;
 
-    event Distribute(uint256 amount);
-    event TokensPerIntervalChange(uint256 amount);
-
-
     constructor(address _rewardToken, address _rewardTracker) {
         rewardToken = _rewardToken;
         rewardTracker = _rewardTracker;
@@ -37,8 +33,10 @@ contract RewardDistributor is Ownable2Step, IRewardDistributor {
 
     function setTokensPerInterval(uint256 _amount) external onlyOwner {
         require(lastDistributionTime != 0, "RewardDistributor: invalid lastDistributionTime");
+
         IRewardTracker(rewardTracker).updateRewards();
         tokensPerInterval = _amount;
+
         emit TokensPerIntervalChange(_amount);
     }
 
@@ -48,11 +46,13 @@ contract RewardDistributor is Ownable2Step, IRewardDistributor {
         }
 
         uint256 timeDiff = block.timestamp - lastDistributionTime;
+
         return tokensPerInterval * timeDiff;
     }
 
     function distribute() external override returns (uint256) {
         require(msg.sender == rewardTracker, "RewardDistributor: invalid msg.sender");
+
         uint256 amount = pendingRewards();
         if (amount == 0) { return 0; }
 
@@ -64,6 +64,7 @@ contract RewardDistributor is Ownable2Step, IRewardDistributor {
         IERC20(rewardToken).safeTransfer(msg.sender, amount);
 
         emit Distribute(amount);
+
         return amount;
     }
 }

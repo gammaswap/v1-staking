@@ -226,6 +226,10 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         return balance + cumulativeClaimAmount;
     }
 
+    function _validateHandler() private view {
+        require(isHandler[msg.sender], "Vester: forbidden");
+    }
+
     function _mint(address _account, uint256 _amount) private {
         require(_account != address(0), "Vester: mint to the zero address");
 
@@ -289,21 +293,6 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         emit Deposit(_account, _amount);
     }
 
-    function _updateVesting(address _account) private {
-        uint256 amount = _getNextClaimableAmount(_account);
-        lastVestingTimes[_account] = block.timestamp;
-
-        if (amount == 0) {
-            return;
-        }
-
-        // transfer claimableAmount from balances to cumulativeClaimAmounts
-        _burn(_account, amount);
-        cumulativeClaimAmounts[_account] = cumulativeClaimAmounts[_account] + amount;
-
-        ERC20Burnable(esToken).burn(amount);
-    }
-
     function _getNextClaimableAmount(address _account) private view returns (uint256) {
         uint256 timeDiff = block.timestamp - lastVestingTimes[_account];
 
@@ -322,14 +311,28 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
 
     function _claim(address _account, address _receiver) private returns (uint256) {
         _updateVesting(_account);
+
         uint256 amount = claimable(_account);
         claimedAmounts[_account] = claimedAmounts[_account] + amount;
         IERC20(claimableToken).safeTransfer(_receiver, amount);
+
         emit Claim(_account, amount);
+
         return amount;
     }
 
-    function _validateHandler() private view {
-        require(isHandler[msg.sender], "Vester: forbidden");
+    function _updateVesting(address _account) private {
+        uint256 amount = _getNextClaimableAmount(_account);
+        lastVestingTimes[_account] = block.timestamp;
+
+        if (amount == 0) {
+            return;
+        }
+
+        // transfer claimableAmount from balances to cumulativeClaimAmounts
+        _burn(_account, amount);
+        cumulativeClaimAmounts[_account] = cumulativeClaimAmounts[_account] + amount;
+
+        ERC20Burnable(esToken).burn(amount);
     }
 }
