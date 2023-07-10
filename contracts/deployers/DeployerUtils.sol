@@ -15,6 +15,6 @@ library DeployerUtils {
         return address(uint160(bytes20(returndata)));
     }
 
-    revert("StakingAdmin: error deployer call");
+    revert("Deployer: error contract deploy");
   }
 }
