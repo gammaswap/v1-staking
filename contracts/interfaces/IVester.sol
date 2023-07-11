@@ -3,10 +3,9 @@
 pragma solidity 0.8.18;
 
 interface IVester {
+    function setHandler(address, bool) external;
     function rewardTracker() external view returns (address);
-
     function claimForAccount(address _account, address _receiver) external returns (uint256);
-
     function claimable(address _account) external view returns (uint256);
     function cumulativeClaimAmounts(address _account) external view returns (uint256);
     function claimedAmounts(address _account) external view returns (uint256);

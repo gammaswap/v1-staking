@@ -23,6 +23,12 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
     string public symbol;
 
     address public distributor;
+
+    bool public inPrivateTransferMode;
+    bool public inPrivateStakingMode;
+    bool public inPrivateClaimingMode;
+
+    mapping (address => bool) public isHandler;
     mapping (address => bool) public isDepositToken;
     mapping (address => mapping (address => uint256)) public override depositBalances;
     mapping (address => uint256) public totalDepositSupply;
@@ -37,13 +43,6 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
     mapping (address => uint256) public previousCumulatedRewardPerToken;
     mapping (address => uint256) public override cumulativeRewards;
     mapping (address => uint256) public override averageStakedAmounts;
-
-    bool public inPrivateTransferMode;
-    bool public inPrivateStakingMode;
-    bool public inPrivateClaimingMode;
-    mapping (address => bool) public isHandler;
-
-    event Claim(address receiver, uint256 amount);
 
     constructor(string memory _name, string memory _symbol) {
         name = _name;
@@ -83,11 +82,6 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
 
     function setHandler(address _handler, bool _isActive) external onlyOwner {
         isHandler[_handler] = _isActive;
-    }
-
-    // to help users who accidentally send their tokens to this contract
-    function withdrawToken(address _token, address _account, uint256 _amount) external onlyOwner {
-        IERC20(_token).safeTransfer(_account, _amount);
     }
 
     function balanceOf(address _account) external view override returns (uint256) {
@@ -167,6 +161,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
 
         uint256 pendingRewards = IRewardDistributor(distributor).pendingRewards() * PRECISION;
         uint256 nextCumulativeRewardPerToken = cumulativeRewardPerToken + pendingRewards / totalSupply;
+
         return _claimableReward + (stakedAmount * (nextCumulativeRewardPerToken - previousCumulatedRewardPerToken[_account]) / PRECISION);
     }
 
@@ -259,6 +254,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
 
         uint256 depositBalance = depositBalances[_account][_depositToken];
         require(depositBalance >= _amount, "RewardTracker: _amount exceeds depositBalance");
+
         depositBalances[_account][_depositToken] = depositBalance - _amount;
         totalDepositSupply[_depositToken] = totalDepositSupply[_depositToken] - _amount;
 

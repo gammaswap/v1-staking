@@ -3,6 +3,11 @@
 pragma solidity 0.8.18;
 
 interface IRewardTracker {
+    function initialize(address[] memory, address) external;
+    function setInPrivateTransferMode(bool) external;
+    function setInPrivateStakingMode(bool) external;
+    function setInPrivateClaimingMode(bool) external;
+    function setHandler(address, bool) external;
     function depositBalances(address _account, address _depositToken) external view returns (uint256);
     function stakedAmounts(address _account) external view returns (uint256);
     function updateRewards() external;
@@ -16,4 +21,6 @@ interface IRewardTracker {
     function claimable(address _account) external view returns (uint256);
     function averageStakedAmounts(address _account) external view returns (uint256);
     function cumulativeRewards(address _account) external view returns (uint256);
+
+    event Claim(address, uint256);
 }
