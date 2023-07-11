@@ -183,8 +183,8 @@ contract StakingAdmin is Ownable2Step, IStakingAdmin {
 
     function execute(address _stakingContract, bytes memory _data) external onlyOwner {
         if(
-            !_stakingContract.supportsInterface(type(IRewardTracker).interfaceId) ||
-            !_stakingContract.supportsInterface(type(IRewardDistributor).interfaceId) ||
+            !_stakingContract.supportsInterface(type(IRewardTracker).interfaceId) &&
+            !_stakingContract.supportsInterface(type(IRewardDistributor).interfaceId) &&
             !_stakingContract.supportsInterface(type(IVester).interfaceId)
         ) {
             revert InvalidExecute();
