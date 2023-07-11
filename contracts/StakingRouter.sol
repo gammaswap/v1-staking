@@ -79,6 +79,11 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
         _compoundPool(_gsPool, msg.sender);
     }
 
+    function compoundPoolForAccount(address _gsPool, address _account) external nonReentrant {
+        _validateHandler();
+        _compoundPool(_gsPool, _account);
+    }
+
     function _validateHandler() private view {
         address user = msg.sender;
         require(owner() == user || manager == user, "StakingRouter: forbidden");
