@@ -8,6 +8,8 @@ bytes4 constant BONUSDISTRIBUTOR_DEPLOYER = bytes4(keccak256("deployBonusDistrib
 bytes4 constant VESTER_DEPLOYER = bytes4(keccak256("deploy(string memory,string memory,uint256,address,address,address,address)"));
 
 library DeployerUtils {
+  error DeployContractException();
+
   function deployContract(address _deployer, bytes memory _data) internal returns (address) {
     (bool success, bytes memory returndata) = _deployer.delegatecall(_data);
 
@@ -15,6 +17,6 @@ library DeployerUtils {
         return address(uint160(bytes20(returndata)));
     }
 
-    revert("Deployer: error contract deploy");
+    revert DeployContractException();
   }
 }

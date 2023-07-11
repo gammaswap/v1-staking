@@ -2,7 +2,9 @@
 
 pragma solidity 0.8.18;
 
-interface IStakingRouter {
+import "./IStakingAdmin.sol";
+
+interface IStakingRouter is IStakingAdmin {
     event StakeGs(address account, address token, uint256 amount);
     event UnstakeGs(address account, address token, uint256 amount);
 

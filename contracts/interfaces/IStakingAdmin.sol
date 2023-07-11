@@ -7,6 +7,10 @@ import "./IRewardTracker.sol";
 import "./IVester.sol";
 
 interface IStakingAdmin {
+  error InvalidConstructor();
+  error InvalidExecute();
+  error ExecuteFailed();
+
   function rewardTracker() external view returns (IRewardTracker);
   function rewardDistributor() external view returns (IRewardDistributor);
   function bonusTracker() external view returns (IRewardTracker);
@@ -14,6 +18,10 @@ interface IStakingAdmin {
   function feeRewardTracker() external view returns (IRewardTracker);
   function feeRewardDistributor() external view returns (IRewardDistributor);
   function vester() external view returns (IVester);
+
+  function lpRewardTrackers(address) external view returns (IRewardTracker);
+  function lpRewardDistributors(address) external view returns (IRewardDistributor);
+  function lpVesters(address) external view returns (IVester);
 
   function setupGsStaking() external;
   function setupLpStaking(address) external;
