@@ -84,11 +84,6 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
         isHandler[_handler] = _isActive;
     }
 
-    // to help users who accidentally send their tokens to this contract
-    function withdrawToken(address _token, address _account, uint256 _amount) external onlyOwner {
-        IERC20(_token).safeTransfer(_account, _amount);
-    }
-
     function balanceOf(address _account) external view override returns (uint256) {
         return balances[_account];
     }

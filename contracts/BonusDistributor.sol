@@ -26,11 +26,6 @@ contract BonusDistributor is Ownable2Step, IRewardDistributor {
         rewardTracker = _rewardTracker;
     }
 
-    // to help users who accidentally send their tokens to this contract
-    function withdrawToken(address _token, address _account, uint256 _amount) external onlyOwner {
-        IERC20(_token).safeTransfer(_account, _amount);
-    }
-
     function updateLastDistributionTime() external onlyOwner {
         lastDistributionTime = block.timestamp;
     }

@@ -98,11 +98,6 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         return _claim(_account, _receiver);
     }
 
-    // to help users who accidentally send their tokens to this contract
-    function withdrawToken(address _token, address _account, uint256 _amount) external onlyOwner {
-        IERC20(_token).safeTransfer(_account, _amount);
-    }
-
     function withdraw() external nonReentrant {
         address account = msg.sender;
         address _receiver = account;
