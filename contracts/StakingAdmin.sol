@@ -100,6 +100,9 @@ contract StakingAdmin is Ownable2Step, IStakingAdmin {
                 abi.encodeWithSelector(BONUSDISTRIBUTOR_DEPLOYER, bnGs, address(_bonusTracker))
             )
         );
+
+        delete _depositTokens;
+
         _depositTokens = new address[](1);
         _depositTokens[0] = address(_rewardTracker);
         _bonusTracker.initialize(_depositTokens, address(_bonusDistributor));
@@ -117,6 +120,9 @@ contract StakingAdmin is Ownable2Step, IStakingAdmin {
                 abi.encodeWithSelector(REWARDDISTRIBUTOR_DEPLOYER, weth, address(_feeRewardTracker))
             )
         );
+
+        delete _depositTokens;
+
         _depositTokens = new address[](2);
         _depositTokens[0] = address(_bonusTracker);
         _depositTokens[1] = bnGs;
