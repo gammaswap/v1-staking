@@ -3,6 +3,7 @@
 pragma solidity 0.8.18;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -329,5 +330,9 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         cumulativeClaimAmounts[_account] = cumulativeClaimAmounts[_account] + amount;
 
         ERC20Burnable(esToken).burn(amount);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
+        return interfaceId == type(IVester).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
 }
