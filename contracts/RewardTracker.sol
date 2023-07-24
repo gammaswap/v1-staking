@@ -24,9 +24,9 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
 
     address public distributor;
 
-    bool public inPrivateTransferMode;
-    bool public inPrivateStakingMode;
-    bool public inPrivateClaimingMode;
+    bool public inPrivateTransferMode = true;
+    bool public inPrivateStakingMode = true;
+    bool public inPrivateClaimingMode = false;
 
     mapping (address => bool) public isHandler;
     mapping (address => bool) public isDepositToken;
