@@ -3,6 +3,10 @@
 pragma solidity 0.8.18;
 
 interface IStakingAdmin {
+  error InvalidConstructor();
+  error InvalidExecute();
+  error ExecuteFailed();
+
   struct AssetCoreTracker {
     address rewardTracker;  // Track GS + esGSL
     address rewardDistributor;  // Reward esGSL

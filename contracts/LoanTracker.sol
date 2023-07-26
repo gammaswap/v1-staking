@@ -41,6 +41,7 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanObserver {
     }
 
     function initialize(
+        address _manager,
         address _gsPool,
         address _distributor
     ) external onlyOwner {

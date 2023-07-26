@@ -2,7 +2,9 @@
 
 pragma solidity 0.8.18;
 
-interface IVester {
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+
+interface IVester is IERC165 {
     function setHandler(address, bool) external;
     function rewardTracker() external view returns (address);
     function claimForAccount(address _account, address _receiver) external returns (uint256);

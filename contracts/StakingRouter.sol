@@ -3,10 +3,7 @@
 pragma solidity 0.8.18;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/Ownable2Step.sol";
 
-import "./interfaces/IRewardDistributor.sol";
-import "./interfaces/IRewardTracker.sol";
 import "./interfaces/IStakingRouter.sol";
 import "./StakingAdmin.sol";
 
@@ -17,23 +14,18 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
         address _esGslp,
         address _esGsb,
         address _bnGs,
+        address _manager,
         address _rewardTrackerDeployer,
         address _rewardDistributorDeployer,
         address _vesterDeployer
-    ) StakingAdmin(_weth, _gs, _esGslp, _esGsb, _bnGs, _rewardTrackerDeployer, _rewardDistributorDeployer, _vesterDeployer) {}
+    ) StakingAdmin(_weth, _gs, _esGslp, _esGsb, _bnGs, _manager, _rewardTrackerDeployer, _rewardDistributorDeployer, _vesterDeployer) {}
 
     receive() external payable {
         require(msg.sender == weth, "StakingRouter: invalid sender");
     }
 
-    function batchStakeGsForAccounts(address[] memory _accounts, uint256[] memory _amounts) external nonReentrant onlyOwner {
-        address _gs = gs;
-        for (uint256 i = 0; i < _accounts.length; i++) {
-            _stakeGs(msg.sender, _accounts[i], _gs, _amounts[i]);
-        }
-    }
-
-    function stakeGsForAccount(address _account, uint256 _amount) external nonReentrant onlyOwner {
+    function stakeGsForAccount(address _account, uint256 _amount) external nonReentrant {
+        _validateHandler();
         _stakeGs(msg.sender, _account, gs, _amount);
     }
 
@@ -79,12 +71,23 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
         _compound(msg.sender);
     }
 
-    function compoundForAccount(address _account) external nonReentrant onlyOwner {
+    function compoundForAccount(address _account) external nonReentrant {
+        _validateHandler();
         _compound(_account);
     }
 
     function compoundPool(address _gsPool) external nonReentrant {
         _compoundPool(_gsPool, msg.sender);
+    }
+
+    function compoundPoolForAccount(address _gsPool, address _account) external nonReentrant {
+        _validateHandler();
+        _compoundPool(_gsPool, _account);
+    }
+
+    function _validateHandler() private view {
+        address user = msg.sender;
+        require(owner() == user || manager == user, "StakingRouter: forbidden");
     }
 
     function _stakeGs(address _fundingAccount, address _account, address _token, uint256 _amount) private {

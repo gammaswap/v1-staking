@@ -20,11 +20,12 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     address public immutable esGsb;
     address public immutable esGslp;
     address public immutable bnGs;
+    address internal immutable manager;
 
     // Deployers
-    address public immutable rewardTrackerDeployer;
-    address public immutable rewardDistributorDeployer;
-    address public immutable vesterDeployer;
+    address private immutable rewardTrackerDeployer;
+    address private immutable rewardDistributorDeployer;
+    address private immutable vesterDeployer;
 
     uint256 public constant VESTING_DURATION = 365 * 24 * 60 * 60;
 
@@ -37,20 +38,24 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         address _esGslp,
         address _esGsb,
         address _bnGs,
+        address _manager,
         address _rewardTrackerDeployer,
         address _rewardDistributorDeployer,
         address _vesterDeployer
     ) {
-        require(_weth != address(0) && _gs != address(0) && _esGsb != address(0) && _esGslp != address(0) && _bnGs != address(0), "StakingFactory: invalid constructor args");
-        require(_rewardTrackerDeployer != address(0), "StakingFactory: invalid constructor args");
-        require(_rewardDistributorDeployer != address(0), "StakingFactory: invalid constructor args");
-        require(_vesterDeployer != address(0), "StakingFactory: invalid constructor args");
+        if (
+            _weth == address(0) || _gs == address(0) || _esGslp != address(0) || _esGsb != address(0) || _bnGs == address(0) || _manager == address(0) ||
+            _rewardTrackerDeployer == address(0) || _rewardDistributorDeployer == address(0) || _vesterDeployer == address(0)
+        ) {
+            revert InvalidConstructor();
+        }
 
         weth = _weth;
         gs = _gs;
         esGsb = _esGsb;
         esGslp = _esGslp;
         bnGs = _bnGs;
+        manager = _manager;
 
         rewardTrackerDeployer = _rewardTrackerDeployer;
         rewardDistributorDeployer = _rewardDistributorDeployer;
@@ -141,16 +146,17 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     }
 
     function execute(address _stakingContract, bytes memory _data) external onlyOwner {
-        require(
-            _stakingContract.supportsInterface(type(IRewardTracker).interfaceId) ||
-            _stakingContract.supportsInterface(type(IRewardDistributor).interfaceId) ||
-            _stakingContract.supportsInterface(type(IVester).interfaceId),
-            "StakingAdmin: cannot execute"
-        );
+        if(
+            !_stakingContract.supportsInterface(type(IRewardTracker).interfaceId) &&
+            !_stakingContract.supportsInterface(type(IRewardDistributor).interfaceId) &&
+            !_stakingContract.supportsInterface(type(IVester).interfaceId)
+        ) {
+            revert InvalidExecute();
+        }
 
         (bool success, bytes memory result) = _stakingContract.call(_data);
         if (!success) {
-            if (result.length == 0) revert("StakingAdmin: execute failed");
+            if (result.length == 0) revert ExecuteFailed();
             assembly {
                 revert(add(32, result), mload(result))
             }
