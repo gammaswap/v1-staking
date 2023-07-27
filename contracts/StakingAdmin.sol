@@ -5,8 +5,9 @@ pragma solidity 0.8.18;
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 
-import "./interfaces/IRewardDistributor.sol";
 import "./interfaces/IRewardTracker.sol";
+import "./interfaces/ILoanTracker.sol";
+import "./interfaces/IRewardDistributor.sol";
 import "./interfaces/IVester.sol";
 import "./interfaces/IStakingAdmin.sol";
 import "./deployers/DeployerUtils.sol";
@@ -145,6 +146,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     function execute(address _stakingContract, bytes memory _data) external onlyOwner {
         if(
             !_stakingContract.supportsInterface(type(IRewardTracker).interfaceId) &&
+            !_stakingContract.supportsInterface(type(ILoanTracker).interfaceId) &&
             !_stakingContract.supportsInterface(type(IRewardDistributor).interfaceId) &&
             !_stakingContract.supportsInterface(type(IVester).interfaceId)
         ) {
