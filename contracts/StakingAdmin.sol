@@ -20,7 +20,8 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     address public immutable esGsb;
     address public immutable esGslp;
     address public immutable bnGs;
-    address internal immutable manager;
+    address public immutable factory;
+    address public immutable manager;
 
     // Deployers
     address private immutable rewardTrackerDeployer;
@@ -38,6 +39,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         address _esGslp,
         address _esGsb,
         address _bnGs,
+        address _factory,
         address _manager,
         address _rewardTrackerDeployer,
         address _rewardDistributorDeployer,
@@ -55,6 +57,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         esGsb = _esGsb;
         esGslp = _esGslp;
         bnGs = _bnGs;
+        factory = _factory;
         manager = _manager;
 
         rewardTrackerDeployer = _rewardTrackerDeployer;
@@ -66,24 +69,24 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         address[] memory _depositTokens = new address[](2);
         _depositTokens[0] = gs;
         _depositTokens[1] = esGslp;
-        (address _rewardTracker, address _rewardDistributor) = _combineTrackerDistributor("Staked GS", "sGS", esGslp, _depositTokens, false);
+        (address _rewardTracker, address _rewardDistributor) = _combineTrackerDistributor("Staked GS", "sGS", esGslp, _depositTokens, 0, false);
 
         delete _depositTokens;
         _depositTokens = new address[](1);
         _depositTokens[0] = esGsb;
-        (address _loanRewardTracker, address _loanRewardDistributor) = _combineTrackerDistributor("Staked GS Loan", "sGSL", esGsb, _depositTokens, false);
+        (address _loanRewardTracker, address _loanRewardDistributor) = _combineTrackerDistributor("Staked GS Loan", "sGSL", esGsb, _depositTokens, 0, false);
 
         delete _depositTokens;
         _depositTokens = new address[](2);
         _depositTokens[0] = _rewardTracker;
         _depositTokens[1] = _loanRewardTracker;
-        (address _bonusTracker, address _bonusDistributor) = _combineTrackerDistributor("Staked + Bonus GS", "sbGS", bnGs, _depositTokens, true);
+        (address _bonusTracker, address _bonusDistributor) = _combineTrackerDistributor("Staked + Bonus GS", "sbGS", bnGs, _depositTokens, 0, true);
 
         delete _depositTokens;
         _depositTokens = new address[](2);
         _depositTokens[0] = _bonusTracker;
         _depositTokens[1] = bnGs;
-        (address _feeTracker, address _feeDistributor) = _combineTrackerDistributor("Staked + Bonus + Fee GS", "sbfGS", weth, _depositTokens, false);
+        (address _feeTracker, address _feeDistributor) = _combineTrackerDistributor("Staked + Bonus + Fee GS", "sbfGS", weth, _depositTokens, 0, false);
 
         address _vester = vesterDeployer.deployContract(
             abi.encodeWithSelector(VESTER_DEPLOYER, "Vested GS LP", "vGSLP", VESTING_DURATION, esGslp, _feeTracker, gs, _rewardTracker)
@@ -113,35 +116,29 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         });
     }
 
-    function setupLpStaking(address _gsPool) external onlyOwner {
+    function setupLpStaking(address _gsPool, uint16 _refId) external onlyOwner {
         address[] memory _depositTokens = new address[](1);
         _depositTokens[0] = _gsPool;
-        (address _rewardTracker, address _rewardDistributor) = _combineTrackerDistributor("Staked GS LP", "sGSLP", esGslp, _depositTokens, false);
+        (address _rewardTracker, address _rewardDistributor) = _combineTrackerDistributor("Staked GS LP", "sGSLP", esGslp, _depositTokens, 0, false);
 
         delete _depositTokens;
         _depositTokens = new address[](1);
         _depositTokens[0] = esGsb;
-        (address _loanRewardTracker, address _loanRewardDistributor) = _combineTrackerDistributor("Staked GS Loan", "sGSL", esGsb, _depositTokens, false);
+        (address _loanRewardTracker, address _loanRewardDistributor) = _combineTrackerDistributor("Staked GS Loan", "sGSL", esGsb, _depositTokens, _refId, false);
 
         address _vester = vesterDeployer.deployContract(
             abi.encodeWithSelector(VESTER_DEPLOYER, "Vested GS LP", "vGSLP", VESTING_DURATION, esGslp, _rewardTracker, gs, _rewardTracker)
         );
 
-        address _loanVester = vesterDeployer.deployContract(
-            abi.encodeWithSelector(VESTER_NORESERVE_DEPLOYER, "Vested GS Borrowed", "vGSB", VESTING_DURATION, esGsb, gs, _loanRewardTracker)
-        );
-
         IRewardTracker(_rewardTracker).setHandler(_vester, true);
         IVester(_vester).setHandler(address(this), true);
-        IVester(_loanVester).setHandler(address(this), true);
 
         poolTrackers[_gsPool] = AssetPoolTracker({
             rewardTracker: _rewardTracker,
             rewardDistributor: _rewardDistributor,
             loanRewardTracker: _loanRewardTracker,
             loanRewardDistributor: _loanRewardDistributor,
-            vester: _vester,
-            loanVester: _loanVester
+            vester: _vester
         });
     }
 
@@ -168,13 +165,21 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         string memory _symbol,
         address _rewardToken,
         address[] memory _depositTokens,
-        bool isBonusDistributor
+        uint16 _refId,
+        bool _isBonusDistributor
     ) private returns (address, address) {
-        address tracker = rewardTrackerDeployer.deployContract(
-            abi.encodeWithSelector(REWARD_TRACKER_DEPLOYER, _name, _symbol)
-        );
+        address tracker;
+        if (_refId > 0) {
+            tracker = rewardTrackerDeployer.deployContract(
+                abi.encodeWithSelector(LOAN_TRACKER_DEPLOYER, factory, _refId, manager, _name, _symbol)
+            );
+        } else {
+            tracker = rewardTrackerDeployer.deployContract(
+                abi.encodeWithSelector(REWARD_TRACKER_DEPLOYER, _name, _symbol)
+            );
+        }
 
-        bytes4 selector = isBonusDistributor ? BONUS_DISTRIBUTOR_DEPLOYER : REWARD_DISTRIBUTOR_DEPLOYER;
+        bytes4 selector = _isBonusDistributor ? BONUS_DISTRIBUTOR_DEPLOYER : REWARD_DISTRIBUTOR_DEPLOYER;
         address distributor = rewardDistributorDeployer.deployContract(
             abi.encodeWithSelector(selector, _rewardToken, tracker)
         );

@@ -185,6 +185,10 @@ contract VesterNoReserve is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         revert("Vester: non-transferrable");
     }
 
+    function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
+        return interfaceId == type(IVester).interfaceId || interfaceId == type(IERC165).interfaceId;
+    }
+
     function getVestedAmount(address _account) public override view returns (uint256) {
         uint256 balance = balances[_account];
         uint256 cumulativeClaimAmount = cumulativeClaimAmounts[_account];

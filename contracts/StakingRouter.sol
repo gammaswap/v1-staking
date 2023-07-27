@@ -14,11 +14,12 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
         address _esGslp,
         address _esGsb,
         address _bnGs,
+        address _factory,
         address _manager,
         address _rewardTrackerDeployer,
         address _rewardDistributorDeployer,
         address _vesterDeployer
-    ) StakingAdmin(_weth, _gs, _esGslp, _esGsb, _bnGs, _manager, _rewardTrackerDeployer, _rewardDistributorDeployer, _vesterDeployer) {}
+    ) StakingAdmin(_weth, _gs, _esGslp, _esGsb, _bnGs, _factory, _manager, _rewardTrackerDeployer, _rewardDistributorDeployer, _vesterDeployer) {}
 
     receive() external payable {
         require(msg.sender == weth, "StakingRouter: invalid sender");

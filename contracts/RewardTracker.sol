@@ -287,7 +287,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
             claimableReward[_account] = _claimableReward;
             previousCumulatedRewardPerToken[_account] = _cumulativeRewardPerToken;
 
-            if (_claimableReward > 0 && stakedAmounts[_account] > 0) {
+            if (_claimableReward > 0 && stakedAmount > 0) {
                 uint256 cumulativeReward = cumulativeRewards[_account];
                 uint256 nextCumulativeReward = cumulativeReward + accountReward;
 

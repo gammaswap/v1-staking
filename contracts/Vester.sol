@@ -224,6 +224,10 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         return balance + cumulativeClaimAmount;
     }
 
+    function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
+        return interfaceId == type(IVester).interfaceId || interfaceId == type(IERC165).interfaceId;
+    }
+
     function _validateHandler() private view {
         require(isHandler[msg.sender], "Vester: forbidden");
     }
@@ -332,9 +336,5 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         cumulativeClaimAmounts[_account] = cumulativeClaimAmounts[_account] + amount;
 
         ERC20Burnable(esToken).burn(amount);
-    }
-
-    function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
-        return interfaceId == type(IVester).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
 }

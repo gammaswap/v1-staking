@@ -26,10 +26,9 @@ interface IStakingAdmin {
     address loanRewardTracker;  // Track tokenId(loan)
     address loanRewardDistributor;  // Reward esGSB
     address vester; // Vest esGSL -> GS (reserve GS_LP)
-    address loanVester; // Vest esGSB -> GS (without reserved tokens)
   }
 
   function setupGsStaking() external;
-  function setupLpStaking(address) external;
+  function setupLpStaking(address, uint16) external;
   function execute(address, bytes memory) external;
 }
