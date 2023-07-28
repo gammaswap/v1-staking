@@ -83,7 +83,7 @@ contract VesterNoReserve is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         _deposit(_account, _amount);
     }
 
-    function claim() external nonReentrant returns (uint256) {
+    function claim() external override nonReentrant returns (uint256) {
         return _claim(msg.sender, msg.sender);
     }
 
@@ -92,24 +92,13 @@ contract VesterNoReserve is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         return _claim(_account, _receiver);
     }
 
-    function withdraw() external nonReentrant {
-        address account = msg.sender;
-        address _receiver = account;
-        _claim(account, _receiver);
+    function withdraw() external override nonReentrant {
+        _withdraw(msg.sender);
+    }
 
-        uint256 claimedAmount = cumulativeClaimAmounts[account];
-        uint256 balance = balances[account];
-        uint256 totalVested = balance + claimedAmount;
-        require(totalVested > 0, "Vester: vested amount is zero");
-
-        IERC20(esToken).safeTransfer(_receiver, balance);
-        _burn(account, balance);
-
-        delete cumulativeClaimAmounts[account];
-        delete claimedAmounts[account];
-        delete lastVestingTimes[account];
-
-        emit Withdraw(account, claimedAmount, balance);
+    function withdrawForAccount(address _account) external override nonReentrant {
+        _validateHandler();
+        _withdraw(_account);
     }
 
     function setCumulativeRewardDeductions(address _account, uint256 _amount) external override nonReentrant {
@@ -261,6 +250,24 @@ contract VesterNoReserve is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         emit Claim(_account, amount);
 
         return amount;
+    }
+
+    function _withdraw(address _account) private {
+        _claim(_account, _account);
+
+        uint256 claimedAmount = cumulativeClaimAmounts[_account];
+        uint256 balance = balances[_account];
+        uint256 totalVested = balance + claimedAmount;
+        require(totalVested > 0, "Vester: vested amount is zero");
+
+        IERC20(esToken).safeTransfer(_account, balance);
+        _burn(_account, balance);
+
+        delete cumulativeClaimAmounts[_account];
+        delete claimedAmounts[_account];
+        delete lastVestingTimes[_account];
+
+        emit Withdraw(_account, claimedAmount, balance);
     }
 
     function _updateVesting(address _account) private {

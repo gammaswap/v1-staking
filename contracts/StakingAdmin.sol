@@ -126,6 +126,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         _depositTokens = new address[](1);
         _depositTokens[0] = esGsb;
         (address _loanRewardTracker, address _loanRewardDistributor) = _combineTrackerDistributor("Staked GS Loan", "sGSL", esGsb, _depositTokens, _refId, false);
+        ILoanTracker(_loanRewardTracker).initialize(_gsPool, _loanRewardDistributor);
 
         address _vester = vesterDeployer.deployContract(
             abi.encodeWithSelector(VESTER_DEPLOYER, "Vested GS LP", "vGSLP", VESTING_DURATION, esGslp, _rewardTracker, gs, _rewardTracker)
@@ -185,8 +186,13 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         address distributor = rewardDistributorDeployer.deployContract(
             abi.encodeWithSelector(selector, _rewardToken, tracker)
         );
-        IRewardTracker(tracker).initialize(_depositTokens, distributor);
-        IRewardTracker(tracker).setHandler(address(this), true);
+
+        if (_refId > 0) {
+            ILoanTracker(tracker).setHandler(address(this), true);
+        } else {
+            IRewardTracker(tracker).initialize(_depositTokens, distributor);
+            IRewardTracker(tracker).setHandler(address(this), true);
+        }
         IRewardDistributor(distributor).updateLastDistributionTime();
 
         return (tracker, distributor);

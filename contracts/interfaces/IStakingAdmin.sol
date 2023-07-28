@@ -8,24 +8,24 @@ interface IStakingAdmin {
   error ExecuteFailed();
 
   struct AssetCoreTracker {
-    address rewardTracker;  // Track GS + esGSL
-    address rewardDistributor;  // Reward esGSL
-    address loanRewardTracker;  // Track esGSB
-    address loanRewardDistributor;  // Reward esGSB
-    address bonusTracker; // Track GS + esGSL + esGSB
+    address rewardTracker;  // Track GS + esGSlp
+    address rewardDistributor;  // Reward esGSlp
+    address loanRewardTracker;  // Track esGSb
+    address loanRewardDistributor;  // Reward esGSb
+    address bonusTracker; // Track GS + esGSL + esGSb
     address bonusDistributor; // Reward bnGS
-    address feeTracker; // Track GS + esGSL + esGSB + bnGS(aka MP)
+    address feeTracker; // Track GS + esGSlp + esGSb + bnGS(aka MP)
     address feeDistributor; // Reward WETH
-    address vester; // Vest esGSL -> GS (reserve GS_LP or GS)
-    address loanVester; // Vest esGSB -> GS (without reserved tokens)
+    address vester; // Vest esGSlp -> GS (reserve GS or esGSlp or bnGS)
+    address loanVester; // Vest esGSb -> GS (without reserved tokens)
   }
 
   struct AssetPoolTracker {
     address rewardTracker;  // Track GS_LP
-    address rewardDistributor;  // Reward esGSL
+    address rewardDistributor;  // Reward esGSlp
     address loanRewardTracker;  // Track tokenId(loan)
-    address loanRewardDistributor;  // Reward esGSB
-    address vester; // Vest esGSL -> GS (reserve GS_LP)
+    address loanRewardDistributor;  // Reward esGSb
+    address vester; // Vest esGSlp -> GS (reserve GS_LP)
   }
 
   function setupGsStaking() external;

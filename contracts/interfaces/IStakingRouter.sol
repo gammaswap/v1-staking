@@ -5,22 +5,43 @@ pragma solidity 0.8.18;
 import "./IStakingAdmin.sol";
 
 interface IStakingRouter is IStakingAdmin {
+    /* Stake */
     function stakeGsForAccount(address, uint256) external;
     function stakeGs(uint256) external;
     function stakeEsGslp(uint256) external;
-    function stakeGsLp(address, uint256) external;
+    function stakeEsGsb(uint256) external;
+    function stakeLpForAccount(address, address, uint256) external;
+    function stakeLp(address, uint256) external;
+    function stakeLoanForAccount(address, address, uint256) external;
+    function stakeLoan(address, uint256) external;
     function unstakeGs(uint256) external;
     function unstakeEsGslp(uint256) external;
-    function unstakeGsLp(address, uint256) external;
+    function unstakeEsGsb(uint256) external;
+    function unstakeLpForAccount(address, address, uint256) external;
+    function unstakeLp(address, uint256) external;
+    function unstakeLoanForAccount(address, address, uint256) external;
+    function unstakeLoan(address, uint256) external;
+
+    /* Vest */
+    function vestEsGslp(uint256) external;
+    function vestEsGslpForPool(address, uint256) external;
+    function vestEsGsb(uint256) external;
+    function withdrawEsGslp() external;
+    function withdrawEsGslpForPool(address) external;
+    function withdrawEsGsb() external;
+
+    /* Claim */
     function claim() external;
     function claimPool(address) external;
+
+    /* Compound */
     function compound() external;
     function compoundForAccount(address) external;
-    function compoundPool(address) external;
-    function compoundPoolForAccount(address, address) external;
 
-    event StakeGs(address, address, uint256);
-    event StakeGsLp(address, address, uint256);
-    event UnstakeGs(address, address, uint256);
-    event UnstakeGsLp(address, address, uint256);
+    event StakedGs(address, address, uint256);
+    event StakedLp(address, address, uint256);
+    event StakedLoan(address, address, uint256);
+    event UnstakedGs(address, address, uint256);
+    event UnstakedLp(address, address, uint256);
+    event UnstakedLoan(address, address, uint256);
 }
