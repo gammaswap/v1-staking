@@ -151,9 +151,6 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
         IGammaPool.LoanData memory loanData = IGammaPool(gsPool).getLoanData(_loanId);
         require(loanData.initLiquidity > 0, "LoanTracker: invalid loan");
 
-        IGammaPool.PoolData memory poolData = IGammaPool(gsPool).getPoolData();
-        totalSupply = poolData.lastCFMMTotalSupply == 0 ? 0 : poolData.LP_TOKEN_BORROWED * poolData.lastCFMMInvariant / poolData.lastCFMMTotalSupply;
-
         address account = stakedLoans[_loanId];
         if (account != address(0)) {
             LoanObserved memory loan = abi.decode(_data, (LoanObserved));
@@ -198,6 +195,7 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
         require(_account != address(0), "LoanTracker: mint to the zero address");
 
         balances[_account] = balances[_account] + _amount;
+        totalSupply = totalSupply + _amount;
 
         emit Transfer(address(0), _account, _amount);
     }
@@ -207,6 +205,7 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
         require(_account != address(0), "LoanTracker: burn from the zero address");
 
         balances[_account] = balances[_account] - _amount;
+        totalSupply = totalSupply - _amount;
 
         emit Transfer(_account, address(0), _amount);
     }
