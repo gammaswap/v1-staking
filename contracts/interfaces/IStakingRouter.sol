@@ -8,14 +8,14 @@ interface IStakingRouter is IStakingAdmin {
     /* Stake */
     function stakeGsForAccount(address, uint256) external;
     function stakeGs(uint256) external;
-    function stakeEsGslp(uint256) external;
+    function stakeEsGs(uint256) external;
     function stakeEsGsb(uint256) external;
     function stakeLpForAccount(address, address, uint256) external;
     function stakeLp(address, uint256) external;
     function stakeLoanForAccount(address, address, uint256) external;
     function stakeLoan(address, uint256) external;
     function unstakeGs(uint256) external;
-    function unstakeEsGslp(uint256) external;
+    function unstakeEsGs(uint256) external;
     function unstakeEsGsb(uint256) external;
     function unstakeLpForAccount(address, address, uint256) external;
     function unstakeLp(address, uint256) external;
@@ -23,11 +23,11 @@ interface IStakingRouter is IStakingAdmin {
     function unstakeLoan(address, uint256) external;
 
     /* Vest */
-    function vestEsGslp(uint256) external;
-    function vestEsGslpForPool(address, uint256) external;
+    function vestEsGs(uint256) external;
+    function vestEsGsForPool(address, uint256) external;
     function vestEsGsb(uint256) external;
-    function withdrawEsGslp() external;
-    function withdrawEsGslpForPool(address) external;
+    function withdrawEsGs() external;
+    function withdrawEsGsForPool(address) external;
     function withdrawEsGsb() external;
 
     /* Claim */

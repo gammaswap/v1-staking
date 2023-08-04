@@ -53,7 +53,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
     function initialize(
         address[] memory _depositTokens,
         address _distributor
-    ) external onlyOwner {
+    ) external virtual onlyOwner {
         require(!isInitialized, "RewardTracker: already initialized");
         isInitialized = true;
 
@@ -263,7 +263,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
         IERC20(_depositToken).safeTransfer(_receiver, _amount);
     }
 
-    function _updateRewards(address _account) private {
+    function _updateRewards(address _account) internal virtual {
         uint256 blockReward = IRewardDistributor(distributor).distribute();
 
         uint256 supply = totalSupply;

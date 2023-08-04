@@ -11,15 +11,15 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     constructor(
         address _weth,
         address _gs,
-        address _esGslp,
         address _esGsb,
+        address _esGs,
         address _bnGs,
         address _factory,
         address _manager,
         address _rewardTrackerDeployer,
         address _rewardDistributorDeployer,
         address _vesterDeployer
-    ) StakingAdmin(_weth, _gs, _esGslp, _esGsb, _bnGs, _factory, _manager, _rewardTrackerDeployer, _rewardDistributorDeployer, _vesterDeployer) {}
+    ) StakingAdmin(_weth, _gs, _esGs, _esGsb, _bnGs, _factory, _manager, _rewardTrackerDeployer, _rewardDistributorDeployer, _vesterDeployer) {}
 
     receive() external payable {
         require(msg.sender == weth, "StakingRouter: invalid sender");
@@ -34,8 +34,8 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
         _stakeGs(msg.sender, msg.sender, gs, _amount);
     }
 
-    function stakeEsGslp(uint256 _amount) external nonReentrant {
-        _stakeGs(msg.sender, msg.sender, esGslp, _amount);
+    function stakeEsGs(uint256 _amount) external nonReentrant {
+        _stakeGs(msg.sender, msg.sender, esGs, _amount);
     }
 
     function stakeEsGsb(uint256 _amount) external nonReentrant {
@@ -64,8 +64,8 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
         _unstakeGs(msg.sender, gs, _amount, true);
     }
 
-    function unstakeEsGslp(uint256 _amount) external nonReentrant {
-        _unstakeGs(msg.sender, esGslp, _amount, true);
+    function unstakeEsGs(uint256 _amount) external nonReentrant {
+        _unstakeGs(msg.sender, esGs, _amount, true);
     }
 
     function unstakeEsGsb(uint256 _amount) external nonReentrant {
@@ -90,11 +90,11 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
         _unstakeLoan(msg.sender, _gsPool, _loanId);
     }
 
-    function vestEsGslp(uint256 _amount) external nonReentrant {
+    function vestEsGs(uint256 _amount) external nonReentrant {
         IVester(coreTracker.vester).depositForAccount(msg.sender, _amount);
     }
 
-    function vestEsGslpForPool(address _gsPool, uint256 _amount) external nonReentrant {
+    function vestEsGsForPool(address _gsPool, uint256 _amount) external nonReentrant {
         IVester(poolTrackers[_gsPool].vester).depositForAccount(msg.sender, _amount);
     }
 
@@ -102,11 +102,11 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
         IVester(coreTracker.loanVester).depositForAccount(msg.sender, _amount);
     }
 
-    function withdrawEsGslp() external nonReentrant {
+    function withdrawEsGs() external nonReentrant {
         IVester(coreTracker.vester).withdrawForAccount(msg.sender);
     }
 
-    function withdrawEsGslpForPool(address _gsPool) external nonReentrant {
+    function withdrawEsGsForPool(address _gsPool) external nonReentrant {
         IVester(poolTrackers[_gsPool].vester).withdrawForAccount(msg.sender);
     }
 
@@ -120,7 +120,6 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
         IRewardTracker(coreTracker.feeTracker).claimForAccount(account, account);
         IRewardTracker(coreTracker.rewardTracker).claimForAccount(account, account);
         IRewardTracker(coreTracker.loanRewardTracker).claimForAccount(account, account);
-        IRewardTracker(coreTracker.bonusTracker).claimForAccount(account, account);
         IVester(coreTracker.vester).claimForAccount(account, account);
         IVester(coreTracker.loanVester).claimForAccount(account, account);
     }
@@ -219,9 +218,9 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     }
 
     function _compound(address _account) private {
-        uint256 esGslpAmount = IRewardTracker(coreTracker.rewardTracker).claimForAccount(_account, _account);
-        if (esGslpAmount > 0) {
-            _stakeGs(_account, _account, esGslp, esGslpAmount);
+        uint256 esGsAmount = IRewardTracker(coreTracker.rewardTracker).claimForAccount(_account, _account);
+        if (esGsAmount > 0) {
+            _stakeGs(_account, _account, esGs, esGsAmount);
         }
 
         uint256 esGsbAmount = IRewardTracker(coreTracker.loanRewardTracker).claimForAccount(_account, _account);
