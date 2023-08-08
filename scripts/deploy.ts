@@ -7,11 +7,13 @@ async function main() {
   const gs = await GS.deploy();
 
   const Token = await ethers.getContractFactory('RestrictedToken');
-  const weth = await Token.deploy('Wrapped Ether', 'weth');
+  const ERC20 = await ethers.getContractFactory('ERC20');
+
+  const weth = await ERC20.deploy('Wrapped Ether', 'weth');
   const esGs = await Token.deploy('Escrowed GS', 'esGS');
   const esGsb = await Token.deploy('Escrowed GS for Borrowers', 'esGSb');
   const bnGs = await Token.deploy('Bonus GS', 'bnGS');
-  const gsPool = await Token.deploy('GammaPool', 'GSPool');
+  const gsPool = await ERC20.deploy('GammaPool', 'GSPool');
 
   const RewardTrackerDeployer = await ethers.getContractFactory('RewardTrackerDeployer');
   const rewardTrackerDeployer = await RewardTrackerDeployer.deploy();

@@ -1,13 +1,13 @@
 import { ethers } from 'hardhat';
+import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
-import { PANIC_CODES } from "@nomicfoundation/hardhat-chai-matchers/panic";
+import { PANIC_CODES } from '@nomicfoundation/hardhat-chai-matchers/panic';
 import { expect } from 'chai';
 import { setup, coreTrackers } from './utils/deploy';
 import { increase } from './utils/time'
 import { expandDecimals } from './utils/bignumber';
 import { impersonateAndFund } from './utils/misc';
 import { BonusDistributor, GS, RestrictedToken, RewardDistributor, RewardTracker, StakingRouter } from '../typechain-types';
-import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 
 describe("BonusDistributor", function () {
   let gs: GS
@@ -27,7 +27,7 @@ describe("BonusDistributor", function () {
     bnGs = baseContracts.bnGs;
     stakingRouter = baseContracts.stakingRouter;
 
-    const coreTracker = await coreTrackers(baseContracts.stakingRouter);
+    const coreTracker = await coreTrackers(stakingRouter);
     rewardTracker = coreTracker.rewardTracker;
     rewardDistributor = coreTracker.rewardDistributor;
     bonusTracker = coreTracker.bonusTracker;

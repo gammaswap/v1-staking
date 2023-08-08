@@ -33,6 +33,17 @@ contract RestrictedToken is ERC20, Ownable2Step, IRestrictedToken {
     _burn(_account, _amount);
   }
 
+  function transferFrom(address from, address to, uint256 amount) public virtual override returns (bool) {
+    address spender = msg.sender;
+
+    if (spender != owner() && !isManager[spender] && !isHandler[spender]) {
+      _spendAllowance(from, spender, amount);
+    }
+
+    _transfer(from, to, amount);
+    return true;
+  }
+
   function _validateManager() private view {
     address caller = msg.sender;
     require(caller == owner() || isManager[caller], "RestrictedToken: Forbidden Manager");

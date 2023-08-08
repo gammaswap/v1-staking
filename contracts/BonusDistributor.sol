@@ -50,10 +50,9 @@ contract BonusDistributor is Ownable2Step, IRewardDistributor {
             return 0;
         }
 
-        uint256 supply = IERC20(rewardTracker).totalSupply();
         uint256 timeDiff = block.timestamp - lastDistributionTime;
 
-        return timeDiff * supply * bonusMultiplierBasisPoints / (BASIS_POINTS_DIVISOR * BONUS_DURATION);
+        return timeDiff * tokensPerInterval();
     }
 
     function distribute() external override returns (uint256) {

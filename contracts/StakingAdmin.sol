@@ -109,8 +109,11 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         IRewardTracker(_feeTracker).setHandler(_vester, true);
         IVester(_vester).setHandler(address(this), true);
         IVester(_loanVester).setHandler(address(this), true);
+        IRestrictedToken(esGs).setHandler(_rewardTracker, true);
         IRestrictedToken(esGs).setHandler(_vester, true);
+        IRestrictedToken(esGsb).setHandler(_loanRewardTracker, true);
         IRestrictedToken(esGsb).setHandler(_loanVester, true);
+        IRestrictedToken(bnGs).setHandler(_feeTracker, true);
 
         coreTracker = AssetCoreTracker({
             rewardTracker: _rewardTracker,

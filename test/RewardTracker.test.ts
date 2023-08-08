@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
-import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
-import { PANIC_CODES } from "@nomicfoundation/hardhat-chai-matchers/panic";
 import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
+import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
+import { PANIC_CODES } from '@nomicfoundation/hardhat-chai-matchers/panic';
 import { expect } from 'chai';
 import { setup, coreTrackers } from './utils/deploy';
 import { increase } from './utils/time'
@@ -246,7 +246,7 @@ describe('RewardTracker', function() {
     expect(distributed).lt(totalCumulativeReward + expandDecimals(1, 18))
   })
 
-  it.only("stakeForAccount, unstakeForAccount, claimForAccount", async () => {
+  it("stakeForAccount, unstakeForAccount, claimForAccount", async () => {
     const [deployer, user0, user1, user2, user3] = await ethers.getSigners()
 
     await esGs.mint(rewardDistributor.target, expandDecimals(50000, 18))
