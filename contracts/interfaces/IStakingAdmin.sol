@@ -29,6 +29,6 @@ interface IStakingAdmin {
   }
 
   function setupGsStaking() external;
-  function setupLpStaking(address, uint16) external;
+  function setupPoolStaking(address, uint16) external;
   function execute(address, bytes memory) external;
 }

@@ -4,6 +4,7 @@ pragma solidity 0.8.18;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
+import "./interfaces/IRestrictedToken.sol";
 import "./interfaces/IStakingRouter.sol";
 import "./StakingAdmin.sol";
 
@@ -11,15 +12,16 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     constructor(
         address _weth,
         address _gs,
-        address _esGsb,
         address _esGs,
+        address _esGsb,
         address _bnGs,
         address _factory,
         address _manager,
         address _rewardTrackerDeployer,
+        address _feeTrackerDeployer,
         address _rewardDistributorDeployer,
         address _vesterDeployer
-    ) StakingAdmin(_weth, _gs, _esGs, _esGsb, _bnGs, _factory, _manager, _rewardTrackerDeployer, _rewardDistributorDeployer, _vesterDeployer) {}
+    ) StakingAdmin(_weth, _gs, _esGs, _esGsb, _bnGs, _factory, _manager, _rewardTrackerDeployer, _feeTrackerDeployer, _rewardDistributorDeployer, _vesterDeployer) {}
 
     receive() external payable {
         require(msg.sender == weth, "StakingRouter: invalid sender");
@@ -196,7 +198,7 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
             if (stakedBnGs > 0) {
                 uint256 reductionAmount = stakedBnGs * _amount / balance;
                 IRewardTracker(feeTracker).unstakeForAccount(_account, bnGs, reductionAmount, _account);
-                // bnGs.burn(_account, reductionAmount);
+                IRestrictedToken(bnGs).burn(_account, reductionAmount);
             }
         }
 

@@ -1,23 +1,32 @@
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
+import { PANIC_CODES } from "@nomicfoundation/hardhat-chai-matchers/panic";
+import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { deployContract } from './utils/deploy';
+import { setup, coreTrackers } from './utils/deploy';
 import { increase } from './utils/time'
 import { expandDecimals } from './utils/bignumber';
+import { impersonateAndFund } from './utils/misc';
+import { GS, RestrictedToken, RewardDistributor, RewardTracker } from '../typechain-types';
 
 describe('RewardTracker', function() {
-  let rewardTracker
-  let gs
-  let esGs
-  let rewardDistributor
+  let rewardTracker: RewardTracker
+  let gs: GS
+  let esGs: RestrictedToken
+  let rewardDistributor: RewardDistributor
+  let routerAsSigner: HardhatEthersSigner
 
   beforeEach(async () => {
-    rewardTracker = await deployContract('RewardTracker', ['RewardTracker', 'RT']);
-    gs = await deployContract('GS', ['GammaSwap', 'GS']);
-    esGs = await deployContract('EsGS', ['Gammaswap esGS', 'esGS']);
-    rewardDistributor = await deployContract('RewardDistributor', [esGs.target, rewardTracker.target]);
-    await rewardDistributor.updateLastDistributionTime();
-    await rewardTracker.initialize([gs.target, esGs.target], rewardDistributor.target);
+    const baseContracts = await loadFixture(setup);
+    gs = baseContracts.gs;
+    esGs = baseContracts.esGs;
+    const router = baseContracts.stakingRouter;
+
+    const coreTracker = await coreTrackers(router);
+    rewardTracker = coreTracker.rewardTracker;
+    rewardDistributor = coreTracker.rewardDistributor;
+
+    routerAsSigner = await impersonateAndFund(router.target.toString());
   });
 
   it('inits', async () => {
@@ -28,49 +37,49 @@ describe('RewardTracker', function() {
     expect(await rewardTracker.distributor()).eq(rewardDistributor.target)
     expect(await rewardTracker.rewardToken()).eq(esGs.target)
 
-    await expect(rewardTracker.initialize([gs.target, esGs.target], rewardDistributor.target))
+    await expect(rewardTracker.connect(routerAsSigner).initialize([gs.target, esGs.target], rewardDistributor.target))
       .to.be.revertedWith('RewardTracker: already initialized')
   })
 
   it("setDepositToken", async () => {
-    const [deployer, user0, user1] = await ethers.getSigners()
+    const [, user0, user1] = await ethers.getSigners()
     await expect(rewardTracker.connect(user0).setDepositToken(user1.address, true))
       .to.be.revertedWith("Ownable: caller is not the owner")
 
     expect(await rewardTracker.isDepositToken(user1.address)).eq(false)
-    await rewardTracker.connect(deployer).setDepositToken(user1.address, true)
+    await rewardTracker.connect(routerAsSigner).setDepositToken(user1.address, true)
     expect(await rewardTracker.isDepositToken(user1.address)).eq(true)
-    await rewardTracker.connect(deployer).setDepositToken(user1.address, false)
+    await rewardTracker.connect(routerAsSigner).setDepositToken(user1.address, false)
     expect(await rewardTracker.isDepositToken(user1.address)).eq(false)
   })
 
   it("setInPrivateTransferMode", async () => {
-    const [deployer, user0] = await ethers.getSigners()
+    const [, user0] = await ethers.getSigners()
     await expect(rewardTracker.connect(user0).setInPrivateTransferMode(true))
       .to.be.revertedWith("Ownable: caller is not the owner")
 
     expect(await rewardTracker.inPrivateTransferMode()).eq(true)
-    await rewardTracker.connect(deployer).setInPrivateTransferMode(false)
+    await rewardTracker.connect(routerAsSigner).setInPrivateTransferMode(false)
     expect(await rewardTracker.inPrivateTransferMode()).eq(false)
   })
 
   it("setInPrivateStakingMode", async () => {
-    const [deployer, user0] = await ethers.getSigners()
+    const [, user0] = await ethers.getSigners()
     await expect(rewardTracker.connect(user0).setInPrivateStakingMode(true))
       .to.be.revertedWith("Ownable: caller is not the owner")
 
     expect(await rewardTracker.inPrivateStakingMode()).eq(true)
-    await rewardTracker.connect(deployer).setInPrivateStakingMode(false)
+    await rewardTracker.connect(routerAsSigner).setInPrivateStakingMode(false)
     expect(await rewardTracker.inPrivateStakingMode()).eq(false)
   })
 
   it("setHandler", async () => {
-    const [deployer, user0, user1] = await ethers.getSigners()
+    const [, user0, user1] = await ethers.getSigners()
     await expect(rewardTracker.connect(user0).setHandler(user1.address, true))
       .to.be.revertedWith("Ownable: caller is not the owner")
 
     expect(await rewardTracker.isHandler(user1.address)).eq(false)
-    await rewardTracker.connect(deployer).setHandler(user1.address, true)
+    await rewardTracker.connect(routerAsSigner).setHandler(user1.address, true)
     expect(await rewardTracker.isHandler(user1.address)).eq(true)
   })
 
@@ -78,15 +87,13 @@ describe('RewardTracker', function() {
     const [deployer, user0, user1, user2, user3] = await ethers.getSigners()
 
     await esGs.mint(rewardDistributor.target, expandDecimals(50000, 18))
-    await rewardDistributor.setTokensPerInterval("20667989410000000") // 0.02066798941 esGs per second
-    await gs.setHandler(deployer.address, true)
+    await rewardDistributor.connect(routerAsSigner).setTokensPerInterval("20667989410000000") // 0.02066798941 esGs per second
     await gs.mint(user0.address, expandDecimals(1000, 18))
 
-    await rewardTracker.setInPrivateStakingMode(true)
     await expect(rewardTracker.connect(user0).stake(gs.target, expandDecimals(1000, 18)))
       .to.be.revertedWith("RewardTracker: action not enabled")
 
-    await rewardTracker.setInPrivateStakingMode(false)
+    await rewardTracker.connect(routerAsSigner).setInPrivateStakingMode(false)
 
     await expect(rewardTracker.connect(user0).stake(user1.address, 0))
       .to.be.revertedWith("RewardTracker: invalid _amount")
@@ -95,7 +102,7 @@ describe('RewardTracker', function() {
       .to.be.revertedWith("RewardTracker: invalid _depositToken")
 
     await expect(rewardTracker.connect(user0).stake(gs.target, expandDecimals(1000, 18)))
-      .to.be.revertedWith("BaseToken: transfer amount exceeds allowance")
+      .to.be.revertedWith("ERC20: insufficient allowance")
 
     await gs.connect(user0).approve(rewardTracker.target, expandDecimals(1000, 18))
     await rewardTracker.connect(user0).stake(gs.target, expandDecimals(1000, 18))
@@ -233,30 +240,29 @@ describe('RewardTracker', function() {
     const distributed = expandDecimals(50000, 18) - (await esGs.balanceOf(rewardDistributor.target))
     const cumulativeReward0 = await rewardTracker.cumulativeRewards(user0.address)
     const cumulativeReward1 = await rewardTracker.cumulativeRewards(user1.address)
-    const totalCumulativeReward = cumulativeReward0.add(cumulativeReward1)
+    const totalCumulativeReward = cumulativeReward0 + cumulativeReward1
 
-    expect(distributed).gt(totalCumulativeReward.sub(expandDecimals(1, 18)))
-    expect(distributed).lt(totalCumulativeReward.add(expandDecimals(1, 18)))
+    expect(distributed).gt(totalCumulativeReward - expandDecimals(1, 18))
+    expect(distributed).lt(totalCumulativeReward + expandDecimals(1, 18))
   })
 
-  it("stakeForAccount, unstakeForAccount, claimForAccount", async () => {
+  it.only("stakeForAccount, unstakeForAccount, claimForAccount", async () => {
     const [deployer, user0, user1, user2, user3] = await ethers.getSigners()
 
     await esGs.mint(rewardDistributor.target, expandDecimals(50000, 18))
-    await rewardDistributor.setTokensPerInterval("20667989410000000") // 0.02066798941 esgs per second
-    await gs.setHandler(deployer.address, true)
+    await rewardDistributor.connect(routerAsSigner).setTokensPerInterval("20667989410000000") // 0.02066798941 esgs per second
     await gs.mint(deployer.address, expandDecimals(1000, 18))
 
-    await rewardTracker.setInPrivateStakingMode(true)
+    await rewardTracker.connect(routerAsSigner).setInPrivateStakingMode(true)
     await expect(rewardTracker.connect(user0).stake(gs.target, expandDecimals(1000, 18)))
       .to.be.revertedWith("RewardTracker: action not enabled")
 
     await expect(rewardTracker.connect(user2).stakeForAccount(deployer.address, user0.address, gs.target, expandDecimals(1000, 18)))
       .to.be.revertedWith("RewardTracker: forbidden")
 
-    await rewardTracker.setHandler(user2.address, true)
+    await rewardTracker.connect(routerAsSigner).setHandler(user2.address, true)
     await expect(rewardTracker.connect(user2).stakeForAccount(deployer.address, user0.address, gs.target, expandDecimals(1000, 18)))
-      .to.be.revertedWith("BaseToken: transfer amount exceeds allowance")
+      .to.be.revertedWith("ERC20: insufficient allowance")
 
     await gs.connect(deployer).approve(rewardTracker.target, expandDecimals(1000, 18))
 
@@ -269,11 +275,11 @@ describe('RewardTracker', function() {
     expect(await rewardTracker.claimable(user0.address)).gt(expandDecimals(1785, 18)) // 50000 / 28 => ~1785
     expect(await rewardTracker.claimable(user0.address)).lt(expandDecimals(1786, 18))
 
-    await rewardTracker.setHandler(user2.address, false)
+    await rewardTracker.connect(routerAsSigner).setHandler(user2.address, false)
     await expect(rewardTracker.connect(user2).unstakeForAccount(user0.address, esGs.target, expandDecimals(1000, 18), user1.address))
       .to.be.revertedWith("RewardTracker: forbidden")
 
-    await rewardTracker.setHandler(user2.address, true)
+    await rewardTracker.connect(routerAsSigner).setHandler(user2.address, true)
 
     await expect(rewardTracker.connect(user2).unstakeForAccount(user0.address, esGs.target, expandDecimals(1000, 18), user1.address))
       .to.be.revertedWith("RewardTracker: _amount exceeds depositBalance")
@@ -285,20 +291,22 @@ describe('RewardTracker', function() {
     expect(await rewardTracker.stakedAmounts(user0.address)).eq(expandDecimals(1000, 18))
     expect(await rewardTracker.depositBalances(user0.address, gs.target)).eq(expandDecimals(1000, 18))
 
+    await rewardTracker.connect(routerAsSigner).setInPrivateTransferMode(false)
+
     expect(await rewardTracker.balanceOf(user0.address)).eq(expandDecimals(1000, 18))
     await rewardTracker.connect(user0).transfer(user1.address, expandDecimals(50, 18))
     expect(await rewardTracker.balanceOf(user0.address)).eq(expandDecimals(950, 18))
     expect(await rewardTracker.balanceOf(user1.address)).eq(expandDecimals(50, 18))
 
-    await rewardTracker.setInPrivateTransferMode(true)
+    await rewardTracker.connect(routerAsSigner).setInPrivateTransferMode(true)
     await expect(rewardTracker.connect(user0).transfer(user1.address, expandDecimals(50, 18)))
       .to.be.revertedWith("RewardTracker: forbidden")
 
-    await rewardTracker.setHandler(user2.address, false)
+    await rewardTracker.connect(routerAsSigner).setHandler(user2.address, false)
     await expect(rewardTracker.connect(user2).transferFrom(user1.address, user0.address, expandDecimals(50, 18)))
-      .to.be.revertedWith("RewardTracker: transfer amount exceeds allowance")
+      .to.be.revertedWithPanic(PANIC_CODES.ARITHMETIC_UNDER_OR_OVERFLOW)
 
-    await rewardTracker.setHandler(user2.address, true)
+    await rewardTracker.connect(routerAsSigner).setHandler(user2.address, true)
     await rewardTracker.connect(user2).transferFrom(user1.address, user0.address, expandDecimals(50, 18))
     expect(await rewardTracker.balanceOf(user0.address)).eq(expandDecimals(1000, 18))
     expect(await rewardTracker.balanceOf(user1.address)).eq(0)

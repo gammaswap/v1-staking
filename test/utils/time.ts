@@ -11,7 +11,7 @@ export async function advanceBlockTo(blockNumber: number) {
 }
 
 export async function increase(value: any) {
-  await ethers.provider.send("evm_increaseTime", [value.toNumber()]);
+  await ethers.provider.send("evm_increaseTime", [value]);
   await advanceBlock();
 }
 

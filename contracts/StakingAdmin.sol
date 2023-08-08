@@ -10,7 +10,10 @@ import "./interfaces/ILoanTracker.sol";
 import "./interfaces/IRewardDistributor.sol";
 import "./interfaces/IVester.sol";
 import "./interfaces/IStakingAdmin.sol";
+import "./interfaces/IRestrictedToken.sol";
 import "./deployers/DeployerUtils.sol";
+
+import "hardhat/console.sol";
 
 abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     using ERC165Checker for address;
@@ -26,6 +29,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
 
     // Deployers
     address private immutable rewardTrackerDeployer;
+    address private immutable feeTrackerDeployer;
     address private immutable rewardDistributorDeployer;
     address private immutable vesterDeployer;
 
@@ -43,12 +47,13 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         address _factory,
         address _manager,
         address _rewardTrackerDeployer,
+        address _feeTrackerDeployer,
         address _rewardDistributorDeployer,
         address _vesterDeployer
     ) {
         if (
-            _weth == address(0) || _gs == address(0) || _esGs != address(0) || _esGsb != address(0) || _bnGs == address(0) || _manager == address(0) ||
-            _rewardTrackerDeployer == address(0) || _rewardDistributorDeployer == address(0) || _vesterDeployer == address(0)
+            _weth == address(0) || _gs == address(0) || _esGs == address(0) || _esGsb == address(0) || _bnGs == address(0) || _manager == address(0) ||
+            _rewardTrackerDeployer == address(0) || _feeTrackerDeployer == address(0) || _rewardDistributorDeployer == address(0) || _vesterDeployer == address(0)
         ) {
             revert InvalidConstructor();
         }
@@ -62,6 +67,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         manager = _manager;
 
         rewardTrackerDeployer = _rewardTrackerDeployer;
+        feeTrackerDeployer = _feeTrackerDeployer;
         rewardDistributorDeployer = _rewardDistributorDeployer;
         vesterDeployer = _vesterDeployer;
     }
@@ -103,6 +109,8 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         IRewardTracker(_feeTracker).setHandler(_vester, true);
         IVester(_vester).setHandler(address(this), true);
         IVester(_loanVester).setHandler(address(this), true);
+        IRestrictedToken(esGs).setHandler(_vester, true);
+        IRestrictedToken(esGsb).setHandler(_loanVester, true);
 
         coreTracker = AssetCoreTracker({
             rewardTracker: _rewardTracker,
@@ -118,7 +126,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         });
     }
 
-    function setupLpStaking(address _gsPool, uint16 _refId) external onlyOwner {
+    function setupPoolStaking(address _gsPool, uint16 _refId) external onlyOwner {
         address[] memory _depositTokens = new address[](1);
         _depositTokens[0] = _gsPool;
         (address _rewardTracker, address _rewardDistributor) = _combineTrackerDistributor("Staked GS LP", "sGSlp", esGs, _depositTokens, 0, false, false);
@@ -135,6 +143,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         ILoanTracker(_loanRewardTracker).initialize(_gsPool, _loanRewardDistributor);
         IRewardTracker(_rewardTracker).setHandler(_vester, true);
         IVester(_vester).setHandler(address(this), true);
+        IRestrictedToken(esGs).setHandler(_vester, true);
 
         poolTrackers[_gsPool] = AssetPoolTracker({
             rewardTracker: _rewardTracker,
@@ -179,11 +188,10 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
                 abi.encodeWithSelector(LOAN_TRACKER_DEPLOYER, factory, _refId, manager, _name, _symbol)
             );
         } else if (_isFeeTracker) {
-            tracker = rewardTrackerDeployer.deployContract(
+            tracker = feeTrackerDeployer.deployContract(
                 abi.encodeWithSelector(FEE_TRACKER_DEPLOYER, bnGs)
             );
-        }
-        else {
+        } else {
             tracker = rewardTrackerDeployer.deployContract(
                 abi.encodeWithSelector(REWARD_TRACKER_DEPLOYER, _name, _symbol)
             );
