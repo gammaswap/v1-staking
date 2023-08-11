@@ -3,6 +3,7 @@
 pragma solidity 0.8.18;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
@@ -24,9 +25,9 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
 
     address public distributor;
 
-    bool public inPrivateTransferMode;
-    bool public inPrivateStakingMode;
-    bool public inPrivateClaimingMode;
+    bool public inPrivateTransferMode = true;
+    bool public inPrivateStakingMode = true;
+    bool public inPrivateClaimingMode = false;
 
     mapping (address => bool) public isHandler;
     mapping (address => bool) public isDepositToken;
@@ -52,7 +53,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
     function initialize(
         address[] memory _depositTokens,
         address _distributor
-    ) external onlyOwner {
+    ) external virtual onlyOwner {
         require(!isInitialized, "RewardTracker: already initialized");
         isInitialized = true;
 
@@ -152,7 +153,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
         return _claim(_account, _receiver);
     }
 
-    function claimable(address _account) public override view returns (uint256) {
+    function claimable(address _account) public virtual override view returns (uint256) {
         uint256 stakedAmount = stakedAmounts[_account];
         uint256 _claimableReward = claimableReward[_account];
         if (stakedAmount == 0) {
@@ -226,7 +227,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
         require(isHandler[msg.sender], "RewardTracker: forbidden");
     }
 
-    function _stake(address _fundingAccount, address _account, address _depositToken, uint256 _amount) private {
+    function _stake(address _fundingAccount, address _account, address _depositToken, uint256 _amount) internal virtual {
         require(_amount > 0, "RewardTracker: invalid _amount");
         require(isDepositToken[_depositToken], "RewardTracker: invalid _depositToken");
 
@@ -241,7 +242,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
         _mint(_account, _amount);
     }
 
-    function _unstake(address _account, address _depositToken, uint256 _amount, address _receiver) private {
+    function _unstake(address _account, address _depositToken, uint256 _amount, address _receiver) internal virtual {
         require(_amount > 0, "RewardTracker: invalid _amount");
         require(isDepositToken[_depositToken], "RewardTracker: invalid _depositToken");
 
@@ -262,7 +263,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
         IERC20(_depositToken).safeTransfer(_receiver, _amount);
     }
 
-    function _updateRewards(address _account) private {
+    function _updateRewards(address _account) internal virtual {
         uint256 blockReward = IRewardDistributor(distributor).distribute();
 
         uint256 supply = totalSupply;
@@ -286,7 +287,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
             claimableReward[_account] = _claimableReward;
             previousCumulatedRewardPerToken[_account] = _cumulativeRewardPerToken;
 
-            if (_claimableReward > 0 && stakedAmounts[_account] > 0) {
+            if (_claimableReward > 0 && stakedAmount > 0) {
                 uint256 cumulativeReward = cumulativeRewards[_account];
                 uint256 nextCumulativeReward = cumulativeReward + accountReward;
 
@@ -295,5 +296,9 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
                 cumulativeRewards[_account] = nextCumulativeReward;
             }
         }
+    }
+
+    function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
+        return interfaceId == type(IRewardTracker).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
 }

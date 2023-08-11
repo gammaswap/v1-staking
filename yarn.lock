@@ -397,10 +397,10 @@
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/strings" "^5.7.0"
 
-"@gammaswap/v1-core@^0.5.7":
-  version "0.5.7"
-  resolved "https://npm.pkg.github.com/download/@gammaswap/v1-core/0.5.7/e026f2068e3bb58b9664c70ac454f54989f0c9a8#e026f2068e3bb58b9664c70ac454f54989f0c9a8"
-  integrity sha512-kuY1JDeSNaOTAOfpyNl1glqwVfehQZNg6ZO/dNGU9LsD9X4Bpt9mCyKYPN5M6kxm+YZss0iN26d7WhZnWhiynA==
+"@gammaswap/v1-core@^0.5.18":
+  version "0.5.19"
+  resolved "https://npm.pkg.github.com/download/@gammaswap/v1-core/0.5.19/ccd8a687d6f2f35f780ff96c1ce22248c30eccc8#ccd8a687d6f2f35f780ff96c1ce22248c30eccc8"
+  integrity sha512-PZmjl40id/Y0DjpCSlFSEog2LZ501bE5PpCfu3M32i2OFn/B6s+rx1MOmbU1eWyafAVDFDYNrG5L9twu6JBvEQ==
   dependencies:
     "@openzeppelin/contracts" "^4.7.0"
 
@@ -2123,9 +2123,9 @@ ethers@^5.7.1:
     "@ethersproject/wordlists" "5.7.0"
 
 ethers@^6.4.0:
-  version "6.6.2"
-  resolved "https://registry.yarnpkg.com/ethers/-/ethers-6.6.2.tgz#0b6131b5fa291fec69b7ae379cb6bb2405c505a7"
-  integrity sha512-vyWfVAj2g7xeZIivOqlbpt7PbS2MzvJkKgsncgn4A/1xZr8Q3BznBmEBRQyPXKCgHmX4PzRQLpnYG7jl/yutMg==
+  version "6.6.5"
+  resolved "https://registry.yarnpkg.com/ethers/-/ethers-6.6.5.tgz#b6c29fb45dec93b339a9c984fc62de93c3db8efe"
+  integrity sha512-Tc3HXzI0UJ9EhPp6E0fntkgMIA2//rhcB0UsmiRMCR+Bii5iu0RjtwJV55IhlLJ4K39pd0ku+eE4WRgqrLLW2Q==
   dependencies:
     "@adraffy/ens-normalize" "1.9.2"
     "@noble/hashes" "1.1.2"

@@ -3,7 +3,6 @@
 pragma solidity 0.8.18;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
@@ -12,7 +11,7 @@ import "./interfaces/IRestrictedToken.sol";
 import "./interfaces/IRewardTracker.sol";
 import "./interfaces/IVester.sol";
 
-contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
+contract VesterNoReserve is IERC20, ReentrancyGuard, Ownable2Step, IVester {
     using SafeERC20 for IERC20;
 
     string public name;
@@ -22,18 +21,15 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
     uint256 public vestingDuration;
 
     address public esToken;
-    address public pairToken;
     address public claimableToken;
 
     address public override rewardTracker;
 
     uint256 public override totalSupply;
-    uint256 public pairSupply;
 
     bool public hasMaxVestableAmount;
 
     mapping (address => uint256) public balances;
-    mapping (address => uint256) public override pairAmounts;
     mapping (address => uint256) public override cumulativeClaimAmounts;
     mapping (address => uint256) public override claimedAmounts;
     mapping (address => uint256) public lastVestingTimes;
@@ -46,14 +42,12 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
     event Claim(address receiver, uint256 amount);
     event Deposit(address account, uint256 amount);
     event Withdraw(address account, uint256 claimedAmount, uint256 balance);
-    event PairTransfer(address indexed from, address indexed to, uint256 value);
 
     constructor (
         string memory _name,
         string memory _symbol,
         uint256 _vestingDuration,
         address _esToken,
-        address _pairToken,
         address _claimableToken,
         address _rewardTracker
     ) {
@@ -63,7 +57,6 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         vestingDuration = _vestingDuration;
 
         esToken = _esToken;
-        pairToken = _pairToken;
         claimableToken = _claimableToken;
 
         rewardTracker = _rewardTracker;
@@ -141,35 +134,16 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         return maxVestableAmount - cumulativeRewardDeduction;
     }
 
-    function getAverageStakedAmount(address _account) public override view returns (uint256) {
-        uint256 cumulativeReward = IRewardTracker(rewardTracker).cumulativeRewards(_account);
-        if (cumulativeReward == 0) { return 0; }
-
-        return IRewardTracker(rewardTracker).averageStakedAmounts(_account);
+    function pairAmounts(address) external pure returns (uint256) {
+        return 0;
     }
 
-    function getPairAmount(address _account, uint256 _esAmount) public view returns (uint256) {
-        if (!hasRewardTracker()) { return 0; }
-
-        uint256 averageStakedAmount = getAverageStakedAmount(_account);
-        if (averageStakedAmount == 0) {
-            return 0;
-        }
-
-        uint256 maxVestableAmount = getMaxVestableAmount(_account);
-        if (maxVestableAmount == 0) {
-            return 0;
-        }
-
-        return _esAmount * averageStakedAmount / maxVestableAmount;
+    function getAverageStakedAmount(address) external override pure returns (uint256) {
+        return 0;
     }
 
     function hasRewardTracker() public view returns (bool) {
         return rewardTracker != address(0);
-    }
-
-    function hasPairToken() public view returns (bool) {
-        return pairToken != address(0);
     }
 
     function getTotalVested(address _account) public view returns (uint256) {
@@ -200,15 +174,15 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         revert("Vester: non-transferrable");
     }
 
+    function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
+        return interfaceId == type(IVester).interfaceId || interfaceId == type(IERC165).interfaceId;
+    }
+
     function getVestedAmount(address _account) public override view returns (uint256) {
         uint256 balance = balances[_account];
         uint256 cumulativeClaimAmount = cumulativeClaimAmounts[_account];
 
         return balance + cumulativeClaimAmount;
-    }
-
-    function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
-        return interfaceId == type(IVester).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
 
     function _validateHandler() private view {
@@ -224,15 +198,6 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         emit Transfer(address(0), _account, _amount);
     }
 
-    function _mintPair(address _account, uint256 _amount) private {
-        require(_account != address(0), "Vester: mint to the zero address");
-
-        pairSupply = pairSupply + _amount;
-        pairAmounts[_account] = pairAmounts[_account] + _amount;
-
-        emit PairTransfer(address(0), _account, _amount);
-    }
-
     function _burn(address _account, uint256 _amount) private {
         require(_account != address(0), "Vester: burn from the zero address");
 
@@ -240,15 +205,6 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         totalSupply = totalSupply - _amount;
 
         emit Transfer(_account, address(0), _amount);
-    }
-
-    function _burnPair(address _account, uint256 _amount) private {
-        require(_account != address(0), "Vester: burn from the zero address");
-
-        pairAmounts[_account] = pairAmounts[_account] - _amount;
-        pairSupply = pairSupply - _amount;
-
-        emit PairTransfer(_account, address(0), _amount);
     }
 
     function _deposit(address _account, uint256 _amount) private {
@@ -259,16 +215,6 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         IERC20(esToken).safeTransferFrom(_account, address(this), _amount);
 
         _mint(_account, _amount);
-
-        if (hasPairToken()) {
-            uint256 pairAmount = pairAmounts[_account];
-            uint256 nextPairAmount = getPairAmount(_account, balances[_account]);
-            if (nextPairAmount > pairAmount) {
-                uint256 pairAmountDiff = nextPairAmount - pairAmount;
-                IERC20(pairToken).safeTransferFrom(_account, address(this), pairAmountDiff);
-                _mintPair(_account, pairAmountDiff);
-            }
-        }
 
         if (hasMaxVestableAmount) {
             uint256 maxAmount = getMaxVestableAmount(_account);
@@ -314,12 +260,6 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         uint256 totalVested = balance + claimedAmount;
         require(totalVested > 0, "Vester: vested amount is zero");
 
-        if (hasPairToken()) {
-            uint256 pairAmount = pairAmounts[_account];
-            _burnPair(_account, pairAmount);
-            IERC20(pairToken).safeTransfer(_account, pairAmount);
-        }
-
         IERC20(esToken).safeTransfer(_account, balance);
         _burn(_account, balance);
 
@@ -342,6 +282,6 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         _burn(_account, amount);
         cumulativeClaimAmounts[_account] = cumulativeClaimAmounts[_account] + amount;
 
-        IRestrictedToken(esToken).burn(address(this), amount);
+        IRestrictedToken(esToken).burn(_account, amount);
     }
 }

@@ -1,4 +1,16 @@
 {
+  "name": "@gammaswap/v1-staking",
+  "version": "0.1.0",
+  "description": "Staking contracts for GammaSwapV1 protocol",
+  "scripts": {
+    "hardhat": "hardhat",
+    "test": "hardhat test"
+  },
+  "files": [
+    "artifacts",
+    "contracts",
+    "typechain-types"
+  ],
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.0",
@@ -21,7 +33,7 @@
     "typescript": ">=4.5.0"
   },
   "dependencies": {
-    "@gammaswap/v1-core": "^0.5.7",
+    "@gammaswap/v1-core": "^0.5.18",
     "@openzeppelin/contracts": "^4.9.2"
   }
 }
