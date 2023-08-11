@@ -53,7 +53,7 @@ describe('FeeTracker', function() {
     expect(await feeTracker.bnRateCap()).eq(10000);
   })
 
-  it.only('MP max cap, rewards', async () => {
+  it('MP max cap, rewards', async () => {
     const [, user0, user1] = await ethers.getSigners();
     await gs.mint(user0.address, expandDecimals(1000, 18));
     await bnGs.mint(user0.address, expandDecimals(1500, 18));

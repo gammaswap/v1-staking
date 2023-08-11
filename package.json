@@ -1,4 +1,11 @@
 {
+  "name": "@gammaswap/v1-staking",
+  "version": "0.0.1",
+  "description": "Staking contracts for GammaSwapV1 protocol",
+  "scripts": {
+    "hardhat": "hardhat",
+    "test": "hardhat test"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.0",
