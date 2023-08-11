@@ -10,3 +10,4 @@ cache
 artifacts
 
 .npmrc
+.DS_Store
