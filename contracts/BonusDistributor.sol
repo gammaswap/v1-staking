@@ -56,7 +56,8 @@ contract BonusDistributor is Ownable2Step, IRewardDistributor {
     }
 
     function distribute() external override returns (uint256) {
-        require(msg.sender == rewardTracker, "BonusDistributor: invalid msg.sender");
+        address caller = msg.sender;
+        require(caller == rewardTracker, "BonusDistributor: invalid msg.sender");
         uint256 amount = pendingRewards();
         if (amount == 0) { return 0; }
 
@@ -65,7 +66,7 @@ contract BonusDistributor is Ownable2Step, IRewardDistributor {
         uint256 balance = IERC20(rewardToken).balanceOf(address(this));
         if (amount > balance) { amount = balance; }
 
-        IERC20(rewardToken).safeTransfer(msg.sender, amount);
+        IERC20(rewardToken).safeTransfer(caller, amount);
 
         emit Distribute(amount);
 

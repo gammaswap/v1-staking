@@ -342,6 +342,6 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         _burn(_account, amount);
         cumulativeClaimAmounts[_account] = cumulativeClaimAmounts[_account] + amount;
 
-        IRestrictedToken(esToken).burn(_account, amount);
+        IRestrictedToken(esToken).burn(address(this), amount);
     }
 }

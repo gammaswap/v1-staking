@@ -40,12 +40,9 @@ describe("BonusDistributor", function () {
 
   it("distributes bonus", async () => {
     const [deployer, user0, user1] = await ethers.getSigners()
-    // await esGs.setHandler(deployer.address, true)
     await esGs.mint(rewardDistributor.target, expandDecimals(50000, 18))
-    // await bnGs.setMinter(deployer.address, true)
     await bnGs.mint(bonusDistributor.target, expandDecimals(1500, 18))
     await rewardDistributor.connect(routerAsSigner).setTokensPerInterval("20667989410000000") // 0.02066798941 esGs per second
-    // await gs.setHandler(deployer.address, true)
     await gs.mint(user0.address, expandDecimals(1000, 18))
 
     await gs.connect(user0).approve(rewardTracker.target, expandDecimals(1001, 18))

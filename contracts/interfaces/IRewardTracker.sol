@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 interface IRewardTracker is IERC165 {
     function initialize(address[] memory, address) external;
+    function setDepositToken(address _depositToken, bool _isDepositToken) external;
     function setInPrivateTransferMode(bool) external;
     function setInPrivateStakingMode(bool) external;
     function setInPrivateClaimingMode(bool) external;

@@ -34,7 +34,6 @@ describe('RewardTracker', function() {
     expect(await rewardTracker.isDepositToken(gs.target)).eq(true)
     expect(await rewardTracker.isDepositToken(esGs.target)).eq(true)
     expect(await rewardTracker.distributor()).eq(rewardDistributor.target)
-    expect(await rewardTracker.distributor()).eq(rewardDistributor.target)
     expect(await rewardTracker.rewardToken()).eq(esGs.target)
 
     await expect(rewardTracker.connect(routerAsSigner).initialize([gs.target, esGs.target], rewardDistributor.target))

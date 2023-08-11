@@ -33,12 +33,15 @@ contract RestrictedToken is ERC20, Ownable2Step, IRestrictedToken {
     _burn(_account, _amount);
   }
 
-  function transferFrom(address from, address to, uint256 amount) public virtual override returns (bool) {
-    address spender = msg.sender;
+  function transfer(address to, uint256 amount) public virtual override returns (bool) {
+    _validateHandler();
 
-    if (spender != owner() && !isManager[spender] && !isHandler[spender]) {
-      _spendAllowance(from, spender, amount);
-    }
+    _transfer(msg.sender, to, amount);
+    return true;
+  }
+
+  function transferFrom(address from, address to, uint256 amount) public virtual override returns (bool) {
+    _validateHandler();
 
     _transfer(from, to, amount);
     return true;

@@ -45,10 +45,13 @@ export async function setup() {
 
   await esGs.setManager(stakingRouter.target, true);
   await esGsb.setManager(stakingRouter.target, true);
+  await bnGs.setManager(stakingRouter.target, true);
 
   await stakingRouter.setupGsStaking();
+  await stakingRouter.setupGsStakingForLoan();
 
-  await stakingRouter.setupPoolStaking(gsPool.target, 1); // refId should be non-zero
+  await stakingRouter.setupPoolStaking(gsPool.target);
+  await stakingRouter.setupPoolStakingForLoan(gsPool.target, 1); // refId should be non-zero
 
   return { gs, weth, esGs, esGsb, bnGs, gsPool, rewardTrackerDeployer, feeTrackerDeployer, rewardDistributorDeployer, vesterDeployer, stakingRouter };
 }

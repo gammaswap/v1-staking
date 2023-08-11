@@ -59,11 +59,14 @@ async function main() {
 
   await esGs.setManager(stakingRouter.target, true);
   await esGsb.setManager(stakingRouter.target, true);
+  await bnGs.setManager(stakingRouter.target, true);
 
   await stakingRouter.setupGsStaking();
+  await stakingRouter.setupGsStakingForLoan();
   console.log('===== GS staking setup done =====');
 
-  await stakingRouter.setupPoolStaking(gsPool.target, 1); // refId should be non-zero
+  await stakingRouter.setupPoolStaking(gsPool.target);
+  await stakingRouter.setupPoolStakingForLoan(gsPool.target, 1); // refId should be non-zero
   console.log(`===== Pool staking setup done for ${gsPool.target} =====`);
 }
 
