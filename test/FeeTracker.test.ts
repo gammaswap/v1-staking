@@ -7,16 +7,18 @@ import { setup, coreTrackers } from './utils/deploy';
 import { increase } from './utils/time'
 import { expandDecimals } from './utils/bignumber';
 import { impersonateAndFund } from './utils/misc';
-import { GS, RestrictedToken, RewardDistributor, FeeTracker, RewardTracker, ERC20 } from '../typechain-types';
+import { GS, RestrictedToken, RewardDistributor, FeeTracker, RewardTracker, ERC20, StakingRouter } from '../typechain-types';
 
 describe('FeeTracker', function() {
   let feeTracker: FeeTracker
-  let weth: ERC20
+  let weth: RestrictedToken
   let gs: GS
   let esGs: RestrictedToken
   let bnGs: RestrictedToken
   let feeDistributor: RewardDistributor
+  let rewardTracker: RewardTracker
   let bonusTracker: RewardTracker
+  let stakingRouter: StakingRouter
   let routerAsSigner: HardhatEthersSigner
 
   beforeEach(async () => {
@@ -25,14 +27,15 @@ describe('FeeTracker', function() {
     gs = baseContracts.gs;
     esGs = baseContracts.esGs;
     bnGs = baseContracts.bnGs;
-    const router = baseContracts.stakingRouter;
+    stakingRouter = baseContracts.stakingRouter;
 
-    const coreTracker = await coreTrackers(router);
+    const coreTracker = await coreTrackers(stakingRouter);
+    rewardTracker = coreTracker.rewardTracker;
     bonusTracker = coreTracker.bonusTracker;
     feeTracker = coreTracker.feeTracker;
     feeDistributor = coreTracker.feeDistributor;
 
-    routerAsSigner = await impersonateAndFund(router.target.toString());
+    routerAsSigner = await impersonateAndFund(stakingRouter.target.toString());
   });
 
   it('inits', async () => {
@@ -48,5 +51,49 @@ describe('FeeTracker', function() {
 
   it('setBonusLimit', async () => {
     expect(await feeTracker.bnRateCap()).eq(10000);
+  })
+
+  it.only('MP max cap, rewards', async () => {
+    const [, user0, user1] = await ethers.getSigners();
+    await gs.mint(user0.address, expandDecimals(1000, 18));
+    await bnGs.mint(user0.address, expandDecimals(1500, 18));
+    await esGs.mint(user1.address, expandDecimals(1000, 18));
+
+    await weth.mint(feeDistributor.target, expandDecimals(50000, 18))
+    await feeDistributor.connect(routerAsSigner).setTokensPerInterval("10000000000000000") // 0.01 weth per second
+    await feeTracker.connect(routerAsSigner).setInPrivateStakingMode(false);
+
+    // User0 stake
+    await gs.connect(user0).approve(rewardTracker.target, expandDecimals(1000, 18));
+    await stakingRouter.connect(user0).stakeGs(expandDecimals(1000, 18));
+    await feeTracker.connect(user0).stake(bnGs.target, expandDecimals(1500, 18));
+    expect(await feeTracker.balanceOf(user0.address)).to.eq(expandDecimals(2500, 18));
+
+    // User1 stake
+    await esGs.connect(user0).approve(rewardTracker.target, expandDecimals(1000, 18));
+    await stakingRouter.connect(user1).stakeEsGs(expandDecimals(1000, 18));
+    expect(await feeTracker.balanceOf(user1.address)).to.eq(expandDecimals(1000, 18));
+
+    await increase(24 * 60 * 60)
+
+    expect(await feeTracker.inactivePoints(user0.address)).to.eq(expandDecimals(500, 18));
+    expect(await feeTracker.totalInactivePoints()).to.eq(expandDecimals(500, 18));
+
+    expect(await feeTracker.claimable(user0.address)).to.gte(expandDecimals(576, 18))
+    expect(await feeTracker.claimable(user0.address)).to.lte(expandDecimals(577, 18))
+    expect(await feeTracker.claimable(user1.address)).to.gte(expandDecimals(288, 18))
+    expect(await feeTracker.claimable(user1.address)).to.lte(expandDecimals(289, 18))
+
+    await stakingRouter.connect(user0).unstakeGs(expandDecimals(200, 18));
+    expect(await feeTracker.balanceOf(user0.address)).to.eq(expandDecimals(2000, 18));
+    expect(await feeTracker.inactivePoints(user0.address)).to.eq(expandDecimals(400, 18));
+    expect(await feeTracker.totalInactivePoints()).to.eq(expandDecimals(400, 18));
+
+    await increase(24 * 60 * 60);
+
+    expect(await feeTracker.claimable(user0.address)).to.gte(expandDecimals(576 + 531, 18))
+    expect(await feeTracker.claimable(user0.address)).to.lte(expandDecimals(577 + 532, 18))
+    expect(await feeTracker.claimable(user1.address)).to.gte(expandDecimals(288 + 332, 18))
+    expect(await feeTracker.claimable(user1.address)).to.lte(expandDecimals(289 + 333, 18))
   })
 });

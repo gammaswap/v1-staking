@@ -154,8 +154,8 @@ describe('RewardTracker', function() {
     expect(await rewardTracker.totalDepositSupply(esGs.target)).eq(expandDecimals(500, 18))
 
     expect(await rewardTracker.averageStakedAmounts(user0.address)).eq(expandDecimals(1000, 18))
-    expect(await rewardTracker.cumulativeRewards(user0.address)).gt(expandDecimals(1785+ 1190, 18))
-    expect(await rewardTracker.cumulativeRewards(user0.address)).lt(expandDecimals(1786+ 1191, 18))
+    expect(await rewardTracker.cumulativeRewards(user0.address)).gt(expandDecimals(1785 + 1190, 18))
+    expect(await rewardTracker.cumulativeRewards(user0.address)).lt(expandDecimals(1786 + 1191, 18))
     expect(await rewardTracker.averageStakedAmounts(user1.address)).eq(0)
     expect(await rewardTracker.cumulativeRewards(user1.address)).eq(0)
 

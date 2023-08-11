@@ -183,13 +183,14 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
         address bonusTracker = coreTracker.bonusTracker;
         address feeTracker = coreTracker.feeTracker;
 
+        uint256 balance = IRewardTracker(rewardTracker).stakedAmounts(_account);
+
         IRewardTracker(feeTracker).unstakeForAccount(_account, bonusTracker, _amount, _account);
         IRewardTracker(bonusTracker).unstakeForAccount(_account, rewardTracker, _amount, _account);
         IRewardTracker(rewardTracker).unstakeForAccount(_account, _token, _amount, _account);
 
         if (_shouldReduceBnGs) {
-            uint256 balance = IRewardTracker(coreTracker.rewardTracker).stakedAmounts(_account);
-            uint256 bnGsAmount = IRewardTracker(coreTracker.bonusTracker).claimForAccount(_account, _account);
+            uint256 bnGsAmount = IRewardTracker(bonusTracker).claimForAccount(_account, _account);
             if (bnGsAmount > 0) {
                 IRewardTracker(feeTracker).stakeForAccount(_account, _account, bnGs, bnGsAmount);
             }

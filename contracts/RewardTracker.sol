@@ -153,7 +153,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
         return _claim(_account, _receiver);
     }
 
-    function claimable(address _account) public override view returns (uint256) {
+    function claimable(address _account) public virtual override view returns (uint256) {
         uint256 stakedAmount = stakedAmounts[_account];
         uint256 _claimableReward = claimableReward[_account];
         if (stakedAmount == 0) {
@@ -227,7 +227,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
         require(isHandler[msg.sender], "RewardTracker: forbidden");
     }
 
-    function _stake(address _fundingAccount, address _account, address _depositToken, uint256 _amount) private {
+    function _stake(address _fundingAccount, address _account, address _depositToken, uint256 _amount) internal virtual {
         require(_amount > 0, "RewardTracker: invalid _amount");
         require(isDepositToken[_depositToken], "RewardTracker: invalid _depositToken");
 
@@ -242,7 +242,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
         _mint(_account, _amount);
     }
 
-    function _unstake(address _account, address _depositToken, uint256 _amount, address _receiver) private {
+    function _unstake(address _account, address _depositToken, uint256 _amount, address _receiver) internal virtual {
         require(_amount > 0, "RewardTracker: invalid _amount");
         require(isDepositToken[_depositToken], "RewardTracker: invalid _depositToken");
 

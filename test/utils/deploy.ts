@@ -10,7 +10,7 @@ export async function setup() {
   const Token = await ethers.getContractFactory('RestrictedToken');
   const ERC20 = await ethers.getContractFactory('ERC20');
 
-  const weth = await ERC20.deploy('Wrapped Ether', 'weth');
+  const weth = await Token.deploy('Wrapped Ether', 'weth');
   const esGs = await Token.deploy('Escrowed GS', 'esGS');
   const esGsb = await Token.deploy('Escrowed GS for Borrowers', 'esGSb');
   const bnGs = await Token.deploy('Bonus GS', 'bnGS');
@@ -46,9 +46,11 @@ export async function setup() {
   await esGs.setManager(stakingRouter.target, true);
   await esGsb.setManager(stakingRouter.target, true);
   await bnGs.setManager(stakingRouter.target, true);
-
+  
   await stakingRouter.setupGsStaking();
   await stakingRouter.setupGsStakingForLoan();
+
+  await weth.setHandler((await stakingRouter.coreTracker()).feeDistributor, true)
 
   await stakingRouter.setupPoolStaking(gsPool.target);
   await stakingRouter.setupPoolStakingForLoan(gsPool.target, 1); // refId should be non-zero
