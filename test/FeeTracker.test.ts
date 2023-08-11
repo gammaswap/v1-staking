@@ -55,7 +55,7 @@ describe('FeeTracker', function() {
 
   it('MP max cap, rewards', async () => {
     const [, user0, user1] = await ethers.getSigners();
-    await gs.mint(user0.address, expandDecimals(1000, 18));
+    await gs.mint(user0.address, expandDecimals(1500, 18));
     await bnGs.mint(user0.address, expandDecimals(1500, 18));
     await esGs.mint(user1.address, expandDecimals(1000, 18));
 
@@ -84,6 +84,7 @@ describe('FeeTracker', function() {
     expect(await feeTracker.claimable(user1.address)).to.gte(expandDecimals(288, 18))
     expect(await feeTracker.claimable(user1.address)).to.lte(expandDecimals(289, 18))
 
+    // User0 unstake
     await stakingRouter.connect(user0).unstakeGs(expandDecimals(200, 18));
     expect(await feeTracker.balanceOf(user0.address)).to.eq(expandDecimals(2000, 18));
     expect(await feeTracker.inactivePoints(user0.address)).to.eq(expandDecimals(400, 18));
@@ -95,5 +96,20 @@ describe('FeeTracker', function() {
     expect(await feeTracker.claimable(user0.address)).to.lte(expandDecimals(577 + 532, 18))
     expect(await feeTracker.claimable(user1.address)).to.gte(expandDecimals(288 + 332, 18))
     expect(await feeTracker.claimable(user1.address)).to.lte(expandDecimals(289 + 333, 18))
+
+    // User0 restake
+    await gs.connect(user0).approve(rewardTracker.target, expandDecimals(700, 18));
+    await stakingRouter.connect(user0).stakeGs(expandDecimals(700, 18));
+
+    expect(await feeTracker.balanceOf(user0.address)).to.eq(expandDecimals(2700, 18));
+    expect(await feeTracker.inactivePoints(user0.address)).to.eq(0);
+    expect(await feeTracker.totalInactivePoints()).to.eq(0);
+
+    await increase(24 * 60 * 60);
+
+    expect(await feeTracker.claimable(user0.address)).to.gte(expandDecimals(576 + 531 + 630, 18))
+    expect(await feeTracker.claimable(user0.address)).to.lte(expandDecimals(577 + 532 + 631, 18))
+    expect(await feeTracker.claimable(user1.address)).to.gte(expandDecimals(288 + 332 + 233, 18))
+    expect(await feeTracker.claimable(user1.address)).to.lte(expandDecimals(289 + 333 + 234, 18))
   })
 });
