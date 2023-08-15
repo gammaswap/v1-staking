@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.18;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
@@ -12,8 +12,6 @@ import "./interfaces/IVester.sol";
 import "./interfaces/IStakingAdmin.sol";
 import "./interfaces/IRestrictedToken.sol";
 import "./deployers/DeployerUtils.sol";
-
-import "hardhat/console.sol";
 
 abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     using ERC165Checker for address;
@@ -102,6 +100,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         IRestrictedToken(esGs).setHandler(_rewardDistributor, true);
         IRestrictedToken(esGs).setHandler(_vester, true);
         IRestrictedToken(bnGs).setHandler(_feeTracker, true);
+        IRestrictedToken(bnGs).setHandler(_bonusTracker, true);
         IRestrictedToken(bnGs).setHandler(_bonusDistributor, true);
 
         coreTracker.rewardTracker = _rewardTracker;
@@ -147,6 +146,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
 
         IRewardTracker(_rewardTracker).setHandler(_vester, true);
         IVester(_vester).setHandler(address(this), true);
+        IRestrictedToken(esGs).setHandler(_rewardTracker, true);
         IRestrictedToken(esGs).setHandler(_rewardDistributor, true);
         IRestrictedToken(esGs).setHandler(_vester, true);
 

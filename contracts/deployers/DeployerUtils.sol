@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.18;
+pragma solidity 0.8.17;
 
 bytes4 constant REWARD_TRACKER_DEPLOYER = bytes4(keccak256("deploy(string,string)"));
 bytes4 constant LOAN_TRACKER_DEPLOYER = bytes4(keccak256("deployLoanTracker(address,uint16,address,string,string)"));

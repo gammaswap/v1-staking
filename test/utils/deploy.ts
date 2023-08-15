@@ -7,13 +7,13 @@ export async function setup() {
   const GS = await ethers.getContractFactory('GS');
   const gs = await GS.deploy();
 
-  const Token = await ethers.getContractFactory('RestrictedToken');
-  const ERC20 = await ethers.getContractFactory('ERC20');
+  const ERC20 = await ethers.getContractFactory('ERC20Mock');
+  const RestrictedToken = await ethers.getContractFactory('RestrictedToken');
 
-  const weth = await Token.deploy('Wrapped Ether', 'weth');
-  const esGs = await Token.deploy('Escrowed GS', 'esGS');
-  const esGsb = await Token.deploy('Escrowed GS for Borrowers', 'esGSb');
-  const bnGs = await Token.deploy('Bonus GS', 'bnGS');
+  const weth = await ERC20.deploy('Wrapped Ether', 'weth');
+  const esGs = await RestrictedToken.deploy('Escrowed GS', 'esGS');
+  const esGsb = await RestrictedToken.deploy('Escrowed GS for Borrowers', 'esGSb');
+  const bnGs = await RestrictedToken.deploy('Bonus GS', 'bnGS');
   const gsPool = await ERC20.deploy('GammaPool', 'GSPool');
 
   const RewardTrackerDeployer = await ethers.getContractFactory('RewardTrackerDeployer');
@@ -49,8 +49,6 @@ export async function setup() {
   
   await stakingRouter.setupGsStaking();
   await stakingRouter.setupGsStakingForLoan();
-
-  await weth.setHandler((await stakingRouter.coreTracker()).feeDistributor, true)
 
   await stakingRouter.setupPoolStaking(gsPool.target);
   await stakingRouter.setupPoolStakingForLoan(gsPool.target, 1); // refId should be non-zero
