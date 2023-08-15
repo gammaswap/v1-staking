@@ -30,10 +30,13 @@ contract StakingRouterTest is CPMMGammaSwapSetup {
     }
 
     function testSuccessStakeLpInPool() public {
+        (address poolRewardTracker,,,,) = stakingRouter.poolTrackers(address(pool));
+    
         vm.startPrank(user1);
         stakingRouter.stakeLp(address(pool), 1000e18);
-        (address poolRewardTracker,,,,) = stakingRouter.poolTrackers(address(pool));
-        assertEq(IERC20(poolRewardTracker).balanceOf(user1), 100e18);
+        assertEq(IERC20(poolRewardTracker).balanceOf(user1), 1000e18);
+        assertEq(IRewardTracker(poolRewardTracker).stakedAmounts(user1), 1000e18);
+        assertEq(IRewardTracker(poolRewardTracker).depositBalances(user1, address(pool)), 1000e18);
         vm.stopPrank();
     }
 
@@ -42,9 +45,6 @@ contract StakingRouterTest is CPMMGammaSwapSetup {
 
         vm.startPrank(user1);
         stakingRouter.stakeLp(address(pool), 1000e18);
-        assertEq(IERC20(poolRewardTracker).balanceOf(user1), 1000e18);
-        assertEq(IRewardTracker(poolRewardTracker).stakedAmounts(user1), 1000e18);
-        assertEq(IRewardTracker(poolRewardTracker).depositBalances(user1, address(pool)), 1000e18);
 
         vm.warp(block.timestamp + 1 days);
 

@@ -4,7 +4,8 @@
   "description": "Staking contracts for GammaSwapV1 protocol",
   "scripts": {
     "hardhat": "hardhat",
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "fuzz": "forge test"
   },
   "files": [
     "artifacts",
