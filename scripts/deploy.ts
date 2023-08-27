@@ -1,4 +1,5 @@
 import { ethers } from "hardhat";
+import { BonusDistributor } from "../typechain-types";
 
 async function main() {
   const [deployer, factory, manager] = await ethers.getSigners();
@@ -54,12 +55,12 @@ async function main() {
     rewardDistributorDeployer.target,
     vesterDeployer.target,
   );
-
   console.log('===== Staking Router Deployed =====', stakingRouter.target);
 
   await esGs.setManager(stakingRouter.target, true);
   await esGsb.setManager(stakingRouter.target, true);
   await bnGs.setManager(stakingRouter.target, true);
+  console.log('===== Reward token permissions given to staking router =====');
 
   await stakingRouter.setupGsStaking();
   await stakingRouter.setupGsStakingForLoan();
@@ -68,6 +69,12 @@ async function main() {
   await stakingRouter.setupPoolStaking(gsPool.target);
   await stakingRouter.setupPoolStakingForLoan(gsPool.target, 1); // refId should be non-zero
   console.log(`===== Pool staking setup done for ${gsPool.target} =====`);
+
+  const coreTracker = await stakingRouter.coreTracker();
+  const bonusDistributor = (await ethers.getContractFactory('BonusDistributor')).attach(coreTracker.bonusDistributor) as BonusDistributor;
+  const functionData = bonusDistributor.interface.encodeFunctionData('setBonusMultiplier', [10000]);
+  await stakingRouter.execute(coreTracker.bonusDistributor, functionData);
+  console.log('===== Bonus Multiplier set =====', await bonusDistributor.bonusMultiplierBasisPoints());
 }
 
 // We recommend this pattern to be able to use async/await everywhere

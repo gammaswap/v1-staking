@@ -65,6 +65,7 @@ contract RewardDistributor is Ownable2Step, IRewardDistributor {
         return amount;
     }
 
+    /// @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
         return interfaceId == type(IRewardDistributor).interfaceId || interfaceId == type(IERC165).interfaceId;
     }

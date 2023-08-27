@@ -172,6 +172,7 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
         return IRewardDistributor(distributor).rewardToken();
     }
 
+    /// @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
         return interfaceId == type(ILoanTracker).interfaceId || interfaceId == type(IERC165).interfaceId;
     }

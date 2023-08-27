@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import "forge-std/Test.sol";
 
@@ -28,9 +28,9 @@ contract TokensSetup is Test {
     function mintTokens(address user, uint256 amount) public {
         usdc.mint(user, amount);
         weth.mint(user, amount);
-        gs.mint(user, amount);
-        esGs.mint(user, amount);
-        esGsb.mint(user, amount);
-        bnGs.mint(user, amount);
+        // gs.mint(user, amount);
+        // esGs.mint(user, amount);
+        // esGsb.mint(user, amount);
+        // bnGs.mint(user, amount);
     }
 }

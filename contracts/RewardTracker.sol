@@ -298,6 +298,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
         }
     }
 
+    /// @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
         return interfaceId == type(IRewardTracker).interfaceId || interfaceId == type(IERC165).interfaceId;
     }

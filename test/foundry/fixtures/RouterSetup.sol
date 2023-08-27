@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import "@gammaswap/v1-core/contracts/base/GammaPoolERC20.sol";
 import "../../../contracts/StakingRouter.sol";
@@ -70,12 +70,14 @@ contract RouterSetup is TokensSetup {
     }
 
     function setEmissions(address gsPool) public {
-        (, address rewardDistributor,,,, address bonusDistributor,, address feeDistributor,,) = stakingRouter.coreTracker();
-        (, address poolRewardDistributor,,,) = stakingRouter.poolTrackers(gsPool);
+        (, address rewardDistributor,,,, address bonusDistributor,, address feeDistributor, address vester,) = stakingRouter.coreTracker();
+        (, address poolRewardDistributor,,, address poolVester) = stakingRouter.poolTrackers(gsPool);
         esGs.mint(rewardDistributor, 50000e18);
         bnGs.mint(bonusDistributor, 50000e18);
         weth.mint(feeDistributor, 10000e18);
         esGs.mint(poolRewardDistributor, 50000e18);
+        gs.mint(vester, 10000e18);
+        gs.mint(poolVester, 10000e18);
 
         vm.startPrank(address(stakingRouter));
         RewardDistributor(rewardDistributor).setTokensPerInterval(1e16);   // 0.01 esGS per second

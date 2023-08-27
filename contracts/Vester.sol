@@ -207,6 +207,7 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         return balance + cumulativeClaimAmount;
     }
 
+    /// @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
         return interfaceId == type(IVester).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
