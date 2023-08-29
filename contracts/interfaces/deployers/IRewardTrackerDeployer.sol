@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.17;
+pragma solidity >=0.8.0;
 
 interface IRewardTrackerDeployer {
   function deploy(string memory _name, string memory _symbol) external returns (address _rewardTracker);

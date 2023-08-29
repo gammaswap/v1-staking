@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.17;
+pragma solidity >=0.8.13;
 
 import "@gammaswap/v1-core/contracts/libraries/GammaSwapLibrary.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
