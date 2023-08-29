@@ -12,6 +12,10 @@ import "./interfaces/IRewardDistributor.sol";
 import "./interfaces/IVester.sol";
 import "./interfaces/IStakingAdmin.sol";
 import "./interfaces/IRestrictedToken.sol";
+import "./interfaces/deployers/IFeeTrackerDeployer.sol";
+import "./interfaces/deployers/IRewardDistributorDeployer.sol";
+import "./interfaces/deployers/IRewardTrackerDeployer.sol";
+import "./interfaces/deployers/IVesterDeployer.sol";
 import "./deployers/DeployerUtils.sol";
 
 abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
@@ -90,7 +94,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         (address _feeTracker, address _feeDistributor) = _combineTrackerDistributor("Staked + Bonus + Fee GS", "sbfGS", weth, _depositTokens, 0, true, false);
 
         address _vester = vesterDeployer.deployContract(
-            abi.encodeWithSelector(VESTER_DEPLOYER, "Vested GS", "vGS", VESTING_DURATION, esGs, _feeTracker, gs, _rewardTracker)
+            abi.encodeCall(IVesterDeployer.deploy, ("Vested GS", "vGS", VESTING_DURATION, esGs, _feeTracker, gs, _rewardTracker))
         );
 
         IRewardTracker(_rewardTracker).setHandler(_bonusTracker, true);
@@ -125,7 +129,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         IRewardTracker(_loanRewardTracker).setHandler(coreTracker.bonusTracker, true);
 
         address _loanVester = vesterDeployer.deployContract(
-            abi.encodeWithSelector(VESTER_NORESERVE_DEPLOYER, "Vested GS Borrowed", "vGSB", VESTING_DURATION, esGsb, gs, _loanRewardTracker)
+            abi.encodeCall(IVesterDeployer.deployVesterNoReserve, ("Vested GS Borrowed", "vGSB", VESTING_DURATION, esGsb, gs, _loanRewardTracker))
         );
 
         IVester(_loanVester).setHandler(address(this), true);
@@ -147,7 +151,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         
 
         address _vester = vesterDeployer.deployContract(
-            abi.encodeWithSelector(VESTER_DEPLOYER, "Vested Pool GS", "vpGS", VESTING_DURATION, esGs, _rewardTracker, gs, _rewardTracker)
+            abi.encodeCall(IVesterDeployer.deploy, ("Vested Pool GS", "vpGS", VESTING_DURATION, esGs, _rewardTracker, gs, _rewardTracker))
         );
 
         IRewardTracker(_rewardTracker).setHandler(_vester, true);
@@ -211,22 +215,28 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         address tracker;
         if (_refId > 0) {
             tracker = rewardTrackerDeployer.deployContract(
-                abi.encodeWithSelector(LOAN_TRACKER_DEPLOYER, factory, _refId, manager, _name, _symbol)
+                abi.encodeCall(IRewardTrackerDeployer.deployLoanTracker, (factory, _refId, manager, _name, _symbol))
             );
         } else if (_isFeeTracker) {
             tracker = feeTrackerDeployer.deployContract(
-                abi.encodeWithSelector(FEE_TRACKER_DEPLOYER, 10000) // bnRateCap: 100%
+                abi.encodeCall(IFeeTrackerDeployer.deploy, (10000)) // bnRateCap: 100%
             );
         } else {
             tracker = rewardTrackerDeployer.deployContract(
-                abi.encodeWithSelector(REWARD_TRACKER_DEPLOYER, _name, _symbol)
+                abi.encodeCall(IRewardTrackerDeployer.deploy, (_name, _symbol))
             );
         }
 
-        bytes4 selector = _isBonusDistributor ? BONUS_DISTRIBUTOR_DEPLOYER : REWARD_DISTRIBUTOR_DEPLOYER;
-        address distributor = rewardDistributorDeployer.deployContract(
-            abi.encodeWithSelector(selector, _rewardToken, tracker)
-        );
+        address distributor;
+        if (_isBonusDistributor) {
+            distributor = rewardDistributorDeployer.deployContract(
+                abi.encodeCall(IRewardDistributorDeployer.deployBonusDistributor, (_rewardToken, tracker))
+            );
+        } else {
+            distributor = rewardDistributorDeployer.deployContract(
+                abi.encodeCall(IRewardDistributorDeployer.deploy, (_rewardToken, tracker))
+            );
+        }
 
         if (_refId > 0) {
             ILoanTracker(tracker).setHandler(address(this), true);
