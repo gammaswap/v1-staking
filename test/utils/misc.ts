@@ -8,3 +8,11 @@ export async function impersonateAndFund(account: string) {
 
   return signer;
 }
+
+export async function reportGasUsed(tx, label) {
+  const receipt = await ethers.provider.getTransactionReceipt(tx.hash)
+  if (receipt) {
+    console.info(label, receipt.gasUsed.toString())
+    return receipt.gasUsed
+  }
+}

@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.18;
+pragma solidity 0.8.21;
 
 import "../RewardTracker.sol";
 import "../LoanTracker.sol";
+import "../interfaces/deployers/IRewardTrackerDeployer.sol";
 
 /**
  * @notice Proxy contract for RewardTracker deployments
  */
-contract RewardTrackerDeployer {
+contract RewardTrackerDeployer is IRewardTrackerDeployer {
   function deploy(string memory _name, string memory _symbol) external returns (address _rewardTracker) {
     _rewardTracker = address(new RewardTracker(_name, _symbol));
   }

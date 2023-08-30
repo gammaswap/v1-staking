@@ -4,7 +4,8 @@
   "description": "Staking contracts for GammaSwapV1 protocol",
   "scripts": {
     "hardhat": "hardhat",
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "fuzz": "forge test"
   },
   "files": [
     "artifacts",
@@ -14,6 +15,7 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "@nomicfoundation/hardhat-foundry": "^1.1.1",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
     "@nomicfoundation/hardhat-toolbox": "^3.0.0",
     "@nomicfoundation/hardhat-verify": "^1.0.0",
@@ -24,7 +26,7 @@
     "@types/node": ">=12.0.0",
     "chai": "^4.2.0",
     "ethers": "^6.4.0",
-    "hardhat": "^2.16.1",
+    "hardhat": "^2.17.1",
     "hardhat-contract-sizer": "^2.10.0",
     "hardhat-gas-reporter": "^1.0.8",
     "solidity-coverage": "^0.8.0",
@@ -33,7 +35,14 @@
     "typescript": ">=4.5.0"
   },
   "dependencies": {
-    "@gammaswap/v1-core": "^0.5.18",
-    "@openzeppelin/contracts": "^4.9.2"
+    "@gammaswap/v1-core": "^0.5.30",
+    "@gammaswap/v1-implementations": "^0.5.13",
+    "@gammaswap/v1-periphery": "^0.5.10",
+    "@layerzerolabs/lz-sdk": "^0.0.38",
+    "@layerzerolabs/solidity-examples": "^0.0.13",
+    "@layerzerolabs/ua-utils": "^0.0.4",
+    "@openzeppelin/contracts": "^4.9.2",
+    "@uniswap/v2-core": "^1.0.1",
+    "@uniswap/v2-periphery": "^1.1.0-beta.0"
   }
 }

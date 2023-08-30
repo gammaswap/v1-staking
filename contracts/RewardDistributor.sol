@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.18;
+pragma solidity 0.8.21;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
@@ -65,6 +65,7 @@ contract RewardDistributor is Ownable2Step, IRewardDistributor {
         return amount;
     }
 
+    /// @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
         return interfaceId == type(IRewardDistributor).interfaceId || interfaceId == type(IERC165).interfaceId;
     }

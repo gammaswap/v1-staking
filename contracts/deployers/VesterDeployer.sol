@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.18;
+pragma solidity 0.8.21;
 
 import "../Vester.sol";
 import "../VesterNoReserve.sol";
+import "../interfaces/deployers/IVesterDeployer.sol";
 
 /**
  * @notice Proxy contract for `Vester` deployments
  */
-contract VesterDeployer {
+contract VesterDeployer is IVesterDeployer {
   function deploy(
     string memory _name,
     string memory _symbol,

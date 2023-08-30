@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.18;
+pragma solidity 0.8.21;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -172,6 +172,7 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
         return IRewardDistributor(distributor).rewardToken();
     }
 
+    /// @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
         return interfaceId == type(ILoanTracker).interfaceId || interfaceId == type(IERC165).interfaceId;
     }

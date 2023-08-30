@@ -4,10 +4,25 @@ coverage
 coverage.json
 typechain
 typechain-types
+.DS_Store
 
 # Hardhat files
 cache
 artifacts
 
+#foundry files
+out
+cache_forge
+
+#IDE
+.idea
+.vscode
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+#access tokens
 .npmrc
-.DS_Store
