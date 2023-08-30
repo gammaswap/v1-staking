@@ -5,7 +5,7 @@ async function main() {
   const [deployer, factory, manager] = await ethers.getSigners();
 
   const GS = await ethers.getContractFactory('GS');
-  const gs = await GS.deploy();
+  const gs = await GS.deploy(ethers.ZeroAddress);
 
   const Token = await ethers.getContractFactory('RestrictedToken');
   const ERC20 = await ethers.getContractFactory('ERC20');
