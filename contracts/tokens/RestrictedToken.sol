@@ -28,20 +28,14 @@ contract RestrictedToken is ERC20, Ownable2Step, IRestrictedToken {
     isHandler[_handler] = _isActive;
   }
 
-  /// @dev Mint tokens
-  /// @notice Only Managers or handlers are allowed
-  /// @param _account Address to mint tokens to
-  /// @param _amount Amount of tokens to mint
+  /// @dev See {IRestrictedToken-mint}
   function mint(address _account, uint256 _amount) public {
     _validateHandler();
 
     _mint(_account, _amount);
   }
 
-  /// @dev Burn tokens
-  /// @notice Only Managers or handlers are allowed
-  /// @param _account Address to burn tokens from
-  /// @param _amount Amount of tokens to burn
+  /// @dev See {IRestrictedToken-burn}
   function burn(address _account, uint256 _amount) public {
     _validateHandler();
 
@@ -50,7 +44,7 @@ contract RestrictedToken is ERC20, Ownable2Step, IRestrictedToken {
 
   /// @notice Only Managers or handlers are allowed
   /// @dev See {IERC20-transfer}
-  function transfer(address to, uint256 amount) public virtual override returns (bool) {
+  function transfer(address to, uint256 amount) public virtual override(ERC20, IERC20) returns (bool) {
     _validateHandler();
 
     _transfer(msg.sender, to, amount);
@@ -59,7 +53,7 @@ contract RestrictedToken is ERC20, Ownable2Step, IRestrictedToken {
 
   /// @notice Only Managers or handlers are allowed
   /// @dev See {IERC20-transferFrom}
-  function transferFrom(address from, address to, uint256 amount) public virtual override returns (bool) {
+  function transferFrom(address from, address to, uint256 amount) public virtual override(ERC20, IERC20) returns (bool) {
     _validateHandler();
 
     _transfer(from, to, amount);

@@ -2,10 +2,12 @@
 
 pragma solidity >=0.8.0;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 /// @title Interface for RestrictedToken contract
 /// @author Simon Mall
 /// @notice Used for esGS, esGSb and bnGS
-interface IRestrictedToken {
+interface IRestrictedToken is IERC20 {
   /// @param _user Address for query
   /// @return Check if an address is manager
   function isManager(address _user) external returns (bool);

@@ -11,7 +11,7 @@ contract TokensSetup is Test {
 
     ERC20Mock public weth;
     ERC20Mock public usdc;
-    RestrictedToken public gs;
+    IRestrictedToken public gs;
     RestrictedToken public esGs;
     RestrictedToken public esGsb;
     RestrictedToken public bnGs;
@@ -19,7 +19,7 @@ contract TokensSetup is Test {
     function createTokens() public {
         weth = new ERC20Mock("Wrapped Ethereum", "WETH");
         usdc = new ERC20Mock("USDC", "USDC");
-        gs = new GS();
+        gs = new GS(address(0));
         esGs = new RestrictedToken("Escrowed GS", "esGs");
         esGsb = new RestrictedToken("Escrowed GS for Borrowers", "esGs");
         bnGs = new RestrictedToken("Bonus GS", "bnGs");

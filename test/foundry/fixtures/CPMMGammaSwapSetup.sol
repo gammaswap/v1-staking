@@ -10,14 +10,14 @@ import "@gammaswap/v1-implementations/contracts/strategies/cpmm/liquidation/CPMM
 import "@gammaswap/v1-implementations/contracts/strategies/cpmm/liquidation/CPMMBatchLiquidationStrategy.sol";
 import "@gammaswap/v1-implementations/contracts/strategies/cpmm/CPMMShortStrategy.sol";
 import "@gammaswap/v1-implementations/contracts/libraries/cpmm/CPMMMath.sol";
-import "@gammaswap/v1-periphery/contracts/interfaces/IPositionManager.sol";
+import "@gammaswap/v1-periphery/contracts/PositionManager.sol";
 
 import "./UniswapSetup.sol";
 import "./RouterSetup.sol";
 
 contract CPMMGammaSwapSetup is UniswapSetup, RouterSetup {
     GammaPoolFactory public factory;
-    IPositionManager public manager;
+    PositionManager public manager;
 
     CPMMBorrowStrategy public longStrategy;
     CPMMRepayStrategy public repayStrategy;
@@ -85,11 +85,11 @@ contract CPMMGammaSwapSetup is UniswapSetup, RouterSetup {
         //////// END: GammaSwap Core setup ////////
 
         //////// START: PositionManager ////////
-        bytes memory managerArgs = abi.encode(address(factory), address(weth), address(0), address(0));
-        bytes memory managerBytecode = abi.encodePacked(vm.getCode("./node_modules/@gammaswap/v1-periphery/artifacts/contracts/PositionManager.sol/PositionManager.json"), managerArgs);
-        assembly {
-            sstore(manager.slot, create(0, add(managerBytecode, 0x20), mload(managerBytecode)))
-        }
+        manager = new PositionManager(address(factory), address(weth), address(0), address(0));
+        // bytes memory managerBytecode = abi.encodePacked(vm.getCode("./node_modules/@gammaswap/v1-periphery/artifacts/contracts/PositionManager.sol/PositionManager.json"), managerArgs);
+        // assembly {
+        //     sstore(manager.slot, create(0, add(managerBytecode, 0x20), mload(managerBytecode)))
+        // }
         //////// END: PositionManager ////////
 
         //////// START: Staking ////////
