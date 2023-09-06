@@ -2,6 +2,11 @@
 
 pragma solidity >=0.8.0;
 
+/// @title Interface for FeeTrackerDeployer contract
+/// @author Simon Mall (small@gammaswap.com)
+/// @notice Deploy FeeTracker contract from StakingAdmin
 interface IFeeTrackerDeployer {
+  /// @dev Deploy FeeTracker
+  /// @param _bnRateCap Bonus utilization rate
   function deploy(uint256 _bnRateCap) external returns (address _feeTracker);
 }

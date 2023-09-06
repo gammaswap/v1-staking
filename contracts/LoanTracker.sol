@@ -14,16 +14,19 @@ import "@gammaswap/v1-core/contracts/interfaces/observer/ILoanObserver.sol";
 import "./interfaces/ILoanTracker.sol";
 import "./interfaces/IRewardDistributor.sol";
 
+/// @title LoanTracker contract
+/// @author Simon Mall (small@gammaswap.com)
+/// @notice Track loan staking and their rewards
 contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILoanObserver {
     using SafeERC20 for IERC20;
 
-    /// @dev See {ILoanObserver-factory}
+    /// @inheritdoc ILoanObserver
     address public override factory;
 
-    /// @dev See {ILoanObserver-refId}
+    /// @inheritdoc ILoanObserver
     uint16 public override refId;
 
-    /// @dev See {ILoanObserver-refType}
+    /// @inheritdoc ILoanObserver
     uint16 public immutable override refType = 2;
 
     uint256 public constant PRECISION = 1e30;
@@ -63,6 +66,7 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
         symbol = _symbol;
     }
 
+    /// @inheritdoc ILoanTracker
     function initialize(
         address _gsPool,
         address _distributor
@@ -74,6 +78,7 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
         distributor = _distributor;
     }
 
+    /// @inheritdoc ILoanTracker
     function setHandler(address _handler, bool _isActive) external onlyOwner {
         isHandler[_handler] = _isActive;
     }
@@ -82,19 +87,23 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
         return balances[_account];
     }
 
+    /// @inheritdoc ILoanTracker
     function stake(uint256 _loanId) external override nonReentrant {
         _stake(msg.sender, _loanId);
     }
 
+    /// @inheritdoc ILoanTracker
     function stakeForAccount(address _account, uint256 _loanId) external override nonReentrant {
         _validateHandler();
         _stake(_account, _loanId);
     }
 
+    /// @inheritdoc ILoanTracker
     function unstake(uint256 _loanId) external override nonReentrant {
         _unstake(msg.sender, _loanId);
     }
 
+    /// @inheritdoc ILoanTracker
     function unstakeForAccount(address _account, uint256 _loanId) external override nonReentrant {
         _validateHandler();
         _unstake(_account, _loanId);
@@ -116,23 +125,28 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
         revert("LoanTracker: Forbidden");
     }
 
+    /// @inheritdoc ILoanTracker
     function tokensPerInterval() external override view returns (uint256) {
         return IRewardDistributor(distributor).tokensPerInterval();
     }
 
+    /// @inheritdoc ILoanTracker
     function updateRewards() external override nonReentrant {
         _updateRewards(address(0));
     }
 
+    /// @inheritdoc ILoanTracker
     function claim(address _receiver) external override nonReentrant returns (uint256) {
         return _claim(msg.sender, _receiver);
     }
 
+    /// @inheritdoc ILoanTracker
     function claimForAccount(address _account, address _receiver) external override nonReentrant returns (uint256) {
         _validateHandler();
         return _claim(_account, _receiver);
     }
 
+    /// @inheritdoc ILoanTracker
     function claimable(address _account) public override view returns (uint256) {
         uint256 balance = balances[_account];
         uint256 _claimableReward = claimableReward[_account];
@@ -146,7 +160,7 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
         return _claimableReward + (balance * (nextCumulativeRewardPerToken - previousCumulatedRewardPerToken[_account]) / PRECISION);
     }
 
-    /// @dev See {ILoanObserver.onLoanUpdate}
+    /// @inheritdoc ILoanObserver
     function onLoanUpdate(address, uint16, uint256 _loanId, bytes memory _data) external override virtual returns(uint256) {
         IGammaPool.LoanData memory loanData = IGammaPool(gsPool).getLoanData(_loanId);
         require(loanData.initLiquidity > 0, "LoanTracker: invalid loan");
@@ -163,7 +177,7 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
         return 0;
     }
 
-    /// @dev See {ILoanObserver.validate}
+    /// @inheritdoc ILoanObserver
     function validate(address _gsPool) external override virtual view returns(bool) {
         return gsPool == _gsPool;
     }
@@ -191,7 +205,8 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
         return tokenAmount;
     }
 
-    /// @dev `totalSupply` is updated in `onLoanUpdate`
+    /// @dev Mint tokens for user
+    /// @dev Triggered in `onLoanUpdate`
     function _mint(address _account, uint256 _amount) internal {
         require(_account != address(0), "LoanTracker: mint to the zero address");
 
@@ -201,7 +216,8 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
         emit Transfer(address(0), _account, _amount);
     }
 
-    /// @dev `totalSupply` is updated in `onLoanUpdate`
+    /// @dev Burn tokens from user
+    /// @dev Triggered in `onLoanUpdate`
     function _burn(address _account, uint256 _amount) internal {
         require(_account != address(0), "LoanTracker: burn from the zero address");
 
@@ -215,6 +231,9 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
         require(isHandler[msg.sender], "LoanTracker: forbidden");
     }
 
+    /// @dev Stake loan from user
+    /// @param _account Owner of the loan
+    /// @param _loanId Loan Id
     function _stake(address _account, uint256 _loanId) private {
         require(IERC721(manager).ownerOf(_loanId) == _account, "LoanTracker: stake forbidden");
         require(stakedLoans[_loanId] == address(0), "LoanTracker: loan already staked");
@@ -229,6 +248,9 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
         _mint(_account, loanData.initLiquidity);
     }
 
+    /// @dev Unstake loan from contract
+    /// @param _account Owner of the loan
+    /// @param _loanId Loan Id
     function _unstake(address _account, uint256 _loanId) private {
         require(stakedLoans[_loanId] == _account, "LoanTracker: loan stake mismatch");
 
@@ -239,6 +261,8 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
         _burn(_account, loanData.initLiquidity);
     }
 
+    /// @dev Calculate rewards amount for the user
+    /// @param _account User earning rewards
     function _updateRewards(address _account) private {
         uint256 blockReward = IRewardDistributor(distributor).distribute();
 

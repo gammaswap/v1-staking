@@ -4,6 +4,9 @@ pragma solidity 0.8.19;
 
 import "./RewardTracker.sol";
 
+/// @title FeeTracker Contract
+/// @author Simon Mall (small@gammaswap.com)
+/// @notice Earns protocol revenue share using actively staked GS/esGS/esGSb/bnGS
 contract FeeTracker is RewardTracker {
     address public bonusTracker;
     address public bnGs;
@@ -42,6 +45,8 @@ contract FeeTracker is RewardTracker {
         bnRateCap = _bnRateCap;
     }
 
+    /// @inheritdoc RewardTracker
+    /// @dev Only active MP tokens contribute to rewards (See `bnRateCap`)
     function claimable(address _account) public virtual override view returns (uint256) {
         uint256 stakedAmount = stakedAmounts[_account] - inactivePoints[_account];
         uint256 _claimableReward = claimableReward[_account];
@@ -56,18 +61,24 @@ contract FeeTracker is RewardTracker {
         return _claimableReward + (stakedAmount * (nextCumulativeRewardPerToken - previousCumulatedRewardPerToken[_account]) / PRECISION);
     }
 
+    /// @dev Stake tokens to earn rewards
+    /// @dev Update inactive MP amounts for the user
     function _stake(address _fundingAccount, address _account, address _depositToken, uint256 _amount) internal override {
         super._stake(_fundingAccount, _account, _depositToken, _amount);
 
         _updateInactivePoints(_account);
     }
 
+    /// @dev Unstake tokens to earn rewards
+    /// @dev Update inactive MP amounts for the user
     function _unstake(address _account, address _depositToken, uint256 _amount, address _receiver) internal override {
         super._unstake(_account, _depositToken, _amount, _receiver);
 
         _updateInactivePoints(_account);
     }
 
+    /// @dev Calculate rewards amount for the user
+    /// @param _account User earning rewards
     function _updateRewards(address _account) internal override {
         uint256 blockReward = IRewardDistributor(distributor).distribute();
 
@@ -78,8 +89,6 @@ contract FeeTracker is RewardTracker {
             cumulativeRewardPerToken = _cumulativeRewardPerToken;
         }
 
-        // cumulativeRewardPerToken can only increase
-        // so if cumulativeRewardPerToken is zero, it means there are no rewards yet
         if (_cumulativeRewardPerToken == 0) {
             return;
         }
@@ -103,6 +112,7 @@ contract FeeTracker is RewardTracker {
         }
     }
 
+    /// @dev Update inactive MP amounts for the user
     function _updateInactivePoints(address _account) private {
         uint256 depositBalance = depositBalances[_account][bonusTracker];
         uint256 bonusBalance = depositBalances[_account][bnGs];

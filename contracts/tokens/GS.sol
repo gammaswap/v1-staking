@@ -11,39 +11,43 @@ contract GS is Ownable, OFT, IRestrictedToken {
 
   constructor(address lzEndpoint) OFT("GammaSwap", "GS", lzEndpoint) {}
 
-  /// @dev See {IRestrictedToken-setManager}
+  /// @inheritdoc IRestrictedToken
   function setManager(address _manager, bool _isActive) public virtual onlyOwner {
     isManager[_manager] = _isActive;
   }
 
+  /// @inheritdoc IRestrictedToken
   function setHandler(address, bool) public override pure {
     revert("GS: Forbidden");
   }
 
+  /// @inheritdoc IRestrictedToken
   function isHandler(address) external pure returns (bool) {
     return false;
   }
 
-  /// @dev See {IRestrictedToken-mint}
+  /// @inheritdoc IRestrictedToken
   function mint(address _account, uint256 _amount) public {
     _validateManager();
 
     _mint(_account, _amount);
   }
 
-  /// @dev See {IRestrictedToken-burn}
+  /// @inheritdoc IRestrictedToken
   function burn(address _account, uint256 _amount) public {
     _validateManager();
 
     _burn(_account, _amount);
   }
 
+  /// @inheritdoc IERC20
   function transfer(address to, uint256 amount) public override(ERC20, IERC20) returns (bool) {
     address user = msg.sender;
     _transfer(user, to, amount);
     return true;
   }
 
+  /// @inheritdoc IERC20
   function transferFrom(address from, address to, uint256 amount) public override(ERC20, IERC20) returns (bool) {
     address spender = msg.sender;
     _spendAllowance(from, spender, amount);

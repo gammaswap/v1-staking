@@ -10,17 +10,19 @@ import "../interfaces/deployers/IRewardTrackerDeployer.sol";
  * @notice Proxy contract for RewardTracker deployments
  */
 contract RewardTrackerDeployer is IRewardTrackerDeployer {
-  function deploy(string memory _name, string memory _symbol) external returns (address _rewardTracker) {
-    _rewardTracker = address(new RewardTracker(_name, _symbol));
-  }
+    /// @inheritdoc IRewardTrackerDeployer
+    function deploy(string memory _name, string memory _symbol) external returns (address _rewardTracker) {
+        _rewardTracker = address(new RewardTracker(_name, _symbol));
+    }
 
-  function deployLoanTracker(
-    address _factory,
-    uint16 _refId,
-    address _manager,
-    string memory _name,
-    string memory _symbol
-  ) external returns (address _loanTracker) {
-    _loanTracker = address(new LoanTracker(_factory, _refId, _manager, _name, _symbol));
-  }
+    /// @inheritdoc IRewardTrackerDeployer
+    function deployLoanTracker(
+        address _factory,
+        uint16 _refId,
+        address _manager,
+        string memory _name,
+        string memory _symbol
+    ) external returns (address _loanTracker) {
+        _loanTracker = address(new LoanTracker(_factory, _refId, _manager, _name, _symbol));
+    }
 }

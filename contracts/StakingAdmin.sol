@@ -18,6 +18,9 @@ import "./interfaces/deployers/IRewardTrackerDeployer.sol";
 import "./interfaces/deployers/IVesterDeployer.sol";
 import "./deployers/DeployerUtils.sol";
 
+/// @title StakingAdmin abstract contract
+/// @author Simon Mall (small@gammaswap.com)
+/// @notice Admin functions for StakingRouter contract
 abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     using GammaSwapLibrary for address;
     using ERC165Checker for address;
@@ -76,6 +79,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         vesterDeployer = _vesterDeployer;
     }
 
+    /// @inheritdoc IStakingAdmin
     function setupGsStaking() external onlyOwner {
         address[] memory _depositTokens = new address[](2);
         _depositTokens[0] = gs;
@@ -120,6 +124,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         emit CoreTrackerCreated(_rewardTracker, _rewardDistributor, _bonusTracker, _bonusDistributor, _feeTracker, _feeDistributor, _vester);
     }
 
+    /// @inheritdoc IStakingAdmin
     function setupGsStakingForLoan() external onlyOwner {
         address[] memory _depositTokens = new address[](1);
         _depositTokens[0] = esGsb;
@@ -144,6 +149,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         emit CoreTrackerUpdated(_loanRewardTracker, _loanRewardDistributor, _loanVester);
     }
 
+    /// @inheritdoc IStakingAdmin
     function setupPoolStaking(address _gsPool) external onlyOwner {
         address[] memory _depositTokens = new address[](1);
         _depositTokens[0] = _gsPool;
@@ -169,6 +175,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         emit PoolTrackerCreated(_gsPool, _rewardTracker, _rewardDistributor, _vester);
     }
 
+    /// @inheritdoc IStakingAdmin
     function setupPoolStakingForLoan(address _gsPool, uint16 _refId) external onlyOwner {
         address[] memory _depositTokens = new address[](1);
         _depositTokens[0] = esGsb;
@@ -184,6 +191,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         emit PoolTrackerUpdated(_gsPool, _loanRewardTracker, _loanRewardDistributor);
     }
 
+    /// @inheritdoc IStakingAdmin
     function execute(address _stakingContract, bytes calldata _data) external onlyOwner {
         if(
             !_stakingContract.supportsInterface(type(IRewardTracker).interfaceId) &&
@@ -203,6 +211,16 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         }
     }
 
+    /// @dev Deploy reward tracker and distributor as a pair and bind them
+    /// @param _name RewardTracker name as ERC20 token
+    /// @param _symbol RewardTracker symbol as ERC20 token
+    /// @param _rewardToken Reward token address
+    /// @param _depositTokens Array of deposit tokens in RewardTracker
+    /// @param _refId LoanObserver Id
+    /// @param _isFeeTracker True if reward tracker should be FeeTracker
+    /// @param _isBonusDistributor True if reward distributor should be BonusDistributor
+    /// @return Reward tracker address
+    /// @return Reward distributor address
     function _combineTrackerDistributor(
         string memory _name,
         string memory _symbol,
