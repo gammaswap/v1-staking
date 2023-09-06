@@ -17,25 +17,25 @@ contract RestrictedToken is ERC20, Ownable2Step, IRestrictedToken {
 
   constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {}
 
-  /// @dev See {IRestrictedToken-setManager}
+  /// @inheritdoc IRestrictedToken
   function setManager(address _manager, bool _isActive) public virtual onlyOwner {
     isManager[_manager] = _isActive;
   }
 
-  /// @dev See {IRestrictedToken-setHandler}
+  /// @inheritdoc IRestrictedToken
   function setHandler(address _handler, bool _isActive) public virtual {
     _validateManager();
     isHandler[_handler] = _isActive;
   }
 
-  /// @dev See {IRestrictedToken-mint}
+  /// @inheritdoc IRestrictedToken
   function mint(address _account, uint256 _amount) public {
     _validateHandler();
 
     _mint(_account, _amount);
   }
 
-  /// @dev See {IRestrictedToken-burn}
+  /// @inheritdoc IRestrictedToken
   function burn(address _account, uint256 _amount) public {
     _validateHandler();
 
@@ -43,7 +43,7 @@ contract RestrictedToken is ERC20, Ownable2Step, IRestrictedToken {
   }
 
   /// @notice Only Managers or handlers are allowed
-  /// @dev See {IERC20-transfer}
+  /// @inheritdoc IERC20
   function transfer(address to, uint256 amount) public virtual override(ERC20, IERC20) returns (bool) {
     _validateHandler();
 
@@ -52,7 +52,7 @@ contract RestrictedToken is ERC20, Ownable2Step, IRestrictedToken {
   }
 
   /// @notice Only Managers or handlers are allowed
-  /// @dev See {IERC20-transferFrom}
+  /// @inheritdoc IERC20
   function transferFrom(address from, address to, uint256 amount) public virtual override(ERC20, IERC20) returns (bool) {
     _validateHandler();
 

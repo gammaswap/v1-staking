@@ -12,6 +12,11 @@ import "./interfaces/IRestrictedToken.sol";
 import "./interfaces/IRewardTracker.sol";
 import "./interfaces/IVester.sol";
 
+/// @title Vester contract
+/// @author Simon Mall (small@gammaswap.com)
+/// @notice Vest esGS tokens to claim GS tokens
+/// @notice Vesting is done linearly over an year
+/// @dev Requires averaged amount of pair tokens to be reserved
 contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
     using SafeERC20 for IERC20;
 
@@ -73,51 +78,63 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         }
     }
 
+    /// @inheritdoc IVester
     function setHandler(address _handler, bool _isActive) external onlyOwner {
         isHandler[_handler] = _isActive;
     }
 
+    /// @dev Restrict max cap of vestable token amounts
+    /// @param _hasMaxVestableAmount True if applied
     function setHasMaxVestableAmount(bool _hasMaxVestableAmount) external onlyOwner {
         hasMaxVestableAmount = _hasMaxVestableAmount;
     }
 
+    /// @inheritdoc IVester
     function deposit(uint256 _amount) external nonReentrant {
         _deposit(msg.sender, _amount);
     }
 
+    /// @inheritdoc IVester
     function depositForAccount(address _account, uint256 _amount) external nonReentrant {
         _validateHandler();
         _deposit(_account, _amount);
     }
 
+    /// @inheritdoc IVester
     function claim() external override nonReentrant returns (uint256) {
         return _claim(msg.sender, msg.sender);
     }
 
+    /// @inheritdoc IVester
     function claimForAccount(address _account, address _receiver) external override nonReentrant returns (uint256) {
         _validateHandler();
         return _claim(_account, _receiver);
     }
 
+    /// @inheritdoc IVester
     function withdraw() external override nonReentrant {
         _withdraw(msg.sender);
     }
 
+    /// @inheritdoc IVester
     function withdrawForAccount(address _account) external override nonReentrant {
         _validateHandler();
         _withdraw(_account);
     }
 
+    /// @inheritdoc IVester
     function setCumulativeRewardDeductions(address _account, uint256 _amount) external override nonReentrant {
         _validateHandler();
         cumulativeRewardDeductions[_account] = _amount;
     }
 
+    /// @inheritdoc IVester
     function setBonusRewards(address _account, uint256 _amount) external override nonReentrant {
         _validateHandler();
         bonusRewards[_account] = _amount;
     }
 
+    /// @inheritdoc IVester
     function claimable(address _account) public override view returns (uint256) {
         uint256 amount = cumulativeClaimAmounts[_account] - claimedAmounts[_account];
         uint256 nextClaimable = _getNextClaimableAmount(_account);
@@ -125,6 +142,7 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         return amount + nextClaimable;
     }
 
+    /// @inheritdoc IVester
     function getMaxVestableAmount(address _account) public override view returns (uint256) {
         if (!hasRewardTracker()) { return 0; }
 
@@ -141,6 +159,7 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         return maxVestableAmount - cumulativeRewardDeduction;
     }
 
+    /// @inheritdoc IVester
     function getAverageStakedAmount(address _account) public override view returns (uint256) {
         uint256 cumulativeReward = IRewardTracker(rewardTracker).cumulativeRewards(_account);
         if (cumulativeReward == 0) { return 0; }
@@ -148,6 +167,9 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         return IRewardTracker(rewardTracker).averageStakedAmounts(_account);
     }
 
+    /// @dev Returns required pair token amount for vesting
+    /// @param _account Vesting account
+    /// @param _esAmount Vesting amount
     function getPairAmount(address _account, uint256 _esAmount) public view returns (uint256) {
         if (!hasRewardTracker()) { return 0; }
 
@@ -164,42 +186,52 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         return _esAmount * averageStakedAmount / maxVestableAmount;
     }
 
+    /// @dev Returns if reward tracker is set
     function hasRewardTracker() public view returns (bool) {
         return rewardTracker != address(0);
     }
 
+    /// @dev Returns if pair token is set
     function hasPairToken() public view returns (bool) {
         return pairToken != address(0);
     }
 
+    /// @dev Returns total vested esGS amounts
+    /// @param _account Vesting account
     function getTotalVested(address _account) public view returns (uint256) {
         return balances[_account] + cumulativeClaimAmounts[_account];
     }
 
+    /// @inheritdoc IERC20
     function balanceOf(address _account) public view override returns (uint256) {
         return balances[_account];
     }
 
+    /// @inheritdoc IERC20
     // empty implementation, tokens are non-transferrable
     function transfer(address /* recipient */, uint256 /* amount */) public pure override returns (bool) {
         revert("Vester: non-transferrable");
     }
 
+    /// @inheritdoc IERC20
     // empty implementation, tokens are non-transferrable
     function allowance(address /* owner */, address /* spender */) public view virtual override returns (uint256) {
         return 0;
     }
 
+    /// @inheritdoc IERC20
     // empty implementation, tokens are non-transferrable
     function approve(address /* spender */, uint256 /* amount */) public virtual override returns (bool) {
         revert("Vester: non-transferrable");
     }
 
+    /// @inheritdoc IERC20
     // empty implementation, tokens are non-transferrable
     function transferFrom(address /* sender */, address /* recipient */, uint256 /* amount */) public virtual override returns (bool) {
         revert("Vester: non-transferrable");
     }
 
+    /// @inheritdoc IVester
     function getVestedAmount(address _account) public override view returns (uint256) {
         uint256 balance = balances[_account];
         uint256 cumulativeClaimAmount = cumulativeClaimAmounts[_account];
@@ -279,6 +311,8 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         emit Deposit(_account, _amount);
     }
 
+    /// @dev Returns claimable GS amount
+    /// @param _account Vesting account
     function _getNextClaimableAmount(address _account) private view returns (uint256) {
         uint256 timeDiff = block.timestamp - lastVestingTimes[_account];
 
@@ -295,6 +329,9 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         return balance;
     }
 
+    /// @dev Claim pending GS tokens
+    /// @param _account Vesting account
+    /// @param _receiver Receiver of rewards
     function _claim(address _account, address _receiver) private returns (uint256) {
         _updateVesting(_account);
 
@@ -307,6 +344,8 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         return amount;
     }
 
+    /// @dev Withdraw esGS tokens and cancel vesting
+    /// @param _account Vesting account
     function _withdraw(address _account) private {
         _claim(_account, _account);
 
@@ -331,6 +370,8 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         emit Withdraw(_account, claimedAmount, balance);
     }
 
+    /// @dev Update vesting params for user
+    /// @param _account Vesting account
     function _updateVesting(address _account) private {
         uint256 amount = _getNextClaimableAmount(_account);
         lastVestingTimes[_account] = block.timestamp;
