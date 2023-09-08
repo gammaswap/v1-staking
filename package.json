@@ -7,6 +7,10 @@
     "test": "hardhat test",
     "fuzz": "forge test"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gammaswap/v1-staking.git"
+  },
   "engines": {
     "node": ">=16"
   },
@@ -41,9 +45,9 @@
     "typescript": ">=4.5.0"
   },
   "dependencies": {
-    "@gammaswap/v1-core": "^0.5.31",
-    "@gammaswap/v1-implementations": "^0.5.14",
-    "@gammaswap/v1-periphery": "^0.5.11",
+    "@gammaswap/v1-core": "^0.5.34",
+    "@gammaswap/v1-implementations": "^0.5.15",
+    "@gammaswap/v1-periphery": "^0.5.12",
     "@layerzerolabs/lz-sdk": "^0.0.38",
     "@layerzerolabs/solidity-examples": "^0.0.13",
     "@layerzerolabs/ua-utils": "^0.0.4",
