@@ -11,3 +11,8 @@
 </p>
 
 <h1 align="center">V1-Staking</h1>
+
+###Testing
+
+For hardhat tests run `yarn test`
+For foundry tests run `yarn fuzz`
