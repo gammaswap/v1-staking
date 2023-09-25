@@ -1,13 +1,18 @@
-# Sample Hardhat Project
+<p align="center">
+    <a href="https://gammaswap.com" target="_blank" rel="noopener noreferrer">
+        <img width="100" src="https://app.gammaswap.com/logo.svg" alt="Gammaswap logo">
+    </a>
+</p>
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+<p align="center">
+  <a href="https://github.com/gammaswap/v1-staking/actions/workflows/main.yml">
+    <img src="https://github.com/gammaswap/v1-staking/actions/workflows/main.yml/badge.svg?branch=main" alt="Compile/Test/Publish">
+  </a>
+</p>
 
-Try running some of the following tasks:
+<h1 align="center">V1-Staking</h1>
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
-```
+###Testing
+
+For hardhat tests run `yarn test`
+For foundry tests run `yarn fuzz`
