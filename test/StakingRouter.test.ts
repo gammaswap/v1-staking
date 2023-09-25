@@ -267,16 +267,18 @@ describe("StakingRouter", function () {
 
     await gsPool.mint(user0, expandDecimals(1000, 18));
     await gsPool.mint(user1, expandDecimals(1000, 18));
-    await gsPool.mint(stakingRouter.target, expandDecimals(1000, 18));
+    await gsPool.mint(manager, expandDecimals(1000, 18));
 
     await gsPool.connect(user0).approve(poolRewardTracker, expandDecimals(1000, 18));
-    await gsPool.connect(user1).approve(poolRewardTracker, expandDecimals(1000, 18));
+    // await gsPool.connect(user1).approve(poolRewardTracker, expandDecimals(1000, 18));
+    await gsPool.connect(manager).approve(poolRewardTracker, expandDecimals(1000, 18));
 
     await expect(stakingRouter.connect(user1).stakeLpForAccount(user0, gsPool, expandDecimals(1000, 18)))
     .to.be.revertedWith("StakingRouter: forbidden");
     await expect(stakingRouter.connect(user0).stakeLp(gsPool, expandDecimals(1000, 18)))
       .to.emit(stakingRouter, "StakedLp")
       .withArgs(user0.address, gsPool.target, expandDecimals(1000, 18))
+
     await stakingRouter.connect(manager).stakeLpForAccount(user1, gsPool, expandDecimals(1000, 18));
     expect(await poolRewardTracker.balanceOf(user0)).eq(expandDecimals(1000, 18));
     expect(await poolRewardTracker.stakedAmounts(user0)).eq(expandDecimals(1000, 18));
