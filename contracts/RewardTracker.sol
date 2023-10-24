@@ -281,7 +281,6 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
     /// @param _receiver Receiver to refund tokens
     function _unstake(address _account, address _depositToken, uint256 _amount, address _receiver) internal virtual {
         require(_amount > 0, "RewardTracker: invalid _amount");
-        require(isDepositToken[_depositToken], "RewardTracker: invalid _depositToken");
 
         _updateRewards(_account);
 

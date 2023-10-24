@@ -55,7 +55,7 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     /// @inheritdoc IStakingRouter
     function stakeLpForAccount(address _account, address _gsPool, uint256 _amount) external nonReentrant {
         _validateHandler();
-        _stakeLp(address(this), _account, _gsPool, _amount);
+        _stakeLp(msg.sender, _account, _gsPool, _amount);
     }
 
     /// @inheritdoc IStakingRouter
