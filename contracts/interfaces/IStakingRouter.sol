@@ -122,6 +122,11 @@ interface IStakingRouter is IStakingAdmin {
     /// @param _account User address for query
     function compoundForAccount(address _account) external;
 
+    /// @dev Get average staked amount for user
+    /// @param _gsPool GammaPool address, address(0) refers to coreTracker
+    /// @param _account User address for query
+    function getAverageStakedAmount(address _gsPool, address _account) external view returns (uint256);
+
     /// @dev Emitted in `_stakeGs` function
     event StakedGs(address, address, uint256);
 

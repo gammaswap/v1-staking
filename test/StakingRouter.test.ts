@@ -4,7 +4,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 import { PANIC_CODES } from '@nomicfoundation/hardhat-chai-matchers/panic';
 import { expect } from 'chai';
 import { setup, coreTrackers, poolTrackers } from './utils/deploy';
-import { increase } from './utils/time'
+import { increase, latest } from './utils/time'
 import { expandDecimals } from './utils/bignumber';
 import { impersonateAndFund, reportGasUsed } from './utils/misc';
 import { BonusDistributor, FeeTracker, GS, ERC20Mock, RestrictedToken, RewardDistributor, RewardTracker, StakingRouter, Vester } from '../typechain-types';
@@ -83,17 +83,18 @@ describe("StakingRouter", function () {
       .to.emit(stakingRouter, "StakedGs")
       .withArgs(user1.address, gs.target, expandDecimals(800, 18))
     expect(await gs.balanceOf(user0.address)).eq(expandDecimals(700, 18))
+    expect(await stakingRouter.getAverageStakedAmount(ethers.ZeroAddress, user1.address)).eq(0n);
 
     await gs.mint(user1.address, expandDecimals(200, 18))
     expect(await gs.balanceOf(user1.address)).eq(expandDecimals(200, 18))
     await gs.connect(user1).approve(rewardTracker.target, expandDecimals(200, 18))
     await stakingRouter.connect(user1).stakeGs(expandDecimals(200, 18))
     expect(await gs.balanceOf(user1.address)).eq(0)
-
     expect(await rewardTracker.stakedAmounts(user0.address)).eq(0)
     expect(await rewardTracker.depositBalances(user0.address, gs.target)).eq(0)
     expect(await rewardTracker.stakedAmounts(user1.address)).eq(expandDecimals(1000, 18))
     expect(await rewardTracker.depositBalances(user1.address, gs.target)).eq(expandDecimals(1000, 18))
+    expect(await stakingRouter.getAverageStakedAmount(ethers.ZeroAddress, user1.address)).eq(expandDecimals(800, 18));
 
     expect(await bonusTracker.stakedAmounts(user0.address)).eq(0)
     expect(await bonusTracker.depositBalances(user0.address, rewardTracker.target)).eq(0)
@@ -118,6 +119,8 @@ describe("StakingRouter", function () {
     expect(await feeTracker.claimable(user0.address)).eq(0)
     expect(await feeTracker.claimable(user1.address)).gt("3560000000000000000") // 3.56, 100 / 28 => ~3.57
     expect(await feeTracker.claimable(user1.address)).lt("3580000000000000000") // 3.58
+
+    expect(await stakingRouter.getAverageStakedAmount(ethers.ZeroAddress, user1.address)).eq(expandDecimals(800, 18));
 
     await increase(20)
 
@@ -174,6 +177,8 @@ describe("StakingRouter", function () {
     expect(await esGs.balanceOf(user1.address)).lt(expandDecimals(1786 + 1191, 18))
     expect(await weth.balanceOf(user1.address)).gt("5940000000000000000")
     expect(await weth.balanceOf(user1.address)).lt("5960000000000000000")
+    expect(await stakingRouter.getAverageStakedAmount(ethers.ZeroAddress, user1.address)).gt(expandDecimals(999, 18));
+    expect(await stakingRouter.getAverageStakedAmount(ethers.ZeroAddress, user1.address)).lt(expandDecimals(1000, 18));
 
     expect(await esGs.balanceOf(user2.address)).eq(0)
     expect(await weth.balanceOf(user2.address)).eq(0)
@@ -307,6 +312,8 @@ describe("StakingRouter", function () {
     expect(await poolRewardTracker.claimable(user0)).lt(expandDecimals(893 + 1429, 18));
     expect(await poolRewardTracker.claimable(user1)).gt(expandDecimals(892 + 357, 18));
     expect(await poolRewardTracker.claimable(user1)).lt(expandDecimals(893 + 358, 18));
+    expect(await stakingRouter.getAverageStakedAmount(gsPool.target, user0.address)).eq(expandDecimals(1000, 18));
+    expect(await stakingRouter.getAverageStakedAmount(gsPool.target, user1.address)).eq(expandDecimals(1000, 18));
 
     await stakingRouter.connect(user0).unstakeLp(gsPool, expandDecimals(1000, 18));
     expect(await poolRewardTracker.balanceOf(user0)).eq(expandDecimals(1000, 18));
@@ -318,10 +325,15 @@ describe("StakingRouter", function () {
 
     await stakingRouter.connect(user0).claimPool(gsPool);
     await stakingRouter.connect(user1).claimPool(gsPool);
+  
     expect(await esGs.balanceOf(user0)).gt(expandDecimals(892 + 1428, 18));
     expect(await esGs.balanceOf(user0)).lt(expandDecimals(893 + 1429, 18));
     expect(await esGs.balanceOf(user1)).gt(expandDecimals(892 + 357, 18));
     expect(await esGs.balanceOf(user1)).lt(expandDecimals(893 + 358, 18));
+    expect(await stakingRouter.getAverageStakedAmount(gsPool.target, user0.address)).gt(expandDecimals(1615, 18));
+    expect(await stakingRouter.getAverageStakedAmount(gsPool.target, user0.address)).lt(expandDecimals(1616, 18));
+    expect(await stakingRouter.getAverageStakedAmount(gsPool.target, user1.address)).gt(expandDecimals(857, 18));
+    expect(await stakingRouter.getAverageStakedAmount(gsPool.target, user1.address)).lt(expandDecimals(858, 18));
   })
 
   it("vestEsGs, vestEsGsForPool, withdrawEsGs, withdrawEsGsForPool", async () => {
