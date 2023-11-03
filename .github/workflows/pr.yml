@@ -16,7 +16,7 @@ jobs:
           registry-url: https://npm.pkg.github.com/
           scope: '@gammaswap'
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1.0.10
+        uses: foundry-rs/foundry-toolchain@v1.0.8
       - run: yarn install
         env:
           NODE_AUTH_TOKEN: ${{secrets.GS_TOKEN}}
