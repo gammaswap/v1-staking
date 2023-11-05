@@ -172,6 +172,14 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
         _compound(_account);
     }
 
+    /// @inheritdoc IStakingRouter
+    function getAverageStakedAmount(address _gsPool, address _account) public view returns (uint256) {
+        address vester = _gsPool == address(0) ? coreTracker.vester : poolTrackers[_gsPool].vester;
+        require(vester != address(0), "Vester contract not found");
+
+        return IVester(vester).getAverageStakedAmount(_account);
+    }
+
     function _validateHandler() private view {
         address user = msg.sender;
         require(owner() == user || manager == user, "StakingRouter: forbidden");
