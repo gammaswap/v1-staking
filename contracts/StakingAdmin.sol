@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity >=0.8.13;
 
 import "@gammaswap/v1-core/contracts/libraries/GammaSwapLibrary.sol";

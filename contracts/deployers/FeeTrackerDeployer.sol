@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
-
-pragma solidity 0.8.19;
+pragma solidity 0.8.21;
 
 import "../FeeTracker.sol";
 import "../interfaces/deployers/IFeeTrackerDeployer.sol";

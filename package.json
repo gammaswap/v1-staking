@@ -1,6 +1,6 @@
 {
   "name": "@gammaswap/v1-staking",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Staking contracts for GammaSwapV1 protocol",
   "scripts": {
     "hardhat": "hardhat",
@@ -45,9 +45,9 @@
     "typescript": ">=4.5.0"
   },
   "dependencies": {
-    "@gammaswap/v1-core": "^1.1.5",
-    "@gammaswap/v1-implementations": "^1.1.5",
-    "@gammaswap/v1-periphery": "^1.1.0",
+    "@gammaswap/v1-core": "^1.1.9",
+    "@gammaswap/v1-implementations": "^1.1.10",
+    "@gammaswap/v1-periphery": "^1.1.2",
     "@layerzerolabs/lz-sdk": "^0.0.38",
     "@layerzerolabs/solidity-examples": "^0.0.13",
     "@layerzerolabs/ua-utils": "^0.0.4",
