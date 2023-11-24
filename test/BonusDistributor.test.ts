@@ -2,6 +2,7 @@ import { ethers } from 'hardhat';
 import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 import { PANIC_CODES } from '@nomicfoundation/hardhat-chai-matchers/panic';
+import { anyUint } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
 import { expect } from 'chai';
 import { setup, coreTrackers } from './utils/deploy';
 import { increase } from './utils/time'
@@ -78,5 +79,44 @@ describe("BonusDistributor", function () {
 
     expect(await bonusTracker.claimable(user1.address)).gt(BigInt("1360000000000000000")) // 1.36, 500 / 365 => ~1.37
     expect(await bonusTracker.claimable(user1.address)).lt(BigInt("1380000000000000000")) // 1.38
+  })
+
+  it('pause/resume emissions', async () => {
+    const [deployer, user0] = await ethers.getSigners()
+    await esGs.mint(rewardDistributor.target, expandDecimals(50000, 18))
+    await rewardDistributor.connect(routerAsSigner).setTokensPerInterval("20667989410000000") // 0.02066798941 esGs per second
+    await gs.mint(user0.address, expandDecimals(1000, 18))
+
+    expect(await rewardDistributor.paused()).equals(false);
+    expect(await bonusDistributor.paused()).equals(false);
+
+    await gs.connect(user0).approve(rewardTracker.target, expandDecimals(1001, 18))
+    await rewardTracker.connect(routerAsSigner).stakeForAccount(user0.address, user0.address, gs.target, expandDecimals(1000, 18))
+
+    await increase(24 * 60 * 60)
+
+    expect(await rewardTracker.claimable(user0.address)).gt(expandDecimals(1785, 18)) // 50000 / 28 => ~1785
+    expect(await rewardTracker.claimable(user0.address)).lt(expandDecimals(1786, 18))
+
+    await expect(rewardDistributor.connect(routerAsSigner).setPaused(true))
+      .to.emit(rewardDistributor, 'StatusChange')
+      .withArgs(rewardTracker.target, anyUint, true);
+
+    await rewardTracker.connect(user0).claim(user0.address);
+    expect(await rewardTracker.claimable(user0.address)).eq(0);
+
+    await increase(24 * 60 * 60);
+
+    // No more rewards earned
+    expect(await rewardTracker.claimable(user0.address)).eq(0);
+
+    await increase(30 * 24 * 60 * 60);
+    await rewardDistributor.connect(routerAsSigner).setPaused(false);
+
+    await increase(24 * 60 * 60);
+
+    // Now earning rewards again
+    expect(await rewardTracker.claimable(user0.address)).gt(expandDecimals(1785, 18))
+    expect(await rewardTracker.claimable(user0.address)).lt(expandDecimals(1786, 18))
   })
 })

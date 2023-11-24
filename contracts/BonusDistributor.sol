@@ -88,6 +88,7 @@ contract BonusDistributor is Ownable2Step, IRewardDistributor {
     function distribute() external override returns (uint256) {
         address caller = msg.sender;
         require(caller == rewardTracker, "BonusDistributor: invalid msg.sender");
+
         uint256 amount = pendingRewards();
         if (amount == 0) { return 0; }
 
