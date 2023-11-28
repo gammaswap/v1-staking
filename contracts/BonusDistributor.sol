@@ -29,6 +29,7 @@ contract BonusDistributor is Ownable2Step, IRewardDistributor {
     address public override rewardToken;
     uint256 public lastDistributionTime;
     address public rewardTracker;
+    bool public paused;
 
     /// @dev Constructor function
     /// @param _rewardToken Address of the ERC20 token used for rewards
@@ -54,6 +55,19 @@ contract BonusDistributor is Ownable2Step, IRewardDistributor {
     }
 
     /// @inheritdoc IRewardDistributor
+    function setPaused(bool _paused) external onlyOwner {
+        if (_paused) {
+            IRewardTracker(rewardTracker).updateRewards();
+        } else {
+            lastDistributionTime = block.timestamp;
+        }
+
+        paused = _paused;
+
+        emit StatusChange(rewardTracker, block.timestamp, _paused);
+    }
+
+    /// @inheritdoc IRewardDistributor
     function tokensPerInterval() public view override returns (uint256) {
         uint256 supply = IERC20(rewardTracker).totalSupply();
         return supply * bonusMultiplierBasisPoints / (BASIS_POINTS_DIVISOR * BONUS_DURATION);
@@ -61,7 +75,7 @@ contract BonusDistributor is Ownable2Step, IRewardDistributor {
 
     /// @inheritdoc IRewardDistributor
     function pendingRewards() public view override returns (uint256) {
-        if (block.timestamp == lastDistributionTime) {
+        if (paused || block.timestamp == lastDistributionTime) {
             return 0;
         }
 
@@ -74,6 +88,7 @@ contract BonusDistributor is Ownable2Step, IRewardDistributor {
     function distribute() external override returns (uint256) {
         address caller = msg.sender;
         require(caller == rewardTracker, "BonusDistributor: invalid msg.sender");
+
         uint256 amount = pendingRewards();
         if (amount == 0) { return 0; }
 

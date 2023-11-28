@@ -19,6 +19,7 @@ contract RewardDistributor is Ownable2Step, IRewardDistributor {
     uint256 public override tokensPerInterval;
     uint256 public lastDistributionTime;
     address public rewardTracker;
+    bool public paused;
 
     constructor(address _rewardToken, address _rewardTracker) {
         rewardToken = _rewardToken;
@@ -42,8 +43,24 @@ contract RewardDistributor is Ownable2Step, IRewardDistributor {
     }
 
     /// @inheritdoc IRewardDistributor
+    function setPaused(bool _paused) external onlyOwner {
+        address _rewardTracker = rewardTracker;
+        uint256 timestamp = block.timestamp;
+
+        if (_paused) {
+            IRewardTracker(_rewardTracker).updateRewards();
+        } else {
+            lastDistributionTime = timestamp;
+        }
+
+        paused = _paused;
+
+        emit StatusChange(_rewardTracker, timestamp, _paused);
+    }
+
+    /// @inheritdoc IRewardDistributor
     function pendingRewards() public view override returns (uint256) {
-        if (block.timestamp == lastDistributionTime) {
+        if (paused || block.timestamp == lastDistributionTime) {
             return 0;
         }
 
