@@ -2,6 +2,7 @@ import { ethers } from 'hardhat';
 import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 import { PANIC_CODES } from '@nomicfoundation/hardhat-chai-matchers/panic';
+import { anyUint } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
 import { expect } from 'chai';
 import { setup, coreTrackers } from './utils/deploy';
 import { increase } from './utils/time'
@@ -104,7 +105,10 @@ describe('RewardTracker', function() {
       .to.be.revertedWith("ERC20: insufficient allowance")
 
     await gs.connect(user0).approve(rewardTracker.target, expandDecimals(1000, 18))
-    await rewardTracker.connect(user0).stake(gs.target, expandDecimals(1000, 18))
+    await expect(rewardTracker.connect(user0).stake(gs.target, expandDecimals(1000, 18)))
+      .to.emit(rewardTracker, 'Stake')
+      .withArgs(user0.address, user0.address, gs.target, expandDecimals(1000, 18))
+
     expect(await rewardTracker.stakedAmounts(user0.address)).eq(expandDecimals(1000, 18))
     expect(await rewardTracker.depositBalances(user0.address, gs.target)).eq(expandDecimals(1000, 18))
 
@@ -148,7 +152,10 @@ describe('RewardTracker', function() {
       .to.be.revertedWith("RewardTracker: _amount exceeds stakedAmount");
 
     expect(await gs.balanceOf(user0.address)).eq(0)
-    await rewardTracker.connect(user0).unstake(gs.target, expandDecimals(1000, 18))
+    await expect(rewardTracker.connect(user0).unstake(gs.target, expandDecimals(1000, 18)))
+      .to.emit(rewardTracker, 'Unstake')
+      .withArgs(user0.address, gs.target, expandDecimals(1000, 18), user0.address);
+
     expect(await gs.balanceOf(user0.address)).eq(expandDecimals(1000, 18))
     expect(await rewardTracker.totalDepositSupply(gs.target)).eq(0)
     expect(await rewardTracker.totalDepositSupply(esGs.target)).eq(expandDecimals(500, 18))
@@ -163,7 +170,13 @@ describe('RewardTracker', function() {
       .to.be.revertedWith("RewardTracker: _amount exceeds stakedAmount");
 
     expect(await esGs.balanceOf(user0.address)).eq(0)
-    await rewardTracker.connect(user0).claim(user2.address)
+    await expect(rewardTracker.connect(user0).claim(user2.address))
+      .to.emit(rewardTracker, 'RewardsUpdate')
+      .withArgs(anyUint)
+      .to.emit(rewardTracker, 'UserRewardsUpdate')
+      .withArgs(user0.address, anyUint, anyUint, anyUint, anyUint)
+      .to.emit(rewardTracker, 'Claim')
+      .withArgs(user0.address, anyUint, user2.address)
     expect(await esGs.balanceOf(user2.address)).gt(expandDecimals(1785 + 1190, 18))
     expect(await esGs.balanceOf(user2.address)).lt(expandDecimals(1786 + 1191, 18))
 

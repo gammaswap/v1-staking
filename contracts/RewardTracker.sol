@@ -204,7 +204,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
 
         if (tokenAmount > 0) {
             IERC20(rewardToken()).safeTransfer(_receiver, tokenAmount);
-            emit Claim(_account, tokenAmount);
+            emit Claim(_account, tokenAmount, _receiver);
         }
 
         return tokenAmount;
@@ -237,7 +237,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
         balances[_sender] = balances[_sender] - _amount;
         balances[_recipient] = balances[_recipient] + _amount;
 
-        emit Transfer(_sender, _recipient,_amount);
+        emit Transfer(_sender, _recipient, _amount);
     }
 
     function _approve(address _owner, address _spender, uint256 _amount) private {
@@ -271,6 +271,8 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
         totalDepositSupply[_depositToken] = totalDepositSupply[_depositToken] + _amount;
 
         _mint(_account, _amount);
+
+        emit Stake(_fundingAccount, _account, _depositToken, _amount);
     }
 
     /// @dev Unstake tokens from contract
@@ -296,6 +298,8 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
 
         _burn(_account, _amount);
         IERC20(_depositToken).safeTransfer(_receiver, _amount);
+
+        emit Unstake(_account, _depositToken, _amount, _receiver);
     }
 
     /// @dev Calculate rewards amount for the user
@@ -316,6 +320,8 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
             return;
         }
 
+        emit RewardsUpdate(_cumulativeRewardPerToken);
+
         if (_account != address(0)) {
             uint256 stakedAmount = stakedAmounts[_account];
             uint256 accountReward = stakedAmount * (_cumulativeRewardPerToken - previousCumulatedRewardPerToken[_account]) / PRECISION;
@@ -324,13 +330,16 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
             claimableReward[_account] = _claimableReward;
             previousCumulatedRewardPerToken[_account] = _cumulativeRewardPerToken;
 
-            if (_claimableReward > 0 && stakedAmount > 0) {
+            if (accountReward > 0 && stakedAmount > 0) {
                 uint256 cumulativeReward = cumulativeRewards[_account];
                 uint256 nextCumulativeReward = cumulativeReward + accountReward;
-
-                averageStakedAmounts[_account] = averageStakedAmounts[_account] * cumulativeReward / nextCumulativeReward + stakedAmount * accountReward / nextCumulativeReward;
+                uint256 _averageStakedAmount = averageStakedAmounts[_account] * cumulativeReward / nextCumulativeReward + stakedAmount * accountReward / nextCumulativeReward;
+                averageStakedAmounts[_account] = _averageStakedAmount;
 
                 cumulativeRewards[_account] = nextCumulativeReward;
+                emit UserRewardsUpdate(_account, claimableReward[_account], _cumulativeRewardPerToken, _averageStakedAmount, nextCumulativeReward);
+            } else {
+                emit UserRewardsUpdate(_account, claimableReward[_account], _cumulativeRewardPerToken, averageStakedAmounts[_account], cumulativeRewards[_account]);
             }
         }
     }
