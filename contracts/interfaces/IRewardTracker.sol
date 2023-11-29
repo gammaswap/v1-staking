@@ -96,8 +96,46 @@ interface IRewardTracker is IERC165 {
     /// @return Accrued rewards for user
     function cumulativeRewards(address _account) external view returns (uint256);
 
+    /// @dev Emitted when deposit tokens are set
+    /// @param _depositToken Deposit token address
+    /// @param _isDepositToken If the token deposit is allowed
+    event DepositTokenSet(address indexed _depositToken, bool _isDepositToken);
+
+    /// @dev Emitted when tokens are staked
+    /// @param _fundingAccount User address to account from
+    /// @param _account User address to account to
+    /// @param _depositToken Deposit token address
+    /// @param _amount Amount of staked tokens
+    event Stake(address indexed _fundingAccount, address indexed _account, address indexed _depositToken, uint256 _amount);
+
+    /// @dev Emitted when tokens are unstaked
+    /// @param _account User address
+    /// @param _depositToken Deposit token address
+    /// @param _amount Amount of unstaked tokens
+    /// @param _receiver Receiver address
+    event Unstake(address indexed _account, address indexed _depositToken, uint256 _amount, address indexed _receiver);
+
+    /// Emitted whenever reward metric is updated
+    /// @param _cumulativeRewardPerToken Up to date value for reward per staked token
+    event RewardsUpdate(uint256 indexed _cumulativeRewardPerToken);
+
+    /// @dev Emitted whenever user reward metrics are updated
+    /// @param _account User address
+    /// @param _claimableReward Claimable reward for `_account`
+    /// @param _previousCumulatedRewardPerToken Reward per staked token for `_account` before update
+    /// @param _averageStakedAmount Reserve token amounts required for vesting for `_account`
+    /// @param _cumulativeReward Total claimed and claimable rewards for `_account`
+    event UserRewardsUpdate(
+        address indexed _account,
+        uint256 _claimableReward,
+        uint256 _previousCumulatedRewardPerToken,
+        uint256 _averageStakedAmount,
+        uint256 _cumulativeReward
+    );
+
     /// @dev Emitted when rewards are claimed
-    /// @param _account Beneficiary user
+    /// @param _account User address claiming
     /// @param _amount Rewards amount claimed
-    event Claim(address _account, uint256 _amount);
+    /// @param _receiver Receiver of the rewards
+    event Claim(address indexed _account, uint256 _amount, address _receiver);
 }

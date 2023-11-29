@@ -45,5 +45,8 @@ interface IRewardDistributor is IERC165 {
     event BonusMultiplierChange(uint256 basisPoints);
 
     /// @dev Emitted when reward emission is paused or resumed
+    /// @param rewardTracker Reward tracker contract mapped to this distributor
+    /// @param timestamp Timestamp of this event
+    /// @param paused If distributor is paused or not
     event StatusChange(address indexed rewardTracker, uint256 timestamp, bool paused);
 }
