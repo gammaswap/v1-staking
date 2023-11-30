@@ -7,7 +7,7 @@ import { setup, coreTrackers, poolTrackers } from './utils/deploy';
 import { increase, latest } from './utils/time'
 import { expandDecimals } from './utils/bignumber';
 import { impersonateAndFund, reportGasUsed } from './utils/misc';
-import { BonusDistributor, FeeTracker, GS, ERC20Mock, RestrictedToken, RewardDistributor, RewardTracker, StakingRouter, Vester } from '../typechain-types';
+import { BonusDistributor, FeeTracker, GS, ERC20Mock, RestrictedToken, RewardDistributor, RewardTracker, StakingRouter, Vester, LoanTracker, VesterNoReserve } from '../typechain-types';
 
 describe("StakingRouter", function () {
   let gs: GS
@@ -16,11 +16,14 @@ describe("StakingRouter", function () {
   let weth: ERC20Mock
   let rewardTracker: RewardTracker
   let rewardDistributor: RewardDistributor
+  let loanRewardTracker: RewardTracker
+  let loanRewardDistributor: RewardDistributor
   let bonusTracker: RewardTracker
   let bonusDistributor: BonusDistributor
   let feeTracker: FeeTracker
   let feeDistributor: RewardDistributor
   let vester: Vester
+  let loanVester: VesterNoReserve
   let stakingRouter: StakingRouter
   let routerAsSigner: HardhatEthersSigner
   let gsPool: ERC20Mock
@@ -39,11 +42,14 @@ describe("StakingRouter", function () {
     const coreTracker = await coreTrackers(stakingRouter);
     rewardTracker = coreTracker.rewardTracker;
     rewardDistributor = coreTracker.rewardDistributor;
+    loanRewardTracker = coreTracker.loanRewardTracker;
+    loanRewardDistributor = coreTracker.loanRewardDistributor;
     bonusTracker = coreTracker.bonusTracker;
     bonusDistributor = coreTracker.bonusDistributor;
     feeTracker = coreTracker.feeTracker;
     feeDistributor = coreTracker.feeDistributor;
     vester = coreTracker.vester;
+    loanVester = coreTracker.loanVester;
 
     await esGs.mint(rewardDistributor.target, expandDecimals(50000, 18))
     await rewardDistributor.connect(routerAsSigner).setTokensPerInterval("20667989410000000") // 0.02066798941 esGs per second
@@ -66,6 +72,28 @@ describe("StakingRouter", function () {
     expect((await stakingRouter.coreTracker()).feeTracker).eq(feeTracker.target)
     expect((await stakingRouter.coreTracker()).feeDistributor).eq(feeDistributor.target)
     expect((await stakingRouter.coreTracker()).vester).eq(vester.target)
+  })
+
+  it("StakingAdmin", async () => {
+    const IRewardTrackerInterface = "0xf08285fe";
+    const ILoanTrackerInterface = "0x57222f66";
+    const IRewardDistributorInterface = "0x7a2b2786";
+    const IVesterInterface = "0x618b5e41";
+
+    const [deployer] = await ethers.getSigners();
+    expect(await rewardTracker.supportsInterface(IRewardTrackerInterface)).equals(true)
+    expect(await rewardDistributor.supportsInterface(IRewardDistributorInterface)).equals(true)
+    expect(await loanRewardTracker.supportsInterface(IRewardTrackerInterface)).equals(true)
+    expect(await loanRewardDistributor.supportsInterface(IRewardDistributorInterface)).equals(true)
+    expect(await bonusTracker.supportsInterface(IRewardTrackerInterface)).equals(true)
+    expect(await bonusDistributor.supportsInterface(IRewardDistributorInterface)).equals(true)
+    expect(await feeTracker.supportsInterface(IRewardTrackerInterface)).equals(true)
+    expect(await feeDistributor.supportsInterface(IRewardDistributorInterface)).equals(true)
+    expect(await vester.supportsInterface(IVesterInterface)).equals(true)
+    expect(await loanVester.supportsInterface(IVesterInterface)).equals(true)
+
+    const functionData = bonusDistributor.interface.encodeFunctionData('setBonusMultiplier', [10000])
+    await stakingRouter.connect(deployer).execute(bonusDistributor, functionData)
   })
 
   it("stakeGsForAccount, stakeGs, stakeEsGs, unstakeGs, unstakeEsGs, claim, compound, compoundForAccount", async () => {
