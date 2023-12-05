@@ -35,7 +35,6 @@ const config: HardhatUserConfig = {
       url: `https://arb-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_ARBITRUM_GOERLI_API_KEY}`,
       accounts: {
         mnemonic: process.env.ARBITRUM_GOERLI_MNEMONIC,
-        path: "m/44'/60'/0'/0",
       },
       chainId: 421613,
     },
@@ -43,7 +42,6 @@ const config: HardhatUserConfig = {
       url: `https://arb-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_ARBITRUM_API_KEY}`,
       accounts: {
         mnemonic: process.env.ARBITRUM_MNEMONIC,
-        path: "m/44'/60'/0'/0",
       },
       chainId: 42161,
     },
