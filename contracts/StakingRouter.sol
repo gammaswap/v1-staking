@@ -146,9 +146,13 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
 
         IRewardTracker(coreTracker.feeTracker).claimForAccount(account, account);
         IRewardTracker(coreTracker.rewardTracker).claimForAccount(account, account);
-        IRewardTracker(coreTracker.loanRewardTracker).claimForAccount(account, account);
+        if (coreTracker.loanRewardTracker != address(0)) {
+            IRewardTracker(coreTracker.loanRewardTracker).claimForAccount(account, account);
+        }
         IVester(coreTracker.vester).claimForAccount(account, account);
-        IVester(coreTracker.loanVester).claimForAccount(account, account);
+        if (coreTracker.loanVester != address(0)) {
+            IVester(coreTracker.loanVester).claimForAccount(account, account);
+        }
     }
 
     /// @inheritdoc IStakingRouter
@@ -156,7 +160,9 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
         address account = msg.sender;
 
         IRewardTracker(poolTrackers[_gsPool].rewardTracker).claimForAccount(account, account);
-        ILoanTracker(poolTrackers[_gsPool].loanRewardTracker).claimForAccount(account, account);
+        if (poolTrackers[_gsPool].loanRewardTracker != address(0)) {
+            ILoanTracker(poolTrackers[_gsPool].loanRewardTracker).claimForAccount(account, account);
+        }
         IVester(poolTrackers[_gsPool].vester).claimForAccount(account, account);
     }
 
@@ -291,9 +297,11 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
             _stakeGs(_account, _account, esGs, esGsAmount);
         }
 
-        uint256 esGsbAmount = IRewardTracker(coreTracker.loanRewardTracker).claimForAccount(_account, _account);
-        if (esGsbAmount > 0) {
-            _stakeGs(_account, _account, esGsb, esGsbAmount);
+        if (coreTracker.loanRewardTracker != address(0)) {
+            uint256 esGsbAmount = IRewardTracker(coreTracker.loanRewardTracker).claimForAccount(_account, _account);
+            if (esGsbAmount > 0) {
+                _stakeGs(_account, _account, esGsb, esGsbAmount);
+            }
         }
 
         uint256 bnGsAmount = IRewardTracker(coreTracker.bonusTracker).claimForAccount(_account, _account);
