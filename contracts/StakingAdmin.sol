@@ -129,7 +129,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         _depositTokens[0] = esGsb;
         (address _loanRewardTracker, address _loanRewardDistributor) = _combineTrackerDistributor("Staked GS Loan", "sGSb", esGsb, _depositTokens, 0, false, false);
 
-        IRewardTracker(coreTracker.feeTracker).setDepositToken(_loanRewardTracker, true);
+        IRewardTracker(coreTracker.bonusTracker).setDepositToken(_loanRewardTracker, true);
         IRewardTracker(_loanRewardTracker).setHandler(coreTracker.bonusTracker, true);
 
         address _loanVester = vesterDeployer.deployContract(
