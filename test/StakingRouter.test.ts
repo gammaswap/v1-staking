@@ -200,7 +200,7 @@ describe("StakingRouter", function () {
 
     expect(await esGs.balanceOf(user1.address)).eq(0)
     expect(await weth.balanceOf(user1.address)).eq(0)
-    await stakingRouter.connect(user1).claim()
+    await stakingRouter.connect(user1).claim(true, true, true)
     expect(await esGs.balanceOf(user1.address)).gt(expandDecimals(1785 + 1190, 18))
     expect(await esGs.balanceOf(user1.address)).lt(expandDecimals(1786 + 1191, 18))
     expect(await weth.balanceOf(user1.address)).gt("5940000000000000000")
@@ -210,7 +210,7 @@ describe("StakingRouter", function () {
 
     expect(await esGs.balanceOf(user2.address)).eq(0)
     expect(await weth.balanceOf(user2.address)).eq(0)
-    await stakingRouter.connect(user2).claim()
+    await stakingRouter.connect(user2).claim(true, true, true)
     expect(await esGs.balanceOf(user2.address)).gt(expandDecimals(595, 18))
     expect(await esGs.balanceOf(user2.address)).lt(expandDecimals(596, 18))
     expect(await weth.balanceOf(user2.address)).gt("1180000000000000000")
@@ -351,8 +351,8 @@ describe("StakingRouter", function () {
     expect(await poolRewardTracker.stakedAmounts(user1)).eq(expandDecimals(500, 18));
     expect(await poolRewardTracker.depositBalances(user1, gsPool)).eq(expandDecimals(500, 18));
 
-    await stakingRouter.connect(user0).claimPool(gsPool);
-    await stakingRouter.connect(user1).claimPool(gsPool);
+    await stakingRouter.connect(user0).claimPool(gsPool, true, true,);
+    await stakingRouter.connect(user1).claimPool(gsPool, true, true);
   
     expect(await esGs.balanceOf(user0)).gt(expandDecimals(892 + 1428, 18));
     expect(await esGs.balanceOf(user0)).lt(expandDecimals(893 + 1429, 18));
