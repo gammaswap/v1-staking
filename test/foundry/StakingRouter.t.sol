@@ -68,9 +68,9 @@ contract StakingRouterTest is CPMMGammaSwapSetup {
 
         ////////// CLAIMING //////////
         vm.prank(user1);
-        stakingRouter.claimPool(address(pool));
+        stakingRouter.claimPool(address(pool), true, true);
         vm.prank(user2);
-        stakingRouter.claimPool(address(pool));
+        stakingRouter.claimPool(address(pool), true, true);
         assertApproxEqRel(esGs.balanceOf(user1), esGsRewards1, 1e4);
         assertApproxEqRel(esGs.balanceOf(user2), esGsRewards2, 1e4);
         assertEq(gs.balanceOf(user1), 0);
@@ -96,7 +96,7 @@ contract StakingRouterTest is CPMMGammaSwapSetup {
 
         vm.warp(block.timestamp + 365 days);
 
-        stakingRouter.claimPool(address(pool));
+        stakingRouter.claimPool(address(pool), true, true);
         assertEq(gs.balanceOf(user2), esGsRewards2);
         vm.stopPrank();
     }

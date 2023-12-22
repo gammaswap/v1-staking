@@ -107,11 +107,16 @@ interface IStakingRouter is IStakingAdmin {
 
     /* Claim */
     /// @dev Claim rewards
-    function claim() external;
+    /// @param _shouldClaimRewards Should claim esGS rewards?
+    /// @param _shouldClaimFee Should claim protocol revenue fees?
+    /// @param _shouldClaimVesting Should claim vested GS?
+    function claim(bool _shouldClaimRewards, bool _shouldClaimFee, bool _shouldClaimVesting) external;
 
     /// @dev Claim rewards for pool
     /// @param _gsPool GammaPool address
-    function claimPool(address _gsPool) external;
+    /// @param _shouldClaimRewards Should claim esGS rewards?
+    /// @param _shouldClaimVesting Should claim vested GS?
+    function claimPool(address _gsPool, bool _shouldClaimRewards, bool _shouldClaimVesting) external;
 
     /* Compound */
     /// @dev Compound staking

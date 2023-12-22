@@ -141,29 +141,43 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     }
 
     /// @inheritdoc IStakingRouter
-    function claim() external nonReentrant {
+    function claim(bool _shouldClaimRewards, bool _shouldClaimFee, bool _shouldClaimVesting) external nonReentrant {
         address account = msg.sender;
 
-        IRewardTracker(coreTracker.feeTracker).claimForAccount(account, account);
-        IRewardTracker(coreTracker.rewardTracker).claimForAccount(account, account);
+        if (_shouldClaimRewards) {
+            IRewardTracker(coreTracker.rewardTracker).claimForAccount(account, account);
+        }
+        if (_shouldClaimFee) {
+            IRewardTracker(coreTracker.feeTracker).claimForAccount(account, account);
+        }
+        if (_shouldClaimVesting) {
+            IVester(coreTracker.vester).claimForAccount(account, account);
+        }
+
+        // Loan Staking rewards
         if (coreTracker.loanRewardTracker != address(0)) {
             IRewardTracker(coreTracker.loanRewardTracker).claimForAccount(account, account);
         }
-        IVester(coreTracker.vester).claimForAccount(account, account);
         if (coreTracker.loanVester != address(0)) {
             IVester(coreTracker.loanVester).claimForAccount(account, account);
         }
     }
 
     /// @inheritdoc IStakingRouter
-    function claimPool(address _gsPool) external nonReentrant {
+    function claimPool(address _gsPool, bool _shouldClaimRewards, bool _shouldClaimVesting) external nonReentrant {
         address account = msg.sender;
 
-        IRewardTracker(poolTrackers[_gsPool].rewardTracker).claimForAccount(account, account);
+        if (_shouldClaimRewards) {
+            IRewardTracker(poolTrackers[_gsPool].rewardTracker).claimForAccount(account, account);
+        }
+        if (_shouldClaimVesting) {
+            IVester(poolTrackers[_gsPool].vester).claimForAccount(account, account);
+        }
+
+        // Loan Staking rewards
         if (poolTrackers[_gsPool].loanRewardTracker != address(0)) {
             ILoanTracker(poolTrackers[_gsPool].loanRewardTracker).claimForAccount(account, account);
         }
-        IVester(poolTrackers[_gsPool].vester).claimForAccount(account, account);
     }
 
     /// @inheritdoc IStakingRouter
