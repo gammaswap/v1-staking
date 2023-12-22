@@ -61,6 +61,7 @@ describe('FeeTracker', function() {
 
     await weth.mint(feeDistributor.target, expandDecimals(50000, 18))
     await feeDistributor.connect(routerAsSigner).setTokensPerInterval("10000000000000000") // 0.01 weth per second
+    await feeDistributor.connect(routerAsSigner).setPaused(false)
     await feeTracker.connect(routerAsSigner).setInPrivateStakingMode(false);
 
     // User0 stake

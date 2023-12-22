@@ -25,11 +25,6 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
         address _vesterDeployer
     ) StakingAdmin(_weth, _gs, _esGs, _esGsb, _bnGs, _factory, _manager, _rewardTrackerDeployer, _feeTrackerDeployer, _rewardDistributorDeployer, _vesterDeployer) {}
 
-    /// @dev Used to convert WETH to ETH
-    receive() external payable {
-        require(msg.sender == weth, "StakingRouter: invalid sender");
-    }
-
     /// @inheritdoc IStakingRouter
     function stakeGsForAccount(address _account, uint256 _amount) external nonReentrant {
         _validateHandler();

@@ -39,11 +39,27 @@ describe("BonusDistributor", function () {
     await bonusDistributor.connect(routerAsSigner).setBonusMultiplier(10000)
   })
 
+  it("initial states", async () => {
+    expect(await rewardDistributor.rewardToken()).equals(esGs.target)
+    expect(await rewardDistributor.rewardTracker()).equals(rewardTracker.target)
+    expect(await rewardDistributor.tokensPerInterval()).equals(0)
+    expect(await rewardDistributor.lastDistributionTime()).greaterThan(0)
+    expect(await rewardDistributor.paused()).equals(true)
+
+    expect(await bonusDistributor.rewardToken()).equals(bnGs.target)
+    expect(await bonusDistributor.rewardTracker()).equals(bonusTracker.target)
+    expect(await bonusDistributor.tokensPerInterval()).equals(0)
+    expect(await bonusDistributor.lastDistributionTime()).greaterThan(0)
+    expect(await bonusDistributor.paused()).equals(true)
+  })
+
   it("distributes bonus", async () => {
     const [deployer, user0, user1] = await ethers.getSigners()
     await esGs.mint(rewardDistributor.target, expandDecimals(50000, 18))
     await bnGs.mint(bonusDistributor.target, expandDecimals(1500, 18))
     await rewardDistributor.connect(routerAsSigner).setTokensPerInterval("20667989410000000") // 0.02066798941 esGs per second
+    await rewardDistributor.connect(routerAsSigner).setPaused(false)
+    await bonusDistributor.connect(routerAsSigner).setPaused(false)
     await gs.mint(user0.address, expandDecimals(1000, 18))
 
     await gs.connect(user0).approve(rewardTracker.target, expandDecimals(1001, 18))
@@ -85,10 +101,10 @@ describe("BonusDistributor", function () {
     const [deployer, user0] = await ethers.getSigners()
     await esGs.mint(rewardDistributor.target, expandDecimals(50000, 18))
     await rewardDistributor.connect(routerAsSigner).setTokensPerInterval("20667989410000000") // 0.02066798941 esGs per second
+    await rewardDistributor.connect(routerAsSigner).setPaused(false)
     await gs.mint(user0.address, expandDecimals(1000, 18))
 
     expect(await rewardDistributor.paused()).equals(false);
-    expect(await bonusDistributor.paused()).equals(false);
 
     await gs.connect(user0).approve(rewardTracker.target, expandDecimals(1001, 18))
     await rewardTracker.connect(routerAsSigner).stakeForAccount(user0.address, user0.address, gs.target, expandDecimals(1000, 18))

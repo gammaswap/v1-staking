@@ -25,11 +25,11 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     using ERC165Checker for address;
     using DeployerUtils for address;
 
-    address public immutable weth;
     address public immutable gs;
     address public immutable esGs;
     address public immutable esGsb;
     address public immutable bnGs;
+    address public immutable feeRewardToken;
     address public immutable factory;
     address public immutable manager;
 
@@ -45,7 +45,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     mapping (address => AssetPoolTracker) public poolTrackers;
 
     constructor(
-        address _weth,
+        address _feeRewardToken,
         address _gs,
         address _esGs,
         address _esGsb,
@@ -58,13 +58,13 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         address _vesterDeployer
     ) {
         if (
-            _weth == address(0) || _gs == address(0) || _esGs == address(0) || _esGsb == address(0) || _bnGs == address(0) || _manager == address(0) ||
+            _feeRewardToken == address(0) || _gs == address(0) || _esGs == address(0) || _esGsb == address(0) || _bnGs == address(0) || _manager == address(0) ||
             _rewardTrackerDeployer == address(0) || _feeTrackerDeployer == address(0) || _rewardDistributorDeployer == address(0) || _vesterDeployer == address(0)
         ) {
             revert InvalidConstructor();
         }
 
-        weth = _weth;
+        feeRewardToken = _feeRewardToken;
         gs = _gs;
         esGsb = _esGsb;
         esGs = _esGs;
@@ -94,7 +94,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         _depositTokens = new address[](2);
         _depositTokens[0] = _bonusTracker;
         _depositTokens[1] = bnGs;
-        (address _feeTracker, address _feeDistributor) = _combineTrackerDistributor("Staked + Bonus + Fee GS", "sbfGS", weth, _depositTokens, 0, true, false);
+        (address _feeTracker, address _feeDistributor) = _combineTrackerDistributor("Staked + Bonus + Fee GS", "sbfGS", feeRewardToken, _depositTokens, 0, true, false);
 
         address _vester = vesterDeployer.deployContract(
             abi.encodeCall(IVesterDeployer.deploy, ("Vested GS", "vGS", VESTING_DURATION, esGs, _feeTracker, gs, _rewardTracker))

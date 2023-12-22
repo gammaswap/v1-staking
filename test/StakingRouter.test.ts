@@ -53,14 +53,17 @@ describe("StakingRouter", function () {
 
     await esGs.mint(rewardDistributor.target, expandDecimals(50000, 18))
     await rewardDistributor.connect(routerAsSigner).setTokensPerInterval("20667989410000000") // 0.02066798941 esGs per second
+    await rewardDistributor.connect(routerAsSigner).setPaused(false)
     await bonusDistributor.connect(routerAsSigner).setBonusMultiplier(10000)
     await bnGs.connect(routerAsSigner).mint(bonusDistributor, expandDecimals(1500, 18))
     await weth.mint(feeDistributor.target, expandDecimals(100, 18))
+    await bonusDistributor.connect(routerAsSigner).setPaused(false)
     await feeDistributor.connect(routerAsSigner).setTokensPerInterval("41335970000000") // 0.00004133597 WETH per second
+    await feeDistributor.connect(routerAsSigner).setPaused(false)
   })
 
   it("inits", async () => {
-    expect(await stakingRouter.weth()).eq(weth.target)
+    expect(await stakingRouter.feeRewardToken()).eq(weth.target)
     expect(await stakingRouter.gs()).eq(gs.target)
     expect(await stakingRouter.esGs()).eq(esGs.target)
     expect(await stakingRouter.bnGs()).eq(bnGs.target)
@@ -296,6 +299,7 @@ describe("StakingRouter", function () {
       rewardDistributor: poolRewardDistributor
     } = await poolTrackers(stakingRouter, gsPool.target.toString())
     await poolRewardDistributor.connect(routerAsSigner).setTokensPerInterval("20667989410000000")
+    await poolRewardDistributor.connect(routerAsSigner).setPaused(false)
     await esGs.mint(poolRewardDistributor, expandDecimals(50000, 18));
 
     await gsPool.mint(user0, expandDecimals(1000, 18));
