@@ -88,6 +88,7 @@ describe('RewardTracker', function() {
 
     await esGs.mint(rewardDistributor.target, expandDecimals(50000, 18))
     await rewardDistributor.connect(routerAsSigner).setTokensPerInterval("20667989410000000") // 0.02066798941 esGs per second
+    await rewardDistributor.connect(routerAsSigner).setPaused(false)
     await gs.mint(user0.address, expandDecimals(1000, 18))
 
     await expect(rewardTracker.connect(user0).stake(gs.target, expandDecimals(1000, 18)))
@@ -263,6 +264,7 @@ describe('RewardTracker', function() {
 
     await esGs.mint(rewardDistributor.target, expandDecimals(50000, 18))
     await rewardDistributor.connect(routerAsSigner).setTokensPerInterval("20667989410000000") // 0.02066798941 esgs per second
+    await rewardDistributor.connect(routerAsSigner).setPaused(false)
     await gs.mint(deployer.address, expandDecimals(1000, 18))
 
     await rewardTracker.connect(routerAsSigner).setInPrivateStakingMode(true)

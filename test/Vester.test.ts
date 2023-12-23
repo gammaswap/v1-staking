@@ -404,7 +404,7 @@ describe('Vester', function() {
     // await esGs.setHandler(wallet.address, true)
     await esGs.mint(rewardDistributor.target, expandDecimals(50000 * 12, 18))
     await rewardDistributor.connect(routerAsSigner).setTokensPerInterval("20667989410000000") // 0.02066798941 esGs per second
-
+    await rewardDistributor.connect(routerAsSigner).setPaused(false)
     await bonusDistributor.connect(routerAsSigner).setBonusMultiplier(10000)
 
     expect(await vester.name()).eq("Vested GS")
@@ -547,7 +547,7 @@ describe('Vester', function() {
 
     await esGs.mint(rewardDistributor.target, expandDecimals(50000 * 12, 18))
     await rewardDistributor.connect(routerAsSigner).setTokensPerInterval("20667989410000000") // 0.02066798941 esGs per second
-
+    await rewardDistributor.connect(routerAsSigner).setPaused(false)
     await bonusDistributor.connect(routerAsSigner).setBonusMultiplier(10000)
     // await vester.setHandler(wallet.address, true)
 

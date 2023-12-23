@@ -29,7 +29,7 @@ contract BonusDistributor is Ownable2Step, IRewardDistributor {
     address public override rewardToken;
     uint256 public lastDistributionTime;
     address public rewardTracker;
-    bool public paused;
+    bool public paused = true;
 
     /// @dev Constructor function
     /// @param _rewardToken Address of the ERC20 token used for rewards
@@ -56,15 +56,18 @@ contract BonusDistributor is Ownable2Step, IRewardDistributor {
 
     /// @inheritdoc IRewardDistributor
     function setPaused(bool _paused) external onlyOwner {
+        address _rewardTracker = rewardTracker;
+        uint256 timestamp = block.timestamp;
+
         if (_paused) {
-            IRewardTracker(rewardTracker).updateRewards();
+            IRewardTracker(_rewardTracker).updateRewards();
         } else {
-            lastDistributionTime = block.timestamp;
+            lastDistributionTime = timestamp;
         }
 
         paused = _paused;
 
-        emit StatusChange(rewardTracker, block.timestamp, _paused);
+        emit StatusChange(_rewardTracker, timestamp, _paused);
     }
 
     /// @inheritdoc IRewardDistributor

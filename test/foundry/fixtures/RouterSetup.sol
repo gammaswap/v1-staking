@@ -81,9 +81,12 @@ contract RouterSetup is TokensSetup {
 
         vm.startPrank(address(stakingRouter));
         RewardDistributor(rewardDistributor).setTokensPerInterval(1e16);   // 0.01 esGS per second
+        RewardDistributor(rewardDistributor).setPaused(false);
         BonusDistributor(bonusDistributor).setBonusMultiplier(10000);
         RewardDistributor(feeDistributor).setTokensPerInterval(1e16);       // 0.01 WETH per second
+        RewardDistributor(feeDistributor).setPaused(false);
         RewardDistributor(poolRewardDistributor).setTokensPerInterval(1e16);       // 0.01 esGS per second
+        RewardDistributor(poolRewardDistributor).setPaused(false);
         vm.stopPrank();
     }
 }

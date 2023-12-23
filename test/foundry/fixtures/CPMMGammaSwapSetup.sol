@@ -79,7 +79,7 @@ contract CPMMGammaSwapSetup is UniswapSetup, RouterSetup {
 
         pool = CPMMGammaPool(factory.createPool(PROTOCOL_ID, cfmm, tokens, new bytes(0)));
 
-        factory.setPoolParams(address(pool), 0, 0, 10, 100, 100, 1, 250, 200);// setting origination fees to zero
+        factory.setPoolParams(address(pool), 0, 0, 10, 100, 100, 1, 250, 200, 1e11);// setting origination fees to zero
 
         approvePool();
         //////// END: GammaSwap Core setup ////////
