@@ -85,7 +85,7 @@ contract CPMMGammaSwapSetup is UniswapSetup, RouterSetup {
         //////// END: GammaSwap Core setup ////////
 
         //////// START: PositionManager ////////
-        manager = new PositionManager(address(factory), address(weth), address(0), address(0));
+        manager = new PositionManager(address(factory), address(weth));
         // bytes memory managerBytecode = abi.encodePacked(vm.getCode("./node_modules/@gammaswap/v1-periphery/artifacts/contracts/PositionManager.sol/PositionManager.json"), managerArgs);
         // assembly {
         //     sstore(manager.slot, create(0, add(managerBytecode, 0x20), mload(managerBytecode)))
