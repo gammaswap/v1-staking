@@ -79,7 +79,7 @@ contract CPMMGammaSwapSetup is UniswapSetup, RouterSetup {
 
         pool = CPMMGammaPool(factory.createPool(PROTOCOL_ID, cfmm, tokens, new bytes(0)));
 
-        factory.setPoolParams(address(pool), 0, 0, 10, 100, 100, 1, 250, 200, 1e11);// setting origination fees to zero
+        setPoolParams(address(pool), 0, 0, 10, 100, 100, 1, 250, 200, 1e11);// setting origination fees to zero
 
         approvePool();
         //////// END: GammaSwap Core setup ////////
@@ -95,6 +95,13 @@ contract CPMMGammaSwapSetup is UniswapSetup, RouterSetup {
         //////// START: Staking ////////
         setupRouter(address(factory), address(manager), address(pool));
         //////// END: Staking ////////
+    }
+
+    function setPoolParams(address pool, uint16 origFee, uint8 extSwapFee, uint8 emaMultiplier, uint8 minUtilRate1, uint8 minUtilRate2,
+        uint16 feeDivisor, uint8 liquidationFee, uint8 ltvThreshold, uint72 minBorrow) internal {
+        vm.startPrank(address(factory));
+        IGammaPool(pool).setPoolParams(origFee, extSwapFee, emaMultiplier, minUtilRate1, minUtilRate2, feeDivisor, liquidationFee, ltvThreshold, minBorrow);// setting origination fees to zero
+        vm.stopPrank();
     }
 
     function approveUniRouter() public {
