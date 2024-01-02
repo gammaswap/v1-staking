@@ -305,6 +305,7 @@ describe("StakingRouter", function () {
     await gsPool.mint(user0, expandDecimals(1000, 18));
     await gsPool.mint(user1, expandDecimals(1000, 18));
     await gsPool.mint(manager, expandDecimals(1000, 18));
+    await gsPool.mint(stakingRouter.target, expandDecimals(1000, 18));
 
     await gsPool.connect(user0).approve(poolRewardTracker, expandDecimals(1000, 18));
     // await gsPool.connect(user1).approve(poolRewardTracker, expandDecimals(1000, 18));
