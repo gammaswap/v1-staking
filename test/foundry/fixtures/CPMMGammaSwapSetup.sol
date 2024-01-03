@@ -10,14 +10,14 @@ import "@gammaswap/v1-implementations/contracts/strategies/cpmm/liquidation/CPMM
 import "@gammaswap/v1-implementations/contracts/strategies/cpmm/liquidation/CPMMBatchLiquidationStrategy.sol";
 import "@gammaswap/v1-implementations/contracts/strategies/cpmm/CPMMShortStrategy.sol";
 import "@gammaswap/v1-implementations/contracts/libraries/cpmm/CPMMMath.sol";
-import "@gammaswap/v1-periphery/contracts/PositionManager.sol";
+import "@gammaswap/v1-periphery/contracts/PositionManagerWithStaking.sol";
 
 import "./UniswapSetup.sol";
 import "./RouterSetup.sol";
 
 contract CPMMGammaSwapSetup is UniswapSetup, RouterSetup {
     GammaPoolFactory public factory;
-    PositionManager public manager;
+    PositionManagerWithStaking public manager;
 
     CPMMBorrowStrategy public longStrategy;
     CPMMRepayStrategy public repayStrategy;
@@ -85,7 +85,7 @@ contract CPMMGammaSwapSetup is UniswapSetup, RouterSetup {
         //////// END: GammaSwap Core setup ////////
 
         //////// START: PositionManager ////////
-        manager = new PositionManager(address(factory), address(weth));
+        manager = new PositionManagerWithStaking(address(factory), address(weth));
         // bytes memory managerBytecode = abi.encodePacked(vm.getCode("./node_modules/@gammaswap/v1-periphery/artifacts/contracts/PositionManager.sol/PositionManager.json"), managerArgs);
         // assembly {
         //     sstore(manager.slot, create(0, add(managerBytecode, 0x20), mload(managerBytecode)))
@@ -94,6 +94,7 @@ contract CPMMGammaSwapSetup is UniswapSetup, RouterSetup {
 
         //////// START: Staking ////////
         setupRouter(address(factory), address(manager), address(pool));
+        manager.setStakingRouter(address(stakingRouter));
         //////// END: Staking ////////
     }
 
