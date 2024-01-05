@@ -549,7 +549,6 @@ describe('Vester', function() {
     await rewardDistributor.connect(routerAsSigner).setTokensPerInterval("20667989410000000") // 0.02066798941 esGs per second
     await rewardDistributor.connect(routerAsSigner).setPaused(false)
     await bonusDistributor.connect(routerAsSigner).setBonusMultiplier(10000)
-    // await vester.setHandler(wallet.address, true)
 
     expect(await vester.name()).eq("Vested GS")
     expect(await vester.symbol()).eq("vGS")
@@ -659,12 +658,12 @@ describe('Vester', function() {
     expect(await vester.getPairAmount(user0.address, expandDecimals(3570, 18))).gt(expandDecimals(999, 18))
     expect(await vester.getPairAmount(user0.address, expandDecimals(3570, 18))).lt(expandDecimals(1000, 18))
 
-    const feeGmxTrackerBalance = await feeTracker.balanceOf(user0.address)
+    const feeTrackerBalance = await feeTracker.balanceOf(user0.address)
 
     await esGs.mint(user0.address, expandDecimals(1190, 18))
     await vester.connect(user0).deposit(expandDecimals(1190, 18))
 
-    expect(feeGmxTrackerBalance).eq(await feeTracker.balanceOf(user0.address))
+    expect(feeTrackerBalance).eq(await feeTracker.balanceOf(user0.address))
 
     await expect(stakingRouter.connect(user0).unstakeGs(expandDecimals(2, 18)))
       .to.be.revertedWithPanic(PANIC_CODES.ARITHMETIC_UNDER_OR_OVERFLOW)
