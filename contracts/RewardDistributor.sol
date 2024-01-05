@@ -59,6 +59,15 @@ contract RewardDistributor is Ownable2Step, IRewardDistributor {
     }
 
     /// @inheritdoc IRewardDistributor
+    function withdrawToken(address _token, address _recipient, uint256 _amount) external onlyOwner {
+        if (_token == address(0)) {
+            payable(_recipient).transfer(_amount);
+        } else {
+            IERC20(_token).safeTransfer(_recipient, _amount);
+        }
+    }
+
+    /// @inheritdoc IRewardDistributor
     function pendingRewards() public view override returns (uint256) {
         if (paused || block.timestamp == lastDistributionTime) {
             return 0;

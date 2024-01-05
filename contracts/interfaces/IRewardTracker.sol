@@ -36,6 +36,12 @@ interface IRewardTracker is IERC165 {
     /// @param _isActive True - Enable, False - Disable
     function setHandler(address _handler, bool _isActive) external;
 
+    /// @dev Withdraw tokens from this contract
+    /// @param _token ERC20 token address, address(0) refers to native token(i.e. ETH)
+    /// @param _recipient Recipient for the withdrawal
+    /// @param _amount Amount of tokens to withdraw
+    function withdrawToken(address _token, address _recipient, uint256 _amount) external;
+
     /// @param _account Address for query
     /// @param _depositToken Token address for query
     /// @return Amount of staked tokens for user

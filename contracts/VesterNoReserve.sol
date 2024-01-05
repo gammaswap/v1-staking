@@ -75,6 +75,15 @@ contract VesterNoReserve is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         isHandler[_handler] = _isActive;
     }
 
+    /// @inheritdoc IVester
+    function withdrawToken(address _token, address _recipient, uint256 _amount) external onlyOwner {
+        if (_token == address(0)) {
+            payable(_recipient).transfer(_amount);
+        } else {
+            IERC20(_token).safeTransfer(_recipient, _amount);
+        }
+    }
+
     /// @dev Restrict max cap of vestable token amounts
     /// @param _hasMaxVestableAmount True if applied
     function setHasMaxVestableAmount(bool _hasMaxVestableAmount) external onlyOwner {

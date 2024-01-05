@@ -32,6 +32,12 @@ interface IRewardDistributor is IERC165 {
     /// @param _paused Indicates if the reward emission is paused
     function setPaused(bool _paused) external;
 
+    /// @dev Withdraw tokens from this contract
+    /// @param _token ERC20 token address, address(0) refers to native token(i.e. ETH)
+    /// @param _recipient Recipient for the withdrawal
+    /// @param _amount Amount of tokens to withdraw
+    function withdrawToken(address _token, address _recipient, uint256 _amount) external;
+
     /// @dev Emitted when rewards are distributed to reward tracker
     /// @param amount Amount of reward tokens distributed
     event Distribute(uint256 amount);
