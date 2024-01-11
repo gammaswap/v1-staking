@@ -98,6 +98,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
         if (_token == address(0)) {
             payable(_recipient).transfer(_amount);
         } else {
+            _amount = _amount == 0 ? IERC20(_token).balanceOf(address(this)) : _amount;
             IERC20(_token).safeTransfer(_recipient, _amount);
         }
     }

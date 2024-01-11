@@ -38,6 +38,9 @@ interface IRewardDistributor is IERC165 {
     /// @param _amount Amount of tokens to withdraw
     function withdrawToken(address _token, address _recipient, uint256 _amount) external;
 
+    /// @dev Returns max withdrawable amount of reward tokens in this contract
+    function maxWithdrawableAmount() external returns (uint256);
+
     /// @dev Emitted when rewards are distributed to reward tracker
     /// @param amount Amount of reward tokens distributed
     event Distribute(uint256 amount);

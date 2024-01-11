@@ -63,8 +63,19 @@ contract RewardDistributor is Ownable2Step, IRewardDistributor {
         if (_token == address(0)) {
             payable(_recipient).transfer(_amount);
         } else {
+            IRewardTracker(rewardTracker).updateRewards();
+            _amount = _amount == 0 ? IERC20(_token).balanceOf(address(this)) : _amount;
             IERC20(_token).safeTransfer(_recipient, _amount);
         }
+    }
+
+    /// @inheritdoc IRewardDistributor
+    function maxWithdrawableAmount() public view returns (uint256) {
+        uint256 rewardsBalance = IERC20(rewardToken).balanceOf(address(this));
+        uint256 pending = pendingRewards();
+
+        require(rewardsBalance >= pending, "RewardDistributor: Insufficient funds");
+        return rewardsBalance - pending;
     }
 
     /// @inheritdoc IRewardDistributor

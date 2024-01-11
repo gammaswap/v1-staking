@@ -19,6 +19,9 @@ interface IVester is IERC165 {
     /// @param _amount Amount of tokens to withdraw
     function withdrawToken(address _token, address _recipient, uint256 _amount) external;
 
+    /// @dev Returns max withdrawable amount of reward tokens in this contract
+    function maxWithdrawableAmount() external returns (uint256);
+
     /// @dev Returns reward tracker contract address
     function rewardTracker() external view returns (address);
 
