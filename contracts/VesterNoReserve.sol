@@ -81,8 +81,11 @@ contract VesterNoReserve is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         if (_token == address(0)) {
             payable(_recipient).transfer(_amount);
         } else {
-            _amount = _amount == 0 ? IERC20(_token).balanceOf(address(this)) : _amount;
-            IERC20(_token).safeTransfer(_recipient, _amount);
+            uint256 maxAmount = maxWithdrawableAmount();
+            _amount = _amount == 0 || _amount > maxAmount ? maxAmount : _amount;
+            if (_amount > 0) {
+                IERC20(_token).safeTransfer(_recipient, _amount);
+            }
         }
     }
 

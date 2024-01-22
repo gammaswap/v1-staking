@@ -64,8 +64,11 @@ contract RewardDistributor is Ownable2Step, IRewardDistributor {
             payable(_recipient).transfer(_amount);
         } else {
             IRewardTracker(rewardTracker).updateRewards();
-            _amount = _amount == 0 ? IERC20(_token).balanceOf(address(this)) : _amount;
-            IERC20(_token).safeTransfer(_recipient, _amount);
+            uint256 maxAmount = maxWithdrawableAmount();
+            _amount = _amount == 0 || _amount > maxAmount ? maxAmount : _amount;
+            if (_amount > 0) {
+                IERC20(_token).safeTransfer(_recipient, _amount);
+            }
         }
     }
 

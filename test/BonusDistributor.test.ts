@@ -167,5 +167,8 @@ describe("BonusDistributor", function () {
     expect(await rewardDistributor.maxWithdrawableAmount()).equals(0)
     expect(await esGs.balanceOf(deployer)).gt(expandDecimals(44642, 18))  // 50000 - (1786 + 3572) ~= 44642
     expect(await esGs.balanceOf(deployer)).lt(expandDecimals(44643, 18))
+
+    await expect(rewardDistributor.connect(routerAsSigner).withdrawToken(esGs.target, deployer, expandDecimals(1000, 18)))
+      .not.to.emit(esGs.target, "Transfer")
   })
 })

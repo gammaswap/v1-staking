@@ -83,7 +83,7 @@ describe('Vester', function() {
     expect(await vester.bonusRewards(user0.address)).eq(200)
   })
 
-  it("deposit, claim, withdraw", async () => {
+  it.only("deposit, claim, withdraw", async () => {
     const [deployer, user0] = await ethers.getSigners()
 
     await expect(vester.connect(user0).deposit(0))
@@ -249,10 +249,23 @@ describe('Vester', function() {
 
     await vester.connect(user0).claim()
 
+    // withdraw tokens
+    await gs.connect(deployer).burn(vester.target, expandDecimals(500, 18))
+    await expect(vester.maxWithdrawableAmount()).to.be.revertedWith("Vester: Insufficient funds");
+
+    await gs.connect(deployer).mint(vester.target, expandDecimals(500, 18))
     await vester.connect(routerAsSigner).withdrawToken(gs.target, deployer, 0)
+
     expect(await vester.maxWithdrawableAmount()).eq(0)
     expect(await gs.balanceOf(deployer)).gt(expandDecimals(489, 18))  // 500 + 989 - 1000
     expect(await gs.balanceOf(deployer)).lt(expandDecimals(490, 18))
+
+    await gs.connect(deployer).mint(vester.target, expandDecimals(100, 18))
+    expect(await vester.maxWithdrawableAmount()).eq(expandDecimals(100, 18))
+    await expect(vester.connect(routerAsSigner).withdrawToken(gs.target, deployer, expandDecimals(500, 18)))
+      .to.emit(gs, "Transfer")
+      .withArgs(vester.target, deployer.address, expandDecimals(100, 18))
+    expect(await vester.maxWithdrawableAmount()).eq(0)
   })
 
   it("depositForAccount, claimForAccount", async () => {
