@@ -55,6 +55,11 @@ describe("BonusDistributor", function () {
     expect(await bonusDistributor.maxWithdrawableAmount()).equals(0)
   })
 
+  it("Max basis points", async () => {
+    await expect(bonusDistributor.connect(routerAsSigner).setBonusMultiplier(10001))
+      .to.revertedWith("BonusDistributor: invalid multiplier points")
+  })
+
   it("distributes bonus", async () => {
     const [deployer, user0, user1] = await ethers.getSigners()
     await esGs.mint(rewardDistributor.target, expandDecimals(5000, 18))
@@ -165,10 +170,12 @@ describe("BonusDistributor", function () {
 
     await rewardDistributor.connect(routerAsSigner).withdrawToken(esGs.target, deployer, 0)
     expect(await rewardDistributor.maxWithdrawableAmount()).equals(0)
-    expect(await esGs.balanceOf(deployer)).gt(expandDecimals(44642, 18))  // 50000 - (1786 + 3572) ~= 44642
-    expect(await esGs.balanceOf(deployer)).lt(expandDecimals(44643, 18))
 
-    await expect(rewardDistributor.connect(routerAsSigner).withdrawToken(esGs.target, deployer, expandDecimals(1000, 18)))
-      .not.to.emit(esGs.target, "Transfer")
+    const esGsBalance = await esGs.balanceOf(deployer)
+    expect(esGsBalance).gt(expandDecimals(44642, 18))  // 50000 - (1786 + 3572) ~= 44642
+    expect(esGsBalance).lt(expandDecimals(44643, 18))
+
+    await rewardDistributor.connect(routerAsSigner).withdrawToken(esGs.target, deployer, expandDecimals(1000, 18))
+    expect(await esGs.balanceOf(deployer)).equals(esGsBalance)
   })
 })

@@ -83,7 +83,7 @@ describe('Vester', function() {
     expect(await vester.bonusRewards(user0.address)).eq(200)
   })
 
-  it.only("deposit, claim, withdraw", async () => {
+  it("deposit, claim, withdraw", async () => {
     const [deployer, user0] = await ethers.getSigners()
 
     await expect(vester.connect(user0).deposit(0))

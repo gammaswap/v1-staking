@@ -47,6 +47,7 @@ contract BonusDistributor is Ownable2Step, IRewardDistributor {
     /// @notice Set basis points
     function setBonusMultiplier(uint256 _bonusMultiplierBasisPoints) external onlyOwner {
         require(lastDistributionTime != 0, "BonusDistributor: invalid lastDistributionTime");
+        require(_bonusMultiplierBasisPoints <= BASIS_POINTS_DIVISOR, "BonusDistributor: invalid multiplier points");
 
         IRewardTracker(rewardTracker).updateRewards();
         bonusMultiplierBasisPoints = _bonusMultiplierBasisPoints;

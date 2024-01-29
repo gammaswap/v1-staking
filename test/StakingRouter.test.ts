@@ -312,11 +312,15 @@ describe("StakingRouter", function () {
     await gsPool.connect(manager).approve(poolRewardTracker, expandDecimals(1000, 18));
 
     await expect(stakingRouter.connect(user1).stakeLpForAccount(user0, gsPool, expandDecimals(1000, 18)))
-    .to.be.revertedWith("StakingRouter: forbidden");
+      .to.be.revertedWith("StakingRouter: forbidden");
+    await expect(stakingRouter.connect(user0).stakeLp(ethers.ZeroAddress, expandDecimals(1000, 18)))
+      .to.be.revertedWith("StakingRouter: pool tracker not found")
     await expect(stakingRouter.connect(user0).stakeLp(gsPool, expandDecimals(1000, 18)))
       .to.emit(stakingRouter, "StakedLp")
       .withArgs(user0.address, gsPool.target, expandDecimals(1000, 18))
 
+    await expect(stakingRouter.connect(manager).stakeLpForAccount(user1, ethers.ZeroAddress, expandDecimals(1000, 18)))
+      .to.be.revertedWith("StakingRouter: pool tracker not found")
     await stakingRouter.connect(manager).stakeLpForAccount(user1, gsPool, expandDecimals(1000, 18));
     expect(await poolRewardTracker.balanceOf(user0)).eq(expandDecimals(1000, 18));
     expect(await poolRewardTracker.stakedAmounts(user0)).eq(expandDecimals(1000, 18));
@@ -356,7 +360,13 @@ describe("StakingRouter", function () {
     expect(await poolRewardTracker.stakedAmounts(user1)).eq(expandDecimals(500, 18));
     expect(await poolRewardTracker.depositBalances(user1, gsPool)).eq(expandDecimals(500, 18));
 
-    await stakingRouter.connect(user0).claimPool(gsPool, true, true,);
+    // Try with unregistered pool
+    await expect(stakingRouter.connect(user0).claimPool(ethers.ZeroAddress, true, true))
+      .to.rejectedWith("StakingRouter: pool tracker not found")
+    await expect(stakingRouter.connect(user0).claimPool(ethers.ZeroAddress, false, true))
+      .to.rejectedWith("StakingRouter: pool vester not found")
+
+    await stakingRouter.connect(user0).claimPool(gsPool, true, true);
     await stakingRouter.connect(user1).claimPool(gsPool, true, true);
   
     expect(await esGs.balanceOf(user0)).gt(expandDecimals(892 + 1428, 18));
@@ -387,6 +397,8 @@ describe("StakingRouter", function () {
     await vester.connect(routerAsSigner).setBonusRewards(user0, expandDecimals(1000, 18));
     await stakingRouter.connect(user0).vestEsGs(expandDecimals(1000, 18));
 
+    await expect(stakingRouter.connect(user1).vestEsGsForPool(ethers.ZeroAddress, expandDecimals(1000, 18)))
+      .to.be.revertedWith("StakingRouter: pool vester not found");
     await expect(stakingRouter.connect(user1).vestEsGsForPool(gsPool, expandDecimals(1000, 18)))
       .to.be.revertedWith("Vester: max vestable amount exceeded");
     await poolVester.connect(routerAsSigner).setBonusRewards(user1, expandDecimals(1000, 18));
@@ -395,6 +407,9 @@ describe("StakingRouter", function () {
     await increase(30 * 24 * 60 * 60)
 
     await stakingRouter.connect(user0).withdrawEsGs();
+    await expect(stakingRouter.connect(user1).withdrawEsGsForPool(ethers.ZeroAddress))
+      .to.rejectedWith("StakingRouter: pool vester not found");
+
     await stakingRouter.connect(user1).withdrawEsGsForPool(gsPool);
     expect(await gs.balanceOf(user0)).gt(expandDecimals(82, 18))  // 1000 * 30 / 365 -> 82.19
     expect(await gs.balanceOf(user0)).lt(expandDecimals(83, 18))
