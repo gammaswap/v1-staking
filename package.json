@@ -45,9 +45,9 @@
     "typescript": ">=4.5.0"
   },
   "dependencies": {
-    "@gammaswap/v1-core": "^1.1.20",
-    "@gammaswap/v1-implementations": "^1.1.24",
-    "@gammaswap/v1-periphery": "^1.1.13",
+    "@gammaswap/v1-core": "^1.2.2",
+    "@gammaswap/v1-implementations": "^1.2.2",
+    "@gammaswap/v1-periphery": "^1.2.1",
     "@layerzerolabs/lz-sdk": "^0.0.38",
     "@layerzerolabs/solidity-examples": "^0.0.13",
     "@layerzerolabs/ua-utils": "^0.0.4",
