@@ -1,6 +1,6 @@
 {
   "name": "@gammaswap/v1-staking",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "Staking contracts for GammaSwapV1 protocol",
   "scripts": {
     "hardhat": "hardhat",

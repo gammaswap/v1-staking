@@ -50,7 +50,7 @@ export async function setup() {
   await stakingRouter.setupGsStaking();
   await stakingRouter.setupGsStakingForLoan();
 
-  await stakingRouter.setupPoolStaking(gsPool.target);
+  await stakingRouter.setupPoolStaking(gsPool.target, esGs.target, gs.target);
   await stakingRouter.setupPoolStakingForLoan(gsPool.target, 1); // refId should be non-zero
 
   return { gs, weth, esGs, esGsb, bnGs, gsPool, rewardTrackerDeployer, feeTrackerDeployer, rewardDistributorDeployer, vesterDeployer, stakingRouter };
