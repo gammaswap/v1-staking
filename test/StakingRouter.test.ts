@@ -7,10 +7,10 @@ import { setup, coreTrackers, poolTrackers } from './utils/deploy';
 import { increase, latest } from './utils/time'
 import { expandDecimals } from './utils/bignumber';
 import { impersonateAndFund, reportGasUsed } from './utils/misc';
-import { BonusDistributor, FeeTracker, GS, ERC20Mock, RestrictedToken, RewardDistributor, RewardTracker, StakingRouter, Vester, LoanTracker, VesterNoReserve } from '../typechain-types';
+import { BonusDistributor, FeeTracker, GS, ERC20Mock, RestrictedToken, RewardDistributor, RewardTracker, StakingRouter, Vester, LoanTracker, VesterNoReserve, Token } from '../typechain-types';
 
 describe("StakingRouter", function () {
-  let gs: GS
+  let gs: Token
   let esGs: RestrictedToken
   let bnGs: RestrictedToken
   let weth: ERC20Mock

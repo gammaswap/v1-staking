@@ -7,13 +7,13 @@ import { setup, coreTrackers } from './utils/deploy';
 import { increase, latest } from './utils/time'
 import { expandDecimals } from './utils/bignumber';
 import { impersonateAndFund } from './utils/misc';
-import { BonusDistributor, FeeTracker, GS, ERC20Mock, RestrictedToken, RewardDistributor, RewardTracker, StakingRouter, Vester } from '../typechain-types';
+import { BonusDistributor, FeeTracker, GS, ERC20Mock, RestrictedToken, RewardDistributor, RewardTracker, StakingRouter, Vester, Token } from '../typechain-types';
 
 const secondsPerYear = 365 * 24 * 60 * 60
 const AddressZero = ethers.ZeroAddress
 
 describe('Vester', function() {
-  let gs: GS
+  let gs: Token
   let esGs: RestrictedToken
   let bnGs: RestrictedToken
   let weth: ERC20Mock

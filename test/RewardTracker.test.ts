@@ -8,11 +8,11 @@ import { setup, coreTrackers } from './utils/deploy';
 import { increase } from './utils/time'
 import { expandDecimals } from './utils/bignumber';
 import { impersonateAndFund } from './utils/misc';
-import { GS, RestrictedToken, RewardDistributor, RewardTracker } from '../typechain-types';
+import { GS, RestrictedToken, RewardDistributor, RewardTracker, Token } from '../typechain-types';
 
 describe('RewardTracker', function() {
   let rewardTracker: RewardTracker
-  let gs: GS
+  let gs: Token
   let esGs: RestrictedToken
   let rewardDistributor: RewardDistributor
   let routerAsSigner: HardhatEthersSigner

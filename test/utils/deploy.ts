@@ -4,16 +4,18 @@ import { BonusDistributor, FeeTracker, LoanTracker, RewardDistributor, RewardTra
 export async function setup() {
   const [deployer, factory, manager] = await ethers.getSigners();
 
-  const GS = await ethers.getContractFactory('GS');
-  const gs = await GS.deploy(ethers.ZeroAddress);
+  // const GS = await ethers.getContractFactory('GS');
+  // const gs = await GS.deploy(ethers.ZeroAddress);
 
   const ERC20 = await ethers.getContractFactory('ERC20Mock');
   const RestrictedToken = await ethers.getContractFactory('RestrictedToken');
+  const Token = await ethers.getContractFactory('Token');
 
   const weth = await ERC20.deploy('Wrapped Ether', 'weth');
-  const esGs = await RestrictedToken.deploy('Escrowed GS', 'esGS');
-  const esGsb = await RestrictedToken.deploy('Escrowed GS for Borrowers', 'esGSb');
-  const bnGs = await RestrictedToken.deploy('Bonus GS', 'bnGS');
+  const gs = await Token.deploy('GS', 'GS');
+  const esGs = await RestrictedToken.deploy('Escrowed GS', 'esGS', 0);
+  const esGsb = await RestrictedToken.deploy('Escrowed GS for Borrowers', 'esGSb', 0);
+  const bnGs = await RestrictedToken.deploy('Bonus GS', 'bnGS', 1);
   const gsPool = await ERC20.deploy('GammaPool', 'GSPool');
 
   const RewardTrackerDeployer = await ethers.getContractFactory('RewardTrackerDeployer');

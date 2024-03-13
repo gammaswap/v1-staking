@@ -7,12 +7,12 @@ import { setup, coreTrackers } from './utils/deploy';
 import { increase } from './utils/time'
 import { expandDecimals } from './utils/bignumber';
 import { impersonateAndFund } from './utils/misc';
-import { GS, RestrictedToken, ERC20Mock, RewardDistributor, FeeTracker, RewardTracker, ERC20, StakingRouter } from '../typechain-types';
+import { GS, RestrictedToken, ERC20Mock, RewardDistributor, FeeTracker, RewardTracker, ERC20, StakingRouter, Token } from '../typechain-types';
 
 describe('FeeTracker', function() {
   let feeTracker: FeeTracker
   let weth: ERC20Mock
-  let gs: GS
+  let gs: Token
   let esGs: RestrictedToken
   let bnGs: RestrictedToken
   let feeDistributor: RewardDistributor

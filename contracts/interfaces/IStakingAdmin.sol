@@ -9,6 +9,9 @@ interface IStakingAdmin {
   /// @dev Thrown in constructor for invalid params
   error InvalidConstructor();
 
+  /// @dev Thrown in constructor for invalid restricted tokens
+  error InvalidRestrictedToken();
+
   /// @dev Thrown in `execute` when calling untrusted contracts
   error InvalidExecute();
 

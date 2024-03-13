@@ -11,9 +11,9 @@ async function main() {
   const ERC20 = await ethers.getContractFactory('ERC20');
 
   const weth = await ERC20.deploy('Wrapped Ether', 'weth');
-  const esGs = await Token.deploy('Escrowed GS', 'esGS');
-  const esGsb = await Token.deploy('Escrowed GS for Borrowers', 'esGSb');
-  const bnGs = await Token.deploy('Bonus GS', 'bnGS');
+  const esGs = await Token.deploy('Escrowed GS', 'esGS', 0);
+  const esGsb = await Token.deploy('Escrowed GS for Borrowers', 'esGSb', 0);
+  const bnGs = await Token.deploy('Bonus GS', 'bnGS', 1);
   const gsPool = await ERC20.deploy('GammaPool', 'GSPool');
 
   const RewardTrackerDeployer = await ethers.getContractFactory('RewardTrackerDeployer');

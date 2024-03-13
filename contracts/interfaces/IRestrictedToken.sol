@@ -7,6 +7,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 /// @author Simon Mall
 /// @notice Used for esGS, esGSb and bnGS
 interface IRestrictedToken is IERC20 {
+  enum TokenType { ESCROW, BONUS }
+
+  function tokenType() external view returns (TokenType);
+
   /// @param _user Address for query
   /// @return Check if an address is manager
   function isManager(address _user) external returns (bool);

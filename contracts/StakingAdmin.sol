@@ -64,6 +64,14 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
             revert InvalidConstructor();
         }
 
+        if (
+            IRestrictedToken(_esGs).tokenType() != IRestrictedToken.TokenType.ESCROW ||
+            IRestrictedToken(_esGsb).tokenType() != IRestrictedToken.TokenType.ESCROW ||
+            IRestrictedToken(_bnGs).tokenType() != IRestrictedToken.TokenType.BONUS
+        ) {
+            revert InvalidRestrictedToken();
+        }
+
         feeRewardToken = _feeRewardToken;
         gs = _gs;
         esGsb = _esGsb;
@@ -150,6 +158,10 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
 
     /// @inheritdoc IStakingAdmin
     function setupPoolStaking(address _gsPool, address _esToken, address _claimableToken) external onlyOwner {
+        if (IRestrictedToken(_esToken).tokenType() != IRestrictedToken.TokenType.ESCROW) {
+            revert InvalidRestrictedToken();
+        }
+
         address[] memory _depositTokens = new address[](1);
         _depositTokens[0] = _gsPool;
         (address _rewardTracker, address _rewardDistributor) = _combineTrackerDistributor("Staked GS LP", "sGSlp", _esToken, _depositTokens, 0, false, false);
