@@ -33,6 +33,7 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
 
     uint256 public override totalSupply;
     uint256 public pairSupply;
+    uint256 public totalClaimable;
 
     bool public hasMaxVestableAmount;
 
@@ -80,6 +81,29 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
     /// @inheritdoc IVester
     function setHandler(address _handler, bool _isActive) external onlyOwner {
         isHandler[_handler] = _isActive;
+    }
+
+    /// @inheritdoc IVester
+    function withdrawToken(address _token, address _recipient, uint256 _amount) external onlyOwner {
+        if (_token == address(0)) {
+            payable(_recipient).transfer(_amount);
+        } else {
+            uint256 maxAmount = maxWithdrawableAmount();
+            _amount = _amount == 0 || _amount > maxAmount ? maxAmount : _amount;
+            if (_amount > 0) {
+                IERC20(_token).safeTransfer(_recipient, _amount);
+            }
+        }
+    }
+
+    /// @inheritdoc IVester
+    function maxWithdrawableAmount() public view returns (uint256) {
+        uint256 rewardsSupply = IERC20(claimableToken).balanceOf(address(this));
+        uint256 rewardsRequired = totalSupply + totalClaimable;
+
+        require(rewardsSupply >= rewardsRequired, "Vester: Insufficient funds");
+
+        return rewardsSupply - rewardsRequired;
     }
 
     /// @dev Restrict max cap of vestable token amounts
@@ -335,7 +359,10 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
         _updateVesting(_account);
 
         uint256 amount = claimable(_account);
-        claimedAmounts[_account] = claimedAmounts[_account] + amount;
+        unchecked {
+            claimedAmounts[_account] = claimedAmounts[_account] + amount;
+            totalClaimable -= amount;
+        }
         IERC20(claimableToken).safeTransfer(_receiver, amount);
 
         emit Claim(_account, amount);
@@ -381,7 +408,10 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
 
         // transfer claimableAmount from balances to cumulativeClaimAmounts
         _burn(_account, amount);
-        cumulativeClaimAmounts[_account] = cumulativeClaimAmounts[_account] + amount;
+        unchecked {
+            cumulativeClaimAmounts[_account] = cumulativeClaimAmounts[_account] + amount;
+            totalClaimable += amount;
+        }
 
         IRestrictedToken(esToken).burn(address(this), amount);
     }

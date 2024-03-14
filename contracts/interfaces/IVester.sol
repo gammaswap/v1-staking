@@ -13,6 +13,15 @@ interface IVester is IERC165 {
     /// @param _isActive True - Enable, False - Disable
     function setHandler(address _handler, bool _isActive) external;
 
+    /// @dev Withdraw tokens from this contract
+    /// @param _token ERC20 token address, address(0) refers to native token(i.e. ETH)
+    /// @param _recipient Recipient for the withdrawal
+    /// @param _amount Amount of tokens to withdraw
+    function withdrawToken(address _token, address _recipient, uint256 _amount) external;
+
+    /// @dev Returns max withdrawable amount of reward tokens in this contract
+    function maxWithdrawableAmount() external returns (uint256);
+
     /// @dev Returns reward tracker contract address
     function rewardTracker() external view returns (address);
 

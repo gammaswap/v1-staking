@@ -11,9 +11,9 @@ async function main() {
   const ERC20 = await ethers.getContractFactory('ERC20');
 
   const weth = await ERC20.deploy('Wrapped Ether', 'weth');
-  const esGs = await Token.deploy('Escrowed GS', 'esGS');
-  const esGsb = await Token.deploy('Escrowed GS for Borrowers', 'esGSb');
-  const bnGs = await Token.deploy('Bonus GS', 'bnGS');
+  const esGs = await Token.deploy('Escrowed GS', 'esGS', 0);
+  const esGsb = await Token.deploy('Escrowed GS for Borrowers', 'esGSb', 0);
+  const bnGs = await Token.deploy('Bonus GS', 'bnGS', 1);
   const gsPool = await ERC20.deploy('GammaPool', 'GSPool');
 
   const RewardTrackerDeployer = await ethers.getContractFactory('RewardTrackerDeployer');
@@ -66,7 +66,7 @@ async function main() {
   await stakingRouter.setupGsStakingForLoan();
   console.log('===== GS staking setup done =====');
 
-  await stakingRouter.setupPoolStaking(gsPool.target);
+  await stakingRouter.setupPoolStaking(gsPool.target, esGs.target, gs.target);
   await stakingRouter.setupPoolStakingForLoan(gsPool.target, 1); // refId should be non-zero
   console.log(`===== Pool staking setup done for ${gsPool.target} =====`);
 

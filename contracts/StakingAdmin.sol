@@ -64,6 +64,14 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
             revert InvalidConstructor();
         }
 
+        if (
+            IRestrictedToken(_esGs).tokenType() != IRestrictedToken.TokenType.ESCROW ||
+            IRestrictedToken(_esGsb).tokenType() != IRestrictedToken.TokenType.ESCROW ||
+            IRestrictedToken(_bnGs).tokenType() != IRestrictedToken.TokenType.BONUS
+        ) {
+            revert InvalidRestrictedToken();
+        }
+
         feeRewardToken = _feeRewardToken;
         gs = _gs;
         esGsb = _esGsb;
@@ -149,21 +157,25 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     }
 
     /// @inheritdoc IStakingAdmin
-    function setupPoolStaking(address _gsPool) external onlyOwner {
+    function setupPoolStaking(address _gsPool, address _esToken, address _claimableToken) external onlyOwner {
+        if (IRestrictedToken(_esToken).tokenType() != IRestrictedToken.TokenType.ESCROW) {
+            revert InvalidRestrictedToken();
+        }
+
         address[] memory _depositTokens = new address[](1);
         _depositTokens[0] = _gsPool;
-        (address _rewardTracker, address _rewardDistributor) = _combineTrackerDistributor("Staked GS LP", "sGSlp", esGs, _depositTokens, 0, false, false);
+        (address _rewardTracker, address _rewardDistributor) = _combineTrackerDistributor("Staked GS LP", "sGSlp", _esToken, _depositTokens, 0, false, false);
         
 
         address _vester = vesterDeployer.deployContract(
-            abi.encodeCall(IVesterDeployer.deploy, ("Vested Pool GS", "vpGS", VESTING_DURATION, esGs, _rewardTracker, gs, _rewardTracker))
+            abi.encodeCall(IVesterDeployer.deploy, ("Vested Pool GS", "vpGS", VESTING_DURATION, _esToken, _rewardTracker, _claimableToken, _rewardTracker))
         );
 
         IRewardTracker(_rewardTracker).setHandler(_vester, true);
         IVester(_vester).setHandler(address(this), true);
-        IRestrictedToken(esGs).setHandler(_rewardTracker, true);
-        IRestrictedToken(esGs).setHandler(_rewardDistributor, true);
-        IRestrictedToken(esGs).setHandler(_vester, true);
+        IRestrictedToken(_esToken).setHandler(_rewardTracker, true);
+        IRestrictedToken(_esToken).setHandler(_rewardDistributor, true);
+        IRestrictedToken(_esToken).setHandler(_vester, true);
 
         poolTrackers[_gsPool].rewardTracker = _rewardTracker;
         poolTrackers[_gsPool].rewardDistributor = _rewardDistributor;

@@ -53,17 +53,18 @@ contract CPMMGammaSwapSetup is UniswapSetup, RouterSetup {
 
         uint16 PROTOCOL_ID = 1;
         uint64 baseRate = 1e16;
-        uint80 factor = 4 * 1e16;
-        uint80 maxApy = 75 * 1e16;
+        uint64 optimalUtilRate = 8 * 1e17;
+        uint64 slope1 = 5 * 1e16;
+        uint64 slope2 = 75 * 1e16;
         uint256 maxTotalApy = 1e19;
 
         mathLib = new CPMMMath();
         viewer = new PoolViewer();
-        longStrategy = new CPMMBorrowStrategy(address(mathLib), maxTotalApy, 2252571, 997, address(0), baseRate, factor, maxApy);
-        repayStrategy = new CPMMRepayStrategy(address(mathLib), maxTotalApy, 2252571, 997, address(0), baseRate, factor, maxApy);
-        shortStrategy = new CPMMShortStrategy(maxTotalApy, 2252571, baseRate, factor, maxApy);
-        liquidationStrategy = new CPMMLiquidationStrategy(address(mathLib), maxTotalApy, 2252571, 997, address(0), baseRate, factor, maxApy);
-        batchLiquidationStrategy = new CPMMBatchLiquidationStrategy(address(mathLib), maxTotalApy, 2252571, 997, address(0), baseRate, factor, maxApy);
+        longStrategy = new CPMMBorrowStrategy(address(mathLib), maxTotalApy, 2252571, 997, 1000, address(0), baseRate, optimalUtilRate, slope1, slope2);
+        repayStrategy = new CPMMRepayStrategy(address(mathLib), maxTotalApy, 2252571, 997, 1000, address(0), baseRate, optimalUtilRate, slope1, slope2);
+        shortStrategy = new CPMMShortStrategy(maxTotalApy, 2252571, baseRate, optimalUtilRate, slope1, slope2);
+        liquidationStrategy = new CPMMLiquidationStrategy(address(mathLib), maxTotalApy, 2252571, 997, 1000, address(0), baseRate, optimalUtilRate, slope1, slope2);
+        batchLiquidationStrategy = new CPMMBatchLiquidationStrategy(address(mathLib), maxTotalApy, 2252571, 997, 1000, address(0), baseRate, optimalUtilRate, slope1, slope2);
 
         bytes32 cfmmHash = hex'96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f'; // UniV2Pair init_code_hash
         protocol = new CPMMGammaPool(PROTOCOL_ID, address(factory), address(longStrategy), address(repayStrategy), address(shortStrategy),

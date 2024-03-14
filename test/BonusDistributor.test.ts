@@ -8,10 +8,10 @@ import { setup, coreTrackers } from './utils/deploy';
 import { increase } from './utils/time'
 import { expandDecimals } from './utils/bignumber';
 import { impersonateAndFund } from './utils/misc';
-import { BonusDistributor, GS, RestrictedToken, RewardDistributor, RewardTracker, StakingRouter } from '../typechain-types';
+import { BonusDistributor, GS, RestrictedToken, RewardDistributor, RewardTracker, StakingRouter, Token } from '../typechain-types';
 
 describe("BonusDistributor", function () {
-  let gs: GS
+  let gs: Token
   let esGs: RestrictedToken
   let bnGs: RestrictedToken
   let rewardTracker: RewardTracker
@@ -45,17 +45,24 @@ describe("BonusDistributor", function () {
     expect(await rewardDistributor.tokensPerInterval()).equals(0)
     expect(await rewardDistributor.lastDistributionTime()).greaterThan(0)
     expect(await rewardDistributor.paused()).equals(true)
+    expect(await rewardDistributor.maxWithdrawableAmount()).equals(0)
 
     expect(await bonusDistributor.rewardToken()).equals(bnGs.target)
     expect(await bonusDistributor.rewardTracker()).equals(bonusTracker.target)
     expect(await bonusDistributor.tokensPerInterval()).equals(0)
     expect(await bonusDistributor.lastDistributionTime()).greaterThan(0)
     expect(await bonusDistributor.paused()).equals(true)
+    expect(await bonusDistributor.maxWithdrawableAmount()).equals(0)
+  })
+
+  it("Max basis points", async () => {
+    await expect(bonusDistributor.connect(routerAsSigner).setBonusMultiplier(10001))
+      .to.revertedWith("BonusDistributor: invalid multiplier points")
   })
 
   it("distributes bonus", async () => {
     const [deployer, user0, user1] = await ethers.getSigners()
-    await esGs.mint(rewardDistributor.target, expandDecimals(50000, 18))
+    await esGs.mint(rewardDistributor.target, expandDecimals(5000, 18))
     await bnGs.mint(bonusDistributor.target, expandDecimals(1500, 18))
     await rewardDistributor.connect(routerAsSigner).setTokensPerInterval("20667989410000000") // 0.02066798941 esGs per second
     await rewardDistributor.connect(routerAsSigner).setPaused(false)
@@ -72,7 +79,7 @@ describe("BonusDistributor", function () {
 
     await increase(24 * 60 * 60)
 
-    expect(await rewardTracker.claimable(user0.address)).gt(expandDecimals(1785, 18)) // 50000 / 28 => ~1785
+    expect(await rewardTracker.claimable(user0.address)).gt(expandDecimals(1785, 18)) // 0.02066798941 * 24 * 60 * 60 => ~1785
     expect(await rewardTracker.claimable(user0.address)).lt(expandDecimals(1786, 18))
     expect(await bonusTracker.claimable(user0.address)).gt(BigInt("2730000000000000000")) // 2.73, 1000 / 365 => ~2.74
     expect(await bonusTracker.claimable(user0.address)).lt(BigInt("2750000000000000000")) // 2.75
@@ -95,6 +102,11 @@ describe("BonusDistributor", function () {
 
     expect(await bonusTracker.claimable(user1.address)).gt(BigInt("1360000000000000000")) // 1.36, 500 / 365 => ~1.37
     expect(await bonusTracker.claimable(user1.address)).lt(BigInt("1380000000000000000")) // 1.38
+
+    expect(await rewardDistributor.maxWithdrawableAmount()).gt(expandDecimals(1428, 18))  // 5000 - (1786 + 1191 + 595)
+    expect(await rewardDistributor.maxWithdrawableAmount()).lt(expandDecimals(1429, 18))
+    expect(await bonusDistributor.maxWithdrawableAmount()).gt(expandDecimals(1493, 18)) // 1500 - (5.48 + 1.37)
+    expect(await bonusDistributor.maxWithdrawableAmount()).lt(expandDecimals(1494, 18))
   })
 
   it('pause/resume emissions', async () => {
@@ -155,5 +167,15 @@ describe("BonusDistributor", function () {
 
     expect(await rewardTracker.claimable(user0.address)).gt(expandDecimals(3570, 18))
     expect(await rewardTracker.claimable(user0.address)).lt(expandDecimals(3572, 18))
+
+    await rewardDistributor.connect(routerAsSigner).withdrawToken(esGs.target, deployer, 0)
+    expect(await rewardDistributor.maxWithdrawableAmount()).equals(0)
+
+    const esGsBalance = await esGs.balanceOf(deployer)
+    expect(esGsBalance).gt(expandDecimals(44642, 18))  // 50000 - (1786 + 3572) ~= 44642
+    expect(esGsBalance).lt(expandDecimals(44643, 18))
+
+    await rewardDistributor.connect(routerAsSigner).withdrawToken(esGs.target, deployer, expandDecimals(1000, 18))
+    expect(await esGs.balanceOf(deployer)).equals(esGsBalance)
   })
 })

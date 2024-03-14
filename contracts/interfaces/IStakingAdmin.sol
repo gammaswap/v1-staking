@@ -9,6 +9,9 @@ interface IStakingAdmin {
   /// @dev Thrown in constructor for invalid params
   error InvalidConstructor();
 
+  /// @dev Thrown in constructor for invalid restricted tokens
+  error InvalidRestrictedToken();
+
   /// @dev Thrown in `execute` when calling untrusted contracts
   error InvalidExecute();
 
@@ -46,7 +49,9 @@ interface IStakingAdmin {
 
   /// @dev Setup pool-level staking for GS_LP
   /// @param _gsPool GammaPool address
-  function setupPoolStaking(address _gsPool) external;
+  /// @param _esToken Escrow reward token
+  /// @param _claimableToken Claimable token from vesting
+  function setupPoolStaking(address _gsPool, address _esToken, address _claimableToken) external;
 
   /// @dev Setup pool-level staking for loans
   /// @param _gsPool GammaPool address

@@ -27,9 +27,6 @@ describe("GS", async () => {
         srcGovToken = await GovTokenFactory.deploy(srcLzEndpoint.target) as GS
         dstGovToken = await GovTokenFactory.deploy(dstLzEndpoint.target) as GS
 
-        await srcGovToken.mint(deployer.address, globalSupply);
-        await dstGovToken.mint(deployer.address, globalSupply);
-
         await srcLzEndpoint.setDestLzEndpoint(dstGovToken.target, dstLzEndpoint.target)
         await dstLzEndpoint.setDestLzEndpoint(srcGovToken.target, srcLzEndpoint.target)
         await srcGovToken.setTrustedRemote(dstChainId, ethers.solidityPacked(["address", "address"], [dstGovToken.target, srcGovToken.target]))

@@ -7,13 +7,13 @@ import { setup, coreTrackers } from './utils/deploy';
 import { increase, latest } from './utils/time'
 import { expandDecimals } from './utils/bignumber';
 import { impersonateAndFund } from './utils/misc';
-import { BonusDistributor, FeeTracker, GS, ERC20Mock, RestrictedToken, RewardDistributor, RewardTracker, StakingRouter, Vester } from '../typechain-types';
+import { BonusDistributor, FeeTracker, GS, ERC20Mock, RestrictedToken, RewardDistributor, RewardTracker, StakingRouter, Vester, Token } from '../typechain-types';
 
 const secondsPerYear = 365 * 24 * 60 * 60
 const AddressZero = ethers.ZeroAddress
 
 describe('Vester', function() {
-  let gs: GS
+  let gs: Token
   let esGs: RestrictedToken
   let bnGs: RestrictedToken
   let weth: ERC20Mock
@@ -56,6 +56,7 @@ describe('Vester', function() {
     expect(await vester.hasPairToken()).eq(true)
     expect(await vester.hasRewardTracker()).eq(true)
     expect(await vester.hasMaxVestableAmount()).eq(true)
+    expect(await vester.maxWithdrawableAmount()).eq(0)
   })
 
   it("setCumulativeRewardDeductions", async () => {
@@ -95,7 +96,7 @@ describe('Vester', function() {
 
     await expect(vester.connect(user0).deposit(expandDecimals(1000, 18)))
     .to.be.revertedWith("ERC20: transfer amount exceeds balance")
-    
+
     expect(await vester.balanceOf(user0.address)).eq(0)
     expect(await vester.getTotalVested(user0.address)).eq(0)
     expect(await vester.cumulativeClaimAmounts(user0.address)).eq(0)
@@ -138,8 +139,10 @@ describe('Vester', function() {
       .to.be.revertedWith("ERC20: transfer amount exceeds balance")
 
     await gs.mint(vester.target, expandDecimals(2000, 18))
+    expect(await vester.maxWithdrawableAmount()).eq(expandDecimals(1000, 18)) // 2000 - 1000
 
     await vester.connect(user0).claim()
+    expect(await vester.maxWithdrawableAmount()).eq(expandDecimals(1000, 18))
     blockTime = await latest()
 
     expect(await esGs.balanceOf(user0.address)).eq(0)
@@ -171,6 +174,7 @@ describe('Vester', function() {
     expect(await vester.claimable(user0.address)).lt(expandDecimals(502, 18))
 
     await vester.connect(user0).claim()
+    expect(await vester.maxWithdrawableAmount()).eq(expandDecimals(1000, 18))
     blockTime = await latest()
 
     expect(await esGs.balanceOf(user0.address)).eq(0)
@@ -202,6 +206,7 @@ describe('Vester', function() {
 
     expect(await vester.claimable(user0.address)).gt("6840000000000000000") // 1000 / 365 + 1500 / 365 => 6.849
     expect(await vester.claimable(user0.address)).lt("6860000000000000000")
+    expect(await vester.maxWithdrawableAmount()).eq(expandDecimals(500, 18))
 
     expect(await esGs.balanceOf(user0.address)).eq(0)
     expect(await gs.balanceOf(user0.address)).eq(gsAmount)
@@ -212,6 +217,8 @@ describe('Vester', function() {
     expect(await esGs.balanceOf(user0.address)).lt(expandDecimals(990, 18))
     expect(await gs.balanceOf(user0.address)).gt(expandDecimals(510, 18))
     expect(await gs.balanceOf(user0.address)).lt(expandDecimals(512, 18))
+    expect(await vester.maxWithdrawableAmount()).gt(expandDecimals(500 + 989, 18))
+    expect(await vester.maxWithdrawableAmount()).lt(expandDecimals(500 + 990, 18))
 
     expect(await vester.balanceOf(user0.address)).eq(0)
     expect(await vester.getTotalVested(user0.address)).eq(0)
@@ -224,6 +231,8 @@ describe('Vester', function() {
     await esGs.connect(user0).approve(vester.target, expandDecimals(1000, 18))
     await esGs.mint(user0.address, expandDecimals(1000, 18))
     await vester.connect(user0).deposit(expandDecimals(1000, 18))
+    expect(await vester.maxWithdrawableAmount()).gt(expandDecimals(500 + 989 - 1000, 18))
+    expect(await vester.maxWithdrawableAmount()).lt(expandDecimals(500 + 990 - 1000, 18))
 
     blockTime = await latest()
 
@@ -239,6 +248,24 @@ describe('Vester', function() {
     expect(await vester.lastVestingTimes(user0.address)).eq(blockTime)
 
     await vester.connect(user0).claim()
+
+    // withdraw tokens
+    await gs.connect(deployer).burn(vester.target, expandDecimals(500, 18))
+    await expect(vester.maxWithdrawableAmount()).to.be.revertedWith("Vester: Insufficient funds");
+
+    await gs.connect(deployer).mint(vester.target, expandDecimals(500, 18))
+    await vester.connect(routerAsSigner).withdrawToken(gs.target, deployer, 0)
+
+    expect(await vester.maxWithdrawableAmount()).eq(0)
+    expect(await gs.balanceOf(deployer)).gt(expandDecimals(489, 18))  // 500 + 989 - 1000
+    expect(await gs.balanceOf(deployer)).lt(expandDecimals(490, 18))
+
+    await gs.connect(deployer).mint(vester.target, expandDecimals(100, 18))
+    expect(await vester.maxWithdrawableAmount()).eq(expandDecimals(100, 18))
+    await expect(vester.connect(routerAsSigner).withdrawToken(gs.target, deployer, expandDecimals(500, 18)))
+      .to.emit(gs, "Transfer")
+      .withArgs(vester.target, deployer.address, expandDecimals(100, 18))
+    expect(await vester.maxWithdrawableAmount()).eq(0)
   })
 
   it("depositForAccount, claimForAccount", async () => {
@@ -549,7 +576,6 @@ describe('Vester', function() {
     await rewardDistributor.connect(routerAsSigner).setTokensPerInterval("20667989410000000") // 0.02066798941 esGs per second
     await rewardDistributor.connect(routerAsSigner).setPaused(false)
     await bonusDistributor.connect(routerAsSigner).setBonusMultiplier(10000)
-    // await vester.setHandler(wallet.address, true)
 
     expect(await vester.name()).eq("Vested GS")
     expect(await vester.symbol()).eq("vGS")
@@ -659,12 +685,12 @@ describe('Vester', function() {
     expect(await vester.getPairAmount(user0.address, expandDecimals(3570, 18))).gt(expandDecimals(999, 18))
     expect(await vester.getPairAmount(user0.address, expandDecimals(3570, 18))).lt(expandDecimals(1000, 18))
 
-    const feeGmxTrackerBalance = await feeTracker.balanceOf(user0.address)
+    const feeTrackerBalance = await feeTracker.balanceOf(user0.address)
 
     await esGs.mint(user0.address, expandDecimals(1190, 18))
     await vester.connect(user0).deposit(expandDecimals(1190, 18))
 
-    expect(feeGmxTrackerBalance).eq(await feeTracker.balanceOf(user0.address))
+    expect(feeTrackerBalance).eq(await feeTracker.balanceOf(user0.address))
 
     await expect(stakingRouter.connect(user0).unstakeGs(expandDecimals(2, 18)))
       .to.be.revertedWithPanic(PANIC_CODES.ARITHMETIC_UNDER_OR_OVERFLOW)

@@ -11,10 +11,14 @@ import "../interfaces/IRestrictedToken.sol";
 /// @dev Supports mint, burn and certain levels of control by managers and handlers
 /// @dev Managers and handlers are usually GammaSwap staking contracts
 contract RestrictedToken is ERC20, Ownable2Step, IRestrictedToken {
+  TokenType public immutable override tokenType;
+
   mapping (address => bool) public isManager;
   mapping (address => bool) public isHandler;
 
-  constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {}
+  constructor(string memory _name, string memory _symbol, TokenType _tokenType) ERC20(_name, _symbol) {
+    tokenType = _tokenType;
+  }
 
   /// @inheritdoc IRestrictedToken
   function setManager(address _manager, bool _isActive) public virtual onlyOwner {

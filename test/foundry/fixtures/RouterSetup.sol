@@ -52,7 +52,7 @@ contract RouterSetup is TokensSetup {
     }
 
     function wireUpPool(address gsPool) public {
-        stakingRouter.setupPoolStaking(gsPool);
+        stakingRouter.setupPoolStaking(gsPool, address(esGs), address(gs));
         stakingRouter.setupPoolStakingForLoan(gsPool, 1);
     }
 

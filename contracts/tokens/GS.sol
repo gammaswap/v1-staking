@@ -2,60 +2,19 @@
 pragma solidity 0.8.21;
 
 import "@layerzerolabs/solidity-examples/contracts/token/oft/OFT.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "../interfaces/IRestrictedToken.sol";
 
-contract GS is Ownable, OFT, IRestrictedToken {
-  mapping (address => bool) public isManager;
+contract GS is Ownable, OFT {
+    uint256 public s_maxSupply = 16000000 * (10**18);
 
-  constructor(address lzEndpoint) OFT("GammaSwap", "GS", lzEndpoint) {}
+    constructor(address lzEndpoint) OFT("GammaSwap", "GS", lzEndpoint) {
+        _mint(msg.sender, s_maxSupply);
+    }
 
-  /// @inheritdoc IRestrictedToken
-  function setManager(address _manager, bool _isActive) public virtual onlyOwner {
-    isManager[_manager] = _isActive;
-  }
+    function _mint(address to, uint256 amount) internal override(ERC20) {
+        super._mint(to, amount);
+    }
 
-  /// @inheritdoc IRestrictedToken
-  function setHandler(address, bool) public override pure {
-    revert("GS: Forbidden");
-  }
-
-  /// @inheritdoc IRestrictedToken
-  function isHandler(address) external pure returns (bool) {
-    return false;
-  }
-
-  /// @inheritdoc IRestrictedToken
-  function mint(address _account, uint256 _amount) public {
-    _validateManager();
-
-    _mint(_account, _amount);
-  }
-
-  /// @inheritdoc IRestrictedToken
-  function burn(address _account, uint256 _amount) public {
-    _validateManager();
-
-    _burn(_account, _amount);
-  }
-
-  /// @inheritdoc IERC20
-  function transfer(address to, uint256 amount) public override(ERC20, IERC20) returns (bool) {
-    address user = msg.sender;
-    _transfer(user, to, amount);
-    return true;
-  }
-
-  /// @inheritdoc IERC20
-  function transferFrom(address from, address to, uint256 amount) public override(ERC20, IERC20) returns (bool) {
-    address spender = msg.sender;
-    _spendAllowance(from, spender, amount);
-    _transfer(from, to, amount);
-    return true;
-  }
-
-  function _validateManager() private view {
-    address caller = msg.sender;
-    require(caller == owner() || isManager[caller], "GS: Forbidden Manager");
-  }
+    function _burn(address account, uint256 amount) internal override(ERC20) {
+        super._burn(account, amount);
+    }
 }
