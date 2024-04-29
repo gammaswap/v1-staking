@@ -122,7 +122,7 @@ contract StakingRouterTest is CPMMGammaSwapSetup {
         });
 
         assertEq(IERC20(poolRewardTracker).balanceOf(user1), 0);
-        (uint256[] memory reserves, uint256 shares) = manager.depositReservesAndStake(params);
+        (uint256[] memory reserves, uint256 shares) = manager.depositReservesAndStake(params, address(stakingRouter));
 
         assertGt(reserves[0], 0);
         assertGt(reserves[1], 0);
@@ -138,7 +138,7 @@ contract StakingRouterTest is CPMMGammaSwapSetup {
             amount: shares,
             amountsMin: amountsMin
         });
-        (uint256[] memory reserves2,) = manager.withdrawReservesAndUnstake(params2);
+        (uint256[] memory reserves2,) = manager.withdrawReservesAndUnstake(params2, address(stakingRouter));
         assertApproxEqRel(reserves[0], reserves2[0], 1e2);
         assertApproxEqRel(reserves[1], reserves2[1], 1e2);
     }
