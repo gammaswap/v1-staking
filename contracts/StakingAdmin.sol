@@ -42,7 +42,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     uint256 public constant VESTING_DURATION = 365 * 24 * 60 * 60;
 
     AssetCoreTracker public coreTracker;
-    mapping (address => AssetPoolTracker) public poolTrackers;
+    mapping(address => mapping(address => AssetPoolTracker)) public poolTrackers;
 
     constructor(
         address _feeRewardToken,
@@ -177,9 +177,9 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         IRestrictedToken(_esToken).setHandler(_rewardDistributor, true);
         IRestrictedToken(_esToken).setHandler(_vester, true);
 
-        poolTrackers[_gsPool].rewardTracker = _rewardTracker;
-        poolTrackers[_gsPool].rewardDistributor = _rewardDistributor;
-        poolTrackers[_gsPool].vester = _vester;
+        poolTrackers[_gsPool][_esToken].rewardTracker = _rewardTracker;
+        poolTrackers[_gsPool][_esToken].rewardDistributor = _rewardDistributor;
+        poolTrackers[_gsPool][_esToken].vester = _vester;
 
         _gsPool.safeApprove(_rewardTracker, type(uint256).max);
 
@@ -196,8 +196,8 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         IRestrictedToken(esGsb).setHandler(_loanRewardTracker, true);
         IRestrictedToken(esGsb).setHandler(_loanRewardDistributor, true);
 
-        poolTrackers[_gsPool].loanRewardTracker = _loanRewardTracker;
-        poolTrackers[_gsPool].loanRewardDistributor = _loanRewardDistributor;
+        poolTrackers[_gsPool][esGsb].loanRewardTracker = _loanRewardTracker;
+        poolTrackers[_gsPool][esGsb].loanRewardDistributor = _loanRewardDistributor;
 
         emit PoolTrackerUpdated(_gsPool, _loanRewardTracker, _loanRewardDistributor);
     }

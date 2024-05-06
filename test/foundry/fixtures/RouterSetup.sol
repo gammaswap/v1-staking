@@ -58,7 +58,7 @@ contract RouterSetup is TokensSetup {
 
     function approveUserForStaking(address user, address gsPool) public {
         (address rewardTracker,,,,,,,,address vester,) = stakingRouter.coreTracker();
-        (address poolRewardTracker,,,, address poolVester) = stakingRouter.poolTrackers(gsPool);
+        (address poolRewardTracker,,,, address poolVester) = stakingRouter.poolTrackers(gsPool, address(esGs));
 
         vm.startPrank(user);
         gs.approve(rewardTracker, type(uint256).max);
@@ -71,7 +71,7 @@ contract RouterSetup is TokensSetup {
 
     function setEmissions(address gsPool) public {
         (, address rewardDistributor,,,, address bonusDistributor,, address feeDistributor, address vester,) = stakingRouter.coreTracker();
-        (, address poolRewardDistributor,,, address poolVester) = stakingRouter.poolTrackers(gsPool);
+        (, address poolRewardDistributor,,, address poolVester) = stakingRouter.poolTrackers(gsPool, address(esGs));
         esGs.mint(rewardDistributor, 50000e18);
         bnGs.mint(bonusDistributor, 50000e18);
         weth.mint(feeDistributor, 10000e18);
