@@ -135,7 +135,7 @@ interface IStakingRouter is IStakingAdmin {
 
     /// @dev Get average staked amount for user
     /// @param _gsPool GammaPool address, address(0) refers to coreTracker
-    /// @param _esToken Escrow token address
+    /// @param _esToken Escrow token address, optional when referring to coreTracker
     /// @param _account User address for query
     function getAverageStakedAmount(address _gsPool, address _esToken, address _account) external view returns (uint256);
 
