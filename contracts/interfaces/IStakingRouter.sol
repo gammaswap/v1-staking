@@ -28,13 +28,15 @@ interface IStakingRouter is IStakingAdmin {
     /// @dev Stake GS_LP tokens on behalf of user
     /// @param _account User address for query
     /// @param _gsPool GammaPool address
+    /// @param _esToken Escrow token address
     /// @param _amount Amount of GS_LP tokens to stake
-    function stakeLpForAccount(address _account, address _gsPool, uint256 _amount) external;
+    function stakeLpForAccount(address _account, address _gsPool, address _esToken, uint256 _amount) external;
 
     /// @dev Stake GS_LP tokens
     /// @param _gsPool GammaPool address
+    /// @param _esToken Escrow token address
     /// @param _amount Amount of GS_LP tokens to stake
-    function stakeLp(address _gsPool, uint256 _amount) external;
+    function stakeLp(address _gsPool, address _esToken, uint256 _amount) external;
 
     /// @dev Stake loan on behalf of user
     /// @param _account User address for query
@@ -62,13 +64,15 @@ interface IStakingRouter is IStakingAdmin {
     /// @dev Unstake GS_LP tokens on behalf of user
     /// @param _account User address for query
     /// @param _gsPool GammaPool address
+    /// @param _esToken Escrow token address
     /// @param _amount Amount of GS_LP tokens to unstake
-    function unstakeLpForAccount(address _account, address _gsPool, uint256 _amount) external;
+    function unstakeLpForAccount(address _account, address _gsPool, address _esToken, uint256 _amount) external;
 
     /// @dev Unstake GS_LP tokens
     /// @param _gsPool GammaPool address
+    /// @param _esToken Escrow token address
     /// @param _amount Amount of GS_LP tokens to unstake
-    function unstakeLp(address _gsPool, uint256 _amount) external;
+    function unstakeLp(address _gsPool, address _esToken, uint256 _amount) external;
 
     /// @dev Unstake loan on behalf of user
     /// @param _account User address for query
@@ -88,8 +92,9 @@ interface IStakingRouter is IStakingAdmin {
 
     /// @dev Vest esGS tokens for pool
     /// @param _gsPool GammaPool address
+    /// @param _esToken Escrow token address
     /// @param _amount Amount of esGS tokens to vest
-    function vestEsGsForPool(address _gsPool, uint256 _amount) external;
+    function vestEsGsForPool(address _gsPool, address _esToken, uint256 _amount) external;
 
     /// @dev Vest esGSb tokens
     /// @param _amount Amount of esGSb tokens to vest
@@ -100,7 +105,8 @@ interface IStakingRouter is IStakingAdmin {
 
     /// @dev Withdraw esGS tokens in vesting for pool
     /// @param _gsPool GammaPool address
-    function withdrawEsGsForPool(address _gsPool) external;
+    /// @param _esToken Escrow token address
+    function withdrawEsGsForPool(address _gsPool, address _esToken) external;
 
     /// @dev Withdraw esGSb tokens in vesting
     function withdrawEsGsb() external;
@@ -114,9 +120,10 @@ interface IStakingRouter is IStakingAdmin {
 
     /// @dev Claim rewards for pool
     /// @param _gsPool GammaPool address
+    /// @param _esToken Escrow token address
     /// @param _shouldClaimRewards Should claim esGS rewards?
     /// @param _shouldClaimVesting Should claim vested GS?
-    function claimPool(address _gsPool, bool _shouldClaimRewards, bool _shouldClaimVesting) external;
+    function claimPool(address _gsPool, address _esToken, bool _shouldClaimRewards, bool _shouldClaimVesting) external;
 
     /* Compound */
     /// @dev Compound staking
@@ -128,8 +135,9 @@ interface IStakingRouter is IStakingAdmin {
 
     /// @dev Get average staked amount for user
     /// @param _gsPool GammaPool address, address(0) refers to coreTracker
+    /// @param _esToken Escrow token address, optional when referring to coreTracker
     /// @param _account User address for query
-    function getAverageStakedAmount(address _gsPool, address _account) external view returns (uint256);
+    function getAverageStakedAmount(address _gsPool, address _esToken, address _account) external view returns (uint256);
 
     /// @dev Emitted in `_stakeGs` function
     event StakedGs(address, address, uint256);

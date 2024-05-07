@@ -41,6 +41,9 @@ interface IStakingAdmin {
     address vester; // Vest esGS -> GS (reserve GS_LP)
   }
 
+  /// @dev Set vesting period for staking contract reward token
+  function setPoolVestingPeriod(uint256 _poolVestingPeriod) external;
+
   /// @dev Setup global staking for GS/esGS/bnGS
   function setupGsStaking() external;
 

@@ -83,18 +83,19 @@ export async function coreTrackers(stakingRouter: StakingRouter) {
   return coreTracker;
 }
 
-export async function poolTrackers(stakingRouter: StakingRouter, gsPool: string) {
+export async function poolTrackers(stakingRouter: StakingRouter, gsPool: string, esToken: string, esGsb: string) {
   const RewardTrackerFactory = await ethers.getContractFactory('RewardTracker');
   const LoanTrackerFactory = await ethers.getContractFactory('LoanTracker');
   const RewardDistributorFactory = await ethers.getContractFactory('RewardDistributor');
   const VesterFactory = await ethers.getContractFactory('Vester');
 
-  const poolTrackerAddresses = await stakingRouter.poolTrackers(gsPool);
+  const poolTrackerAddresses = await stakingRouter.poolTrackers(gsPool, esToken);
+  const poolLoanTrackerAddresses = await stakingRouter.poolTrackers(gsPool, esGsb);
   const poolTracker = {
     rewardTracker: RewardTrackerFactory.attach(poolTrackerAddresses.rewardTracker) as RewardTracker,
     rewardDistributor: RewardDistributorFactory.attach(poolTrackerAddresses.rewardDistributor) as RewardDistributor,
-    loanRewardTracker: LoanTrackerFactory.attach(poolTrackerAddresses.loanRewardTracker) as LoanTracker,
-    loanRewardDistributor: RewardDistributorFactory.attach(poolTrackerAddresses.loanRewardDistributor) as RewardDistributor,
+    loanRewardTracker: LoanTrackerFactory.attach(poolLoanTrackerAddresses.loanRewardTracker) as LoanTracker,
+    loanRewardDistributor: RewardDistributorFactory.attach(poolLoanTrackerAddresses.loanRewardDistributor) as RewardDistributor,
     vester: VesterFactory.attach(poolTrackerAddresses.vester) as Vester,
   }
 

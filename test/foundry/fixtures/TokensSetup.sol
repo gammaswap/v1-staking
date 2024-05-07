@@ -12,6 +12,7 @@ contract TokensSetup is Test {
 
     ERC20Mock public weth;
     ERC20Mock public usdc;
+    ERC20Mock public usdt;
     Token public gs;
     RestrictedToken public esGs;
     RestrictedToken public esGsb;
@@ -20,6 +21,7 @@ contract TokensSetup is Test {
     function createTokens() public {
         weth = new ERC20Mock("Wrapped Ethereum", "WETH");
         usdc = new ERC20Mock("USDC", "USDC");
+        usdt = new ERC20Mock("USDT", "USDT");
         gs = new Token("GS", "GS");
         esGs = new RestrictedToken("Escrowed GS", "esGs", IRestrictedToken.TokenType.ESCROW);
         esGsb = new RestrictedToken("Escrowed GS for Borrowers", "esGs", IRestrictedToken.TokenType.ESCROW);
@@ -29,6 +31,7 @@ contract TokensSetup is Test {
     function mintTokens(address user, uint256 amount) public {
         usdc.mint(user, amount);
         weth.mint(user, amount);
+        usdt.mint(user, amount);
         // gs.mint(user, amount);
         // esGs.mint(user, amount);
         // esGsb.mint(user, amount);

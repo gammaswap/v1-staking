@@ -47,14 +47,14 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     }
 
     /// @inheritdoc IStakingRouter
-    function stakeLpForAccount(address _account, address _gsPool, uint256 _amount) external nonReentrant {
+    function stakeLpForAccount(address _account, address _gsPool, address _esToken, uint256 _amount) external nonReentrant {
         _validateHandler();
-        _stakeLp(address(this), _account, _gsPool, _amount);
+        _stakeLp(address(this), _account, _gsPool, _esToken, _amount);
     }
 
     /// @inheritdoc IStakingRouter
-    function stakeLp(address _gsPool, uint256 _amount) external nonReentrant {
-        _stakeLp(msg.sender, msg.sender, _gsPool, _amount);
+    function stakeLp(address _gsPool, address _esToken, uint256 _amount) external nonReentrant {
+        _stakeLp(msg.sender, msg.sender, _gsPool, _esToken, _amount);
     }
 
     /// @inheritdoc IStakingRouter
@@ -84,14 +84,14 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     }
 
     /// @inheritdoc IStakingRouter
-    function unstakeLpForAccount(address _account, address _gsPool, uint256 _amount) external nonReentrant {
+    function unstakeLpForAccount(address _account, address _gsPool, address _esToken, uint256 _amount) external nonReentrant {
         _validateHandler();
-        _unstakeLp(_account, _gsPool, _amount);
+        _unstakeLp(_account, _gsPool, _esToken, _amount);
     }
 
     /// @inheritdoc IStakingRouter
-    function unstakeLp(address _gsPool, uint256 _amount) external nonReentrant {
-        _unstakeLp(msg.sender, _gsPool, _amount);
+    function unstakeLp(address _gsPool, address _esToken, uint256 _amount) external nonReentrant {
+        _unstakeLp(msg.sender, _gsPool, _esToken, _amount);
     }
 
     /// @inheritdoc IStakingRouter
@@ -111,8 +111,8 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     }
 
     /// @inheritdoc IStakingRouter
-    function vestEsGsForPool(address _gsPool, uint256 _amount) external nonReentrant {
-        address _vester = poolTrackers[_gsPool].vester;
+    function vestEsGsForPool(address _gsPool, address _esToken, uint256 _amount) external nonReentrant {
+        address _vester = poolTrackers[_gsPool][_esToken].vester;
         require(_vester != address(0), "StakingRouter: pool vester not found");
 
         IVester(_vester).depositForAccount(msg.sender, _amount);
@@ -129,8 +129,8 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     }
 
     /// @inheritdoc IStakingRouter
-    function withdrawEsGsForPool(address _gsPool) external nonReentrant {
-        address _vester = poolTrackers[_gsPool].vester;
+    function withdrawEsGsForPool(address _gsPool, address _esToken) external nonReentrant {
+        address _vester = poolTrackers[_gsPool][_esToken].vester;
         require(_vester != address(0), "StakingRouter: pool vester not found");
 
         IVester(_vester).withdrawForAccount(msg.sender);
@@ -165,23 +165,23 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     }
 
     /// @inheritdoc IStakingRouter
-    function claimPool(address _gsPool, bool _shouldClaimRewards, bool _shouldClaimVesting) external nonReentrant {
+    function claimPool(address _gsPool, address _esToken, bool _shouldClaimRewards, bool _shouldClaimVesting) external nonReentrant {
         address account = msg.sender;
 
         if (_shouldClaimRewards) {
-            address _rewardTracker = poolTrackers[_gsPool].rewardTracker;
+            address _rewardTracker = poolTrackers[_gsPool][_esToken].rewardTracker;
             require(_rewardTracker != address(0), "StakingRouter: pool tracker not found");
             IRewardTracker(_rewardTracker).claimForAccount(account, account);
         }
         if (_shouldClaimVesting) {
-            address _vester = poolTrackers[_gsPool].vester;
+            address _vester = poolTrackers[_gsPool][_esToken].vester;
             require(_vester != address(0), "StakingRouter: pool vester not found");
             IVester(_vester).claimForAccount(account, account);
         }
 
         // Loan Staking rewards
-        if (poolTrackers[_gsPool].loanRewardTracker != address(0)) {
-            ILoanTracker(poolTrackers[_gsPool].loanRewardTracker).claimForAccount(account, account);
+        if (poolTrackers[_gsPool][esGsb].loanRewardTracker != address(0)) {
+            ILoanTracker(poolTrackers[_gsPool][esGsb].loanRewardTracker).claimForAccount(account, account);
         }
     }
 
@@ -197,8 +197,8 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     }
 
     /// @inheritdoc IStakingRouter
-    function getAverageStakedAmount(address _gsPool, address _account) public view returns (uint256) {
-        address vester = _gsPool == address(0) ? coreTracker.vester : poolTrackers[_gsPool].vester;
+    function getAverageStakedAmount(address _gsPool, address _esToken, address _account) public view returns (uint256) {
+        address vester = _gsPool == address(0) ? coreTracker.vester : poolTrackers[_gsPool][_esToken].vester;
         require(vester != address(0), "Vester contract not found");
 
         return IVester(vester).getAverageStakedAmount(_account);
@@ -232,11 +232,12 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     /// @param _fundingAccount Funding account to move tokens from
     /// @param _account Account to stake tokens for
     /// @param _gsPool GammaPool address
+    /// @param _esToken Escrow token address
     /// @param _amount Staking amount
-    function _stakeLp(address _fundingAccount, address _account, address _gsPool, uint256 _amount) private {
+    function _stakeLp(address _fundingAccount, address _account, address _gsPool, address _esToken, uint256 _amount) private {
         require(_amount > 0, "StakingRouter: invalid amount");
 
-        address _rewardTracker = poolTrackers[_gsPool].rewardTracker;
+        address _rewardTracker = poolTrackers[_gsPool][_esToken].rewardTracker;
         require(_rewardTracker != address(0), "StakingRouter: pool tracker not found");
 
         IRewardTracker(_rewardTracker).stakeForAccount(_fundingAccount, _account, _gsPool, _amount);
@@ -249,7 +250,7 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     /// @param _gsPool GammaPool address
     /// @param _loanId Loan Id
     function _stakeLoan(address _account, address _gsPool, uint256 _loanId) private {
-        address _loanRewardTracker = poolTrackers[_gsPool].loanRewardTracker;
+        address _loanRewardTracker = poolTrackers[_gsPool][esGsb].loanRewardTracker;
         require(_loanRewardTracker != address(0), "StakingRouter: pool loan tracker not found");
 
         ILoanTracker(_loanRewardTracker).stakeForAccount(_account, _loanId);
@@ -295,11 +296,12 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     /// @dev Unstake GS_LP tokens
     /// @param _account Account to unstake from
     /// @param _gsPool GammaPool address
+    /// @param _esToken Escrow token address
     /// @param _amount Amount to unstake
-    function _unstakeLp(address _account, address _gsPool, uint256 _amount) private {
+    function _unstakeLp(address _account, address _gsPool, address _esToken, uint256 _amount) private {
         require(_amount > 0, "StakingRouter: invalid amount");
 
-        address _rewardTracker = poolTrackers[_gsPool].rewardTracker;
+        address _rewardTracker = poolTrackers[_gsPool][_esToken].rewardTracker;
         require(_rewardTracker != address(0), "StakingRouter: pool tracker not found");
 
         IRewardTracker(_rewardTracker).unstakeForAccount(_account, _gsPool, _amount, _account);
@@ -312,7 +314,7 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     /// @param _gsPool GammaPool
     /// @param _loanId Loan Id
     function _unstakeLoan(address _account, address _gsPool, uint256 _loanId) private {
-        address _loanRewardTracker = poolTrackers[_gsPool].loanRewardTracker;
+        address _loanRewardTracker = poolTrackers[_gsPool][esGsb].loanRewardTracker;
         require(_loanRewardTracker != address(0), "StakingRouter: pool loan tracker not found");
 
         ILoanTracker(_loanRewardTracker).unstakeForAccount(_account, _loanId);
