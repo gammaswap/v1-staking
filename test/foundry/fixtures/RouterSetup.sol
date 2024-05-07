@@ -14,11 +14,17 @@ import "./TokensSetup.sol";
 contract RouterSetup is TokensSetup {
     StakingRouter stakingRouter;
 
-    function setupRouter(address factory, address manager, address gsPool) public {
+    function setupRouter(address factory, address manager, address gsPool, address gsPool2) public {
         initRouter(factory, manager);
+        
         wireUp();
-        wireUpPool(gsPool);
-        setEmissions(gsPool);
+        setEmissions();
+
+        wireUpPool(gsPool, 365 days);
+        setPoolEmissions(gsPool);
+
+        wireUpPool(gsPool2, 180 days);
+        setPoolEmissions(gsPool2);
     }
 
     function initRouter(address factory, address manager) public {
@@ -51,7 +57,8 @@ contract RouterSetup is TokensSetup {
         stakingRouter.setupGsStakingForLoan();
     }
 
-    function wireUpPool(address gsPool) public {
+    function wireUpPool(address gsPool, uint256 vestingPeriod) public {
+        stakingRouter.setPoolVestingPeriod(vestingPeriod);
         stakingRouter.setupPoolStaking(gsPool, address(esGs), address(gs));
         stakingRouter.setupPoolStakingForLoan(gsPool, 1);
     }
@@ -69,15 +76,12 @@ contract RouterSetup is TokensSetup {
         vm.stopPrank();
     }
 
-    function setEmissions(address gsPool) public {
+    function setEmissions() public {
         (, address rewardDistributor,,,, address bonusDistributor,, address feeDistributor, address vester,) = stakingRouter.coreTracker();
-        (, address poolRewardDistributor,,, address poolVester) = stakingRouter.poolTrackers(gsPool, address(esGs));
         esGs.mint(rewardDistributor, 50000e18);
         bnGs.mint(bonusDistributor, 50000e18);
         weth.mint(feeDistributor, 10000e18);
-        esGs.mint(poolRewardDistributor, 50000e18);
         gs.mint(vester, 10000e18);
-        gs.mint(poolVester, 10000e18);
 
         vm.startPrank(address(stakingRouter));
         RewardDistributor(rewardDistributor).setTokensPerInterval(1e16);   // 0.01 esGS per second
@@ -85,6 +89,15 @@ contract RouterSetup is TokensSetup {
         BonusDistributor(bonusDistributor).setBonusMultiplier(10000);
         RewardDistributor(feeDistributor).setTokensPerInterval(1e16);       // 0.01 WETH per second
         RewardDistributor(feeDistributor).setPaused(false);
+        vm.stopPrank();
+    }
+
+    function setPoolEmissions(address gsPool) public {
+        (, address poolRewardDistributor,,, address poolVester) = stakingRouter.poolTrackers(gsPool, address(esGs));
+        esGs.mint(poolRewardDistributor, 50000e18);
+        gs.mint(poolVester, 10000e18);
+
+        vm.startPrank(address(stakingRouter));
         RewardDistributor(poolRewardDistributor).setTokensPerInterval(1e16);       // 0.01 esGS per second
         RewardDistributor(poolRewardDistributor).setPaused(false);
         vm.stopPrank();

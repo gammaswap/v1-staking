@@ -10,13 +10,21 @@ import "./fixtures/CPMMGammaSwapSetup.sol";
 contract StakingRouterTest is CPMMGammaSwapSetup {
     function setUp() public {
         super.initCPMMGammaSwap();
-        depositLiquidityInCFMM(user1, 2*1e24, 2*1e21);
-        depositLiquidityInCFMM(user2, 2*1e24, 2*1e21);
-        depositLiquidityInPool(user1);
-        depositLiquidityInPool(user2);
+        depositLiquidityInCFMM(user1, address(usdc), address(weth), 2*1e24, 2*1e21);
+        depositLiquidityInCFMM(user2, address(usdc), address(weth), 2*1e24, 2*1e21);
+        depositLiquidityInPool(user1, address(cfmm), address(pool));
+        depositLiquidityInPool(user2, address(cfmm), address(pool));
 
         approveUserForStaking(user1, address(pool));
         approveUserForStaking(user2, address(pool));
+
+        depositLiquidityInCFMM(user1, address(usdt), address(weth), 2*1e24, 2*1e21);
+        depositLiquidityInCFMM(user2, address(usdt), address(weth), 2*1e24, 2*1e21);
+        depositLiquidityInPool(user1, address(cfmm2), address(pool2));
+        depositLiquidityInPool(user2, address(cfmm2), address(pool2));
+
+        approveUserForStaking(user1, address(pool2));
+        approveUserForStaking(user2, address(pool2));
     }
 
     function testProtocolAssets() public {
@@ -45,6 +53,7 @@ contract StakingRouterTest is CPMMGammaSwapSetup {
         lpAmount1 = bound(lpAmount1, 1e18, 10000e18);
         lpAmount2 = bound(lpAmount2, 1e18, 10000e18);
         (address poolRewardTracker,,,,) = stakingRouter.poolTrackers(address(pool), address(esGs));
+        (address poolRewardTracker2,,,,) = stakingRouter.poolTrackers(address(pool2), address(esGs));
 
         uint256 lpBalanceBeforeUser1 = GammaPoolERC20(pool).balanceOf(user1);
         uint256 lpBalanceBeforeUser2 = GammaPoolERC20(pool).balanceOf(user2);
@@ -52,8 +61,12 @@ contract StakingRouterTest is CPMMGammaSwapSetup {
         ////////// STAKING //////////
         vm.prank(user1);
         stakingRouter.stakeLp(address(pool), address(esGs), lpAmount1);
+        vm.prank(user1);
+        stakingRouter.stakeLp(address(pool2), address(esGs), lpAmount1);
         vm.prank(user2);
         stakingRouter.stakeLp(address(pool), address(esGs), lpAmount2);
+        vm.prank(user2);
+        stakingRouter.stakeLp(address(pool2), address(esGs), lpAmount2);
 
         assertApproxEqRel(GammaPoolERC20(pool).balanceOf(user1), lpBalanceBeforeUser1 - lpAmount1, 1e4);
         assertApproxEqRel(GammaPoolERC20(pool).balanceOf(user2), lpBalanceBeforeUser2 - lpAmount2, 1e4);
@@ -64,14 +77,20 @@ contract StakingRouterTest is CPMMGammaSwapSetup {
         uint256 esGsRewards2 = 86400 * 1e16 * lpAmount2/(lpAmount1+lpAmount2);
         assertApproxEqRel(IRewardTracker(poolRewardTracker).claimable(user1), esGsRewards1, 1e4);
         assertApproxEqRel(IRewardTracker(poolRewardTracker).claimable(user2), esGsRewards2, 1e4);
+        assertApproxEqRel(IRewardTracker(poolRewardTracker2).claimable(user1), esGsRewards1, 1e4);
+        assertApproxEqRel(IRewardTracker(poolRewardTracker2).claimable(user2), esGsRewards2, 1e4);
 
         ////////// CLAIMING //////////
         vm.prank(user1);
         stakingRouter.claimPool(address(pool), address(esGs), true, true);
+        vm.prank(user1);
+        stakingRouter.claimPool(address(pool2), address(esGs), true, true);
         vm.prank(user2);
         stakingRouter.claimPool(address(pool), address(esGs), true, true);
-        assertApproxEqRel(esGs.balanceOf(user1), esGsRewards1, 1e4);
-        assertApproxEqRel(esGs.balanceOf(user2), esGsRewards2, 1e4);
+        vm.prank(user2);
+        stakingRouter.claimPool(address(pool2), address(esGs), true, true);
+        assertApproxEqRel(esGs.balanceOf(user1), 2*esGsRewards1, 1e4);
+        assertApproxEqRel(esGs.balanceOf(user2), 2*esGsRewards2, 1e4);
         assertEq(gs.balanceOf(user1), 0);
         assertEq(gs.balanceOf(user2), 0);
 
@@ -88,15 +107,30 @@ contract StakingRouterTest is CPMMGammaSwapSetup {
         stakingRouter.vestEsGsForPool(address(pool), address(esGs), 0);
         esGsRewards2 = esGs.balanceOf(user2);
         vm.expectRevert();
-        stakingRouter.vestEsGsForPool(address(pool), address(esGs), esGsRewards2);
+        stakingRouter.vestEsGsForPool(address(pool), address(esGs), esGsRewards2/2);
 
         stakingRouter.stakeLp(address(pool), address(esGs), lpAmount2);    // Stake Lp tokens again to satisfy average staked amounts
-        stakingRouter.vestEsGsForPool(address(pool), address(esGs), esGsRewards2);
+        stakingRouter.vestEsGsForPool(address(pool), address(esGs), esGsRewards2/2);
+
+        stakingRouter.stakeLp(address(pool2), address(esGs), lpAmount2);    // Stake Lp tokens again to satisfy average staked amounts
+        stakingRouter.vestEsGsForPool(address(pool2), address(esGs), esGsRewards2/2);
+
+        vm.warp(block.timestamp + 180 days);
+
+        stakingRouter.claimPool(address(pool2), address(esGs), true, true);
+        assertEq(gs.balanceOf(user2), esGsRewards2/2);
+
+        stakingRouter.claimPool(address(pool), address(esGs), true, true);
+        assertLt(gs.balanceOf(user2), esGsRewards2);
 
         vm.warp(block.timestamp + 365 days);
 
         stakingRouter.claimPool(address(pool), address(esGs), true, true);
         assertEq(gs.balanceOf(user2), esGsRewards2);
+
+        stakingRouter.claimPool(address(pool2), address(esGs), true, true);
+        assertEq(gs.balanceOf(user2), esGsRewards2);
+
         vm.stopPrank();
     }
 

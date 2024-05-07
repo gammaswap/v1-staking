@@ -26,11 +26,13 @@ contract CPMMGammaSwapSetup is UniswapSetup, RouterSetup {
     CPMMBatchLiquidationStrategy public batchLiquidationStrategy;
     CPMMGammaPool public protocol;
     CPMMGammaPool public pool;
+    CPMMGammaPool public pool2;
     IPoolViewer public viewer;
 
     CPMMMath public mathLib;
 
     address public cfmm;
+    address public cfmm2;
     address public owner;
 
     address user1;
@@ -77,12 +79,18 @@ contract CPMMGammaSwapSetup is UniswapSetup, RouterSetup {
         tokens[1] = address(usdc);
 
         cfmm = createPair(tokens[0], tokens[1]);
-
         pool = CPMMGammaPool(factory.createPool(PROTOCOL_ID, cfmm, tokens, new bytes(0)));
-
         setPoolParams(address(pool), 0, 0, 10, 100, 100, 1, 250, 200, 1e11);// setting origination fees to zero
+        approvePool(address(pool), address(cfmm));
 
-        approvePool();
+        tokens[0] = address(weth);
+        tokens[1] = address(usdt);
+
+        cfmm2 = createPair(tokens[0], tokens[1]);
+        pool2 = CPMMGammaPool(factory.createPool(PROTOCOL_ID, cfmm2, tokens, new bytes(0)));
+        setPoolParams(address(pool2), 0, 0, 10, 100, 100, 1, 250, 200, 1e11);// setting origination fees to zero
+        approvePool(address(pool2), address(cfmm2));
+
         //////// END: GammaSwap Core setup ////////
 
         //////// START: PositionManager ////////
@@ -94,7 +102,7 @@ contract CPMMGammaSwapSetup is UniswapSetup, RouterSetup {
         //////// END: PositionManager ////////
 
         //////// START: Staking ////////
-        setupRouter(address(factory), address(manager), address(pool));
+        setupRouter(address(factory), address(manager), address(pool), address(pool2));
         manager.setStakingRouter(address(stakingRouter));
         //////// END: Staking ////////
     }
@@ -109,37 +117,38 @@ contract CPMMGammaSwapSetup is UniswapSetup, RouterSetup {
     function approveUniRouter() public {
         vm.startPrank(user1);
         usdc.approve(address(uniRouter), type(uint256).max);
+        usdt.approve(address(uniRouter), type(uint256).max);
         weth.approve(address(uniRouter), type(uint256).max);
         vm.stopPrank();
 
         vm.startPrank(user2);
         usdc.approve(address(uniRouter), type(uint256).max);
+        usdt.approve(address(uniRouter), type(uint256).max);
         weth.approve(address(uniRouter), type(uint256).max);
         vm.stopPrank();
     }
 
-    function approvePool() public {
+    function approvePool(address _pool, address _cfmm) public {
         vm.startPrank(user1);
-        pool.approve(address(pool), type(uint256).max);
-        IERC20(cfmm).approve(address(pool), type(uint256).max);
+        IERC20(_pool).approve(address(_pool), type(uint256).max);
+        IERC20(_cfmm).approve(address(_pool), type(uint256).max);
         vm.stopPrank();
 
         vm.startPrank(user2);
-        pool.approve(address(pool), type(uint256).max);
-        IERC20(cfmm).approve(address(pool), type(uint256).max);
+        IERC20(_pool).approve(address(_pool), type(uint256).max);
+        IERC20(_cfmm).approve(address(_pool), type(uint256).max);
         vm.stopPrank();
     }
 
-    function depositLiquidityInPool(address addr) public {
+    function depositLiquidityInPool(address addr, address _cfmm, address _pool) public {
         vm.startPrank(addr);
-        uint256 lpTokens = IERC20(cfmm).balanceOf(addr);
-        pool.deposit(lpTokens, addr);
+        uint256 lpTokens = IERC20(_cfmm).balanceOf(addr);
+        CPMMGammaPool(_pool).deposit(lpTokens, addr);
         vm.stopPrank();
-
     }
-    function depositLiquidityInCFMM(address addr, uint256 usdcAmount, uint256 wethAmount) public {
+    function depositLiquidityInCFMM(address addr, address _token0, address _token1, uint256 _amount0, uint256 _amount1) public {
         vm.startPrank(addr);
-        addLiquidity(address(usdc), address(weth), usdcAmount, wethAmount, addr); // 1 weth = 1,000 USDC
+        addLiquidity(_token0, _token1, _amount0, _amount1, addr); // 1 weth = 1,000 USDC
         vm.stopPrank();
     }
 }

@@ -40,6 +40,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     address private immutable vesterDeployer;
 
     uint256 public constant VESTING_DURATION = 365 * 24 * 60 * 60;
+    uint256 public POOL_VESTING_DURATION = 365 * 24 * 60 * 60;
 
     AssetCoreTracker public coreTracker;
     mapping(address => mapping(address => AssetPoolTracker)) public poolTrackers;
@@ -84,6 +85,11 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         feeTrackerDeployer = _feeTrackerDeployer;
         rewardDistributorDeployer = _rewardDistributorDeployer;
         vesterDeployer = _vesterDeployer;
+    }
+
+    /// @inheritdoc IStakingAdmin
+    function setPoolVestingPeriod(uint256 _poolVestingPeriod) external onlyOwner {
+        POOL_VESTING_DURATION = _poolVestingPeriod;
     }
 
     /// @inheritdoc IStakingAdmin
@@ -168,7 +174,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         
 
         address _vester = vesterDeployer.deployContract(
-            abi.encodeCall(IVesterDeployer.deploy, ("Vested Pool GS", "vpGS", VESTING_DURATION, _esToken, _rewardTracker, _claimableToken, _rewardTracker))
+            abi.encodeCall(IVesterDeployer.deploy, ("Vested Pool GS", "vpGS", POOL_VESTING_DURATION, _esToken, _rewardTracker, _claimableToken, _rewardTracker))
         );
 
         IRewardTracker(_rewardTracker).setHandler(_vester, true);
