@@ -104,16 +104,16 @@ contract StakingRouterTest is CPMMGammaSwapSetup {
 
         vm.startPrank(user2);
         vm.expectRevert("Vester: invalid _amount");
-        stakingRouter.vestEsGsForPool(address(pool), address(esGs), 0);
+        stakingRouter.vestEsTokenForPool(address(pool), address(esGs), 0);
         esGsRewards2 = esGs.balanceOf(user2);
         vm.expectRevert();
-        stakingRouter.vestEsGsForPool(address(pool), address(esGs), esGsRewards2/2);
+        stakingRouter.vestEsTokenForPool(address(pool), address(esGs), esGsRewards2/2);
 
         stakingRouter.stakeLp(address(pool), address(esGs), lpAmount2);    // Stake Lp tokens again to satisfy average staked amounts
-        stakingRouter.vestEsGsForPool(address(pool), address(esGs), esGsRewards2/2);
+        stakingRouter.vestEsTokenForPool(address(pool), address(esGs), esGsRewards2/2);
 
         stakingRouter.stakeLp(address(pool2), address(esGs), lpAmount2);    // Stake Lp tokens again to satisfy average staked amounts
-        stakingRouter.vestEsGsForPool(address(pool2), address(esGs), esGsRewards2/2);
+        stakingRouter.vestEsTokenForPool(address(pool2), address(esGs), esGsRewards2/2);
 
         vm.warp(block.timestamp + 180 days);
 

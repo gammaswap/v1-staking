@@ -379,7 +379,7 @@ describe("StakingRouter", function () {
     expect(await stakingRouter.getAverageStakedAmount(gsPool.target, esGs.target, user1.address)).lt(expandDecimals(858, 18));
   })
 
-  it("vestEsGs, vestEsGsForPool, withdrawEsGs, withdrawEsGsForPool", async () => {
+  it("vestEsGs, vestEsTokenForPool, withdrawEsGs, withdrawEsTokenForPool", async () => {
     const [,,, user0, user1] = await ethers.getSigners();
     const {
       vester: poolVester
@@ -397,20 +397,20 @@ describe("StakingRouter", function () {
     await vester.connect(routerAsSigner).setBonusRewards(user0, expandDecimals(1000, 18));
     await stakingRouter.connect(user0).vestEsGs(expandDecimals(1000, 18));
 
-    await expect(stakingRouter.connect(user1).vestEsGsForPool(ethers.ZeroAddress, ethers.ZeroAddress, expandDecimals(1000, 18)))
+    await expect(stakingRouter.connect(user1).vestEsTokenForPool(ethers.ZeroAddress, ethers.ZeroAddress, expandDecimals(1000, 18)))
       .to.be.revertedWith("StakingRouter: pool vester not found");
-    await expect(stakingRouter.connect(user1).vestEsGsForPool(gsPool, esGs.target, expandDecimals(1000, 18)))
+    await expect(stakingRouter.connect(user1).vestEsTokenForPool(gsPool, esGs.target, expandDecimals(1000, 18)))
       .to.be.revertedWith("Vester: max vestable amount exceeded");
     await poolVester.connect(routerAsSigner).setBonusRewards(user1, expandDecimals(1000, 18));
-    await stakingRouter.connect(user1).vestEsGsForPool(gsPool, esGs.target, expandDecimals(1000, 18));
+    await stakingRouter.connect(user1).vestEsTokenForPool(gsPool, esGs.target, expandDecimals(1000, 18));
 
     await increase(30 * 24 * 60 * 60)
 
     await stakingRouter.connect(user0).withdrawEsGs();
-    await expect(stakingRouter.connect(user1).withdrawEsGsForPool(ethers.ZeroAddress, ethers.ZeroAddress))
+    await expect(stakingRouter.connect(user1).withdrawEsTokenForPool(ethers.ZeroAddress, ethers.ZeroAddress))
       .to.rejectedWith("StakingRouter: pool vester not found");
 
-    await stakingRouter.connect(user1).withdrawEsGsForPool(gsPool, esGs.target);
+    await stakingRouter.connect(user1).withdrawEsTokenForPool(gsPool, esGs.target);
     expect(await gs.balanceOf(user0)).gt(expandDecimals(82, 18))  // 1000 * 30 / 365 -> 82.19
     expect(await gs.balanceOf(user0)).lt(expandDecimals(83, 18))
     expect(await gs.balanceOf(user1)).gt(expandDecimals(82, 18))
