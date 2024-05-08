@@ -111,7 +111,7 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     }
 
     /// @inheritdoc IStakingRouter
-    function vestEsGsForPool(address _gsPool, address _esToken, uint256 _amount) external nonReentrant {
+    function vestEsTokenForPool(address _gsPool, address _esToken, uint256 _amount) external nonReentrant {
         address _vester = poolTrackers[_gsPool][_esToken].vester;
         require(_vester != address(0), "StakingRouter: pool vester not found");
 
@@ -129,7 +129,7 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     }
 
     /// @inheritdoc IStakingRouter
-    function withdrawEsGsForPool(address _gsPool, address _esToken) external nonReentrant {
+    function withdrawEsTokenForPool(address _gsPool, address _esToken) external nonReentrant {
         address _vester = poolTrackers[_gsPool][_esToken].vester;
         require(_vester != address(0), "StakingRouter: pool vester not found");
 

@@ -90,11 +90,11 @@ interface IStakingRouter is IStakingAdmin {
     /// @param _amount Amount of esGS tokens to vest
     function vestEsGs(uint256 _amount) external;
 
-    /// @dev Vest esGS tokens for pool
+    /// @dev Vest escrow tokens for pool
     /// @param _gsPool GammaPool address
     /// @param _esToken Escrow token address
-    /// @param _amount Amount of esGS tokens to vest
-    function vestEsGsForPool(address _gsPool, address _esToken, uint256 _amount) external;
+    /// @param _amount Amount of escrow tokens to vest
+    function vestEsTokenForPool(address _gsPool, address _esToken, uint256 _amount) external;
 
     /// @dev Vest esGSb tokens
     /// @param _amount Amount of esGSb tokens to vest
@@ -103,10 +103,10 @@ interface IStakingRouter is IStakingAdmin {
     /// @dev Withdraw esGS tokens in vesting
     function withdrawEsGs() external;
 
-    /// @dev Withdraw esGS tokens in vesting for pool
+    /// @dev Withdraw escrow tokens in vesting for pool
     /// @param _gsPool GammaPool address
     /// @param _esToken Escrow token address
-    function withdrawEsGsForPool(address _gsPool, address _esToken) external;
+    function withdrawEsTokenForPool(address _gsPool, address _esToken) external;
 
     /// @dev Withdraw esGSb tokens in vesting
     function withdrawEsGsb() external;
@@ -121,8 +121,8 @@ interface IStakingRouter is IStakingAdmin {
     /// @dev Claim rewards for pool
     /// @param _gsPool GammaPool address
     /// @param _esToken Escrow token address
-    /// @param _shouldClaimRewards Should claim esGS rewards?
-    /// @param _shouldClaimVesting Should claim vested GS?
+    /// @param _shouldClaimRewards Should claim esToken rewards?
+    /// @param _shouldClaimVesting Should claim vested Token?
     function claimPool(address _gsPool, address _esToken, bool _shouldClaimRewards, bool _shouldClaimVesting) external;
 
     /* Compound */
