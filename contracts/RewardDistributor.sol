@@ -17,9 +17,9 @@ contract RewardDistributor is Ownable2Step, IRewardDistributor {
 
     address public override rewardToken;
     uint256 public override tokensPerInterval;
-    uint256 public lastDistributionTime;
-    address public rewardTracker;
-    bool public paused = true;
+    uint256 public override lastDistributionTime;
+    address public override rewardTracker;
+    bool public override paused = true;
 
     constructor(address _rewardToken, address _rewardTracker) {
         rewardToken = _rewardToken;

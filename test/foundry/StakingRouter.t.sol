@@ -27,6 +27,26 @@ contract StakingRouterTest is CPMMGammaSwapSetup {
         approveUserForStaking(user2, address(pool2));
     }
 
+    function testStakingContractsAlreadySet() public {
+        vm.expectRevert(bytes4(keccak256("StakingContractsAlreadySet()")));
+        stakingRouter.setupGsStaking();
+
+        vm.expectRevert(bytes4(keccak256("StakingContractsAlreadySet()")));
+        stakingRouter.setupGsStakingForLoan();
+
+        vm.expectRevert(bytes4(keccak256("StakingContractsAlreadySet()")));
+        stakingRouter.setupPoolStaking(address(pool), address(esGs), address(gs));
+
+        vm.expectRevert(bytes4(keccak256("StakingContractsAlreadySet()")));
+        stakingRouter.setupPoolStakingForLoan(address(pool), 1);
+
+        vm.expectRevert(bytes4(keccak256("StakingContractsAlreadySet()")));
+        stakingRouter.setupPoolStaking(address(pool2), address(esGs), address(gs));
+
+        vm.expectRevert(bytes4(keccak256("StakingContractsAlreadySet()")));
+        stakingRouter.setupPoolStakingForLoan(address(pool2), 1);
+    }
+
     function testProtocolAssets() public {
         assertGt(pool.totalSupply(), 0);
     }

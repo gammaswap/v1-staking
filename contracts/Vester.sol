@@ -23,19 +23,19 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
     string public symbol;
     uint8 public decimals = 18;
 
-    uint256 public vestingDuration;
+    uint256 public override vestingDuration;
 
-    address public esToken;
     address public pairToken;
-    address public claimableToken;
+    address public override esToken;
+    address public override claimableToken;
 
     address public override rewardTracker;
 
     uint256 public override totalSupply;
     uint256 public pairSupply;
-    uint256 public totalClaimable;
+    uint256 public override totalClaimable;
 
-    bool public hasMaxVestableAmount;
+    bool public override hasMaxVestableAmount;
 
     mapping (address => uint256) public balances;
     mapping (address => uint256) public override pairAmounts;

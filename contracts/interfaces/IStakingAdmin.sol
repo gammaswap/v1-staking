@@ -18,6 +18,9 @@ interface IStakingAdmin {
   /// @dev Thrown in `execute` for executing arbitrary calls for staking contracts
   error ExecuteFailed();
 
+  /// @dev Thrown when creating staking contracts that have already been created for that deposit token
+  error StakingContractsAlreadySet();
+
   /// @dev Contracts for global staking
   struct AssetCoreTracker {
     address rewardTracker;  // Track GS + esGS

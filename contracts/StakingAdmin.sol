@@ -94,6 +94,8 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
 
     /// @inheritdoc IStakingAdmin
     function setupGsStaking() external onlyOwner {
+        if (coreTracker.rewardTracker != address(0)) revert StakingContractsAlreadySet();
+
         address[] memory _depositTokens = new address[](2);
         _depositTokens[0] = gs;
         _depositTokens[1] = esGs;
@@ -139,6 +141,8 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
 
     /// @inheritdoc IStakingAdmin
     function setupGsStakingForLoan() external onlyOwner {
+        if (coreTracker.loanRewardTracker != address(0)) revert StakingContractsAlreadySet();
+
         address[] memory _depositTokens = new address[](1);
         _depositTokens[0] = esGsb;
         (address _loanRewardTracker, address _loanRewardDistributor) = _combineTrackerDistributor("Staked GS Loan", "sGSb", esGsb, _depositTokens, 0, false, false);
@@ -164,9 +168,9 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
 
     /// @inheritdoc IStakingAdmin
     function setupPoolStaking(address _gsPool, address _esToken, address _claimableToken) external onlyOwner {
-        if (IRestrictedToken(_esToken).tokenType() != IRestrictedToken.TokenType.ESCROW) {
-            revert InvalidRestrictedToken();
-        }
+        if (IRestrictedToken(_esToken).tokenType() != IRestrictedToken.TokenType.ESCROW) revert InvalidRestrictedToken();
+
+        if (poolTrackers[_gsPool][_esToken].rewardTracker != address(0)) revert StakingContractsAlreadySet();
 
         address[] memory _depositTokens = new address[](1);
         _depositTokens[0] = _gsPool;
@@ -194,6 +198,8 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
 
     /// @inheritdoc IStakingAdmin
     function setupPoolStakingForLoan(address _gsPool, uint16 _refId) external onlyOwner {
+        if(poolTrackers[_gsPool][esGsb].loanRewardTracker != address(0)) revert StakingContractsAlreadySet();
+
         address[] memory _depositTokens = new address[](1);
         _depositTokens[0] = esGsb;
         (address _loanRewardTracker, address _loanRewardDistributor) = _combineTrackerDistributor("Staked GS Loan", "sGSb", esGsb, _depositTokens, _refId, false, false);
