@@ -9,6 +9,10 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 /// @notice RewardTrackers are ERC20
 /// @dev Need to implement `supportsInterface` function
 interface IRewardTracker is IERC165 {
+    /// @dev Given in the constructor
+    /// @return RewardDistributor contract associated with this RewardTracker
+    function distributor() external view returns(address);
+
     /// @dev Configure contract after deployment
     /// @param _depositTokens Eligible tokens for stake
     /// @param _distributor Reward distributor

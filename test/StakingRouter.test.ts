@@ -78,10 +78,10 @@ describe("StakingRouter", function () {
   })
 
   it("StakingAdmin", async () => {
-    const IRewardTrackerInterface = "0xf161b399";
+    const IRewardTrackerInterface = "0x4e80bab1";
     const ILoanTrackerInterface = "0x57222f66";
-    const IRewardDistributorInterface = "0xf1d1ae87";
-    const IVesterInterface = "0xea71d740";
+    const IRewardDistributorInterface = "0xb33cc676";
+    const IVesterInterface = "0xfbb1fced";
 
     const [deployer] = await ethers.getSigners();
     expect(await rewardTracker.supportsInterface(IRewardTrackerInterface)).equals(true)

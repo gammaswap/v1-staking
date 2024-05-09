@@ -27,9 +27,9 @@ contract BonusDistributor is Ownable2Step, IRewardDistributor {
 
     /// @notice Reward Token - bnGs
     address public override rewardToken;
-    uint256 public lastDistributionTime;
-    address public rewardTracker;
-    bool public paused = true;
+    uint256 public override lastDistributionTime;
+    address public override rewardTracker;
+    bool public override paused = true;
 
     /// @dev Constructor function
     /// @param _rewardToken Address of the ERC20 token used for rewards
