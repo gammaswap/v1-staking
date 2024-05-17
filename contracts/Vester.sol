@@ -12,7 +12,7 @@ import "./interfaces/IRewardTracker.sol";
 import "./interfaces/IVester.sol";
 
 /// @title Vester contract
-/// @author Simon Mall (small@gammaswap.com)
+/// @author Simon Mall
 /// @notice Vest esGS tokens to claim GS tokens
 /// @notice Vesting is done linearly over an year
 /// @dev Requires averaged amount of pair tokens to be reserved
@@ -79,12 +79,12 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
     }
 
     /// @inheritdoc IVester
-    function setHandler(address _handler, bool _isActive) external onlyOwner {
+    function setHandler(address _handler, bool _isActive) external override virtual onlyOwner {
         isHandler[_handler] = _isActive;
     }
 
     /// @inheritdoc IVester
-    function withdrawToken(address _token, address _recipient, uint256 _amount) external onlyOwner {
+    function withdrawToken(address _token, address _recipient, uint256 _amount) external override virtual onlyOwner {
         if (_token == address(0)) {
             payable(_recipient).transfer(_amount);
         } else {
@@ -97,7 +97,7 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
     }
 
     /// @inheritdoc IVester
-    function maxWithdrawableAmount() public view returns (uint256) {
+    function maxWithdrawableAmount() public override virtual view returns (uint256) {
         uint256 rewardsSupply = IERC20(claimableToken).balanceOf(address(this));
         uint256 rewardsRequired = totalSupply + totalClaimable;
 
@@ -113,52 +113,52 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
     }
 
     /// @inheritdoc IVester
-    function deposit(uint256 _amount) external nonReentrant {
+    function deposit(uint256 _amount) external override virtual nonReentrant {
         _deposit(msg.sender, _amount);
     }
 
     /// @inheritdoc IVester
-    function depositForAccount(address _account, uint256 _amount) external nonReentrant {
+    function depositForAccount(address _account, uint256 _amount) external override virtual nonReentrant {
         _validateHandler();
         _deposit(_account, _amount);
     }
 
     /// @inheritdoc IVester
-    function claim() external override nonReentrant returns (uint256) {
+    function claim() external override virtual nonReentrant returns (uint256) {
         return _claim(msg.sender, msg.sender);
     }
 
     /// @inheritdoc IVester
-    function claimForAccount(address _account, address _receiver) external override nonReentrant returns (uint256) {
+    function claimForAccount(address _account, address _receiver) external override virtual nonReentrant returns (uint256) {
         _validateHandler();
         return _claim(_account, _receiver);
     }
 
     /// @inheritdoc IVester
-    function withdraw() external override nonReentrant {
+    function withdraw() external override virtual nonReentrant {
         _withdraw(msg.sender);
     }
 
     /// @inheritdoc IVester
-    function withdrawForAccount(address _account) external override nonReentrant {
+    function withdrawForAccount(address _account) external override virtual nonReentrant {
         _validateHandler();
         _withdraw(_account);
     }
 
     /// @inheritdoc IVester
-    function setCumulativeRewardDeductions(address _account, uint256 _amount) external override nonReentrant {
+    function setCumulativeRewardDeductions(address _account, uint256 _amount) external override virtual nonReentrant {
         _validateHandler();
         cumulativeRewardDeductions[_account] = _amount;
     }
 
     /// @inheritdoc IVester
-    function setBonusRewards(address _account, uint256 _amount) external override nonReentrant {
+    function setBonusRewards(address _account, uint256 _amount) external override virtual nonReentrant {
         _validateHandler();
         bonusRewards[_account] = _amount;
     }
 
     /// @inheritdoc IVester
-    function claimable(address _account) public override view returns (uint256) {
+    function claimable(address _account) public override virtual view returns (uint256) {
         uint256 amount = cumulativeClaimAmounts[_account] - claimedAmounts[_account];
         uint256 nextClaimable = _getNextClaimableAmount(_account);
 
@@ -166,7 +166,7 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
     }
 
     /// @inheritdoc IVester
-    function getMaxVestableAmount(address _account) public override view returns (uint256) {
+    function getMaxVestableAmount(address _account) public override virtual view returns (uint256) {
         if (!hasRewardTracker()) { return 0; }
 
         uint256 bonusReward = bonusRewards[_account];
@@ -183,7 +183,7 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
     }
 
     /// @inheritdoc IVester
-    function getAverageStakedAmount(address _account) public override view returns (uint256) {
+    function getAverageStakedAmount(address _account) public override virtual view returns (uint256) {
         uint256 cumulativeReward = IRewardTracker(rewardTracker).cumulativeRewards(_account);
         if (cumulativeReward == 0) { return 0; }
 
@@ -226,36 +226,36 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
     }
 
     /// @inheritdoc IERC20
-    function balanceOf(address _account) public view override returns (uint256) {
+    function balanceOf(address _account) public override virtual view returns (uint256) {
         return balances[_account];
     }
 
     /// @inheritdoc IERC20
     // empty implementation, tokens are non-transferrable
-    function transfer(address /* recipient */, uint256 /* amount */) public pure override returns (bool) {
+    function transfer(address /* recipient */, uint256 /* amount */) public override virtual returns (bool) {
         revert("Vester: non-transferrable");
     }
 
     /// @inheritdoc IERC20
     // empty implementation, tokens are non-transferrable
-    function allowance(address /* owner */, address /* spender */) public view virtual override returns (uint256) {
+    function allowance(address /* owner */, address /* spender */) public override virtual view returns (uint256) {
         return 0;
     }
 
     /// @inheritdoc IERC20
     // empty implementation, tokens are non-transferrable
-    function approve(address /* spender */, uint256 /* amount */) public virtual override returns (bool) {
+    function approve(address /* spender */, uint256 /* amount */) public override virtual returns (bool) {
         revert("Vester: non-transferrable");
     }
 
     /// @inheritdoc IERC20
     // empty implementation, tokens are non-transferrable
-    function transferFrom(address /* sender */, address /* recipient */, uint256 /* amount */) public virtual override returns (bool) {
+    function transferFrom(address /* sender */, address /* recipient */, uint256 /* amount */) public override virtual returns (bool) {
         revert("Vester: non-transferrable");
     }
 
     /// @inheritdoc IVester
-    function getVestedAmount(address _account) public override view returns (uint256) {
+    function getVestedAmount(address _account) public override virtual view returns (uint256) {
         uint256 balance = balances[_account];
         uint256 cumulativeClaimAmount = cumulativeClaimAmounts[_account];
 
@@ -263,7 +263,7 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, IVester {
     }
 
     /// @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public override virtual pure returns (bool) {
         return interfaceId == type(IVester).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
 

@@ -64,6 +64,22 @@ interface ILoanTracker is IERC165 {
     /// @return Accrued rewards for user
     function cumulativeRewards(address _account) external view returns (uint256);
 
+    /// @dev Set through initialize function
+    /// @return GS Pool this LoanTracker is for
+    function gsPool() external view returns (address);
+
+    /// @dev Set in constructor
+    /// @return Address of admin contract for this LoanTracker
+    function manager() external view returns (address);
+
+    /// @dev Set through initialize function
+    /// @return Address of distributor contract for this LoanTracker
+    function distributor() external view returns (address);
+
+    /// @dev Given by distributor
+    /// @return Address of reward token earned from staking
+    function rewardToken() external view returns (address);
+
     /// @dev Emitted when rewards are claimed
     /// @param _account Beneficiary user
     /// @param _amount Rewards amount claimed

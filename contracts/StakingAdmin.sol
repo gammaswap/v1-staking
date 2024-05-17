@@ -18,7 +18,7 @@ import "./interfaces/deployers/IVesterDeployer.sol";
 import "./deployers/DeployerUtils.sol";
 
 /// @title StakingAdmin abstract contract
-/// @author Simon Mall (small@gammaswap.com)
+/// @author Simon Mall
 /// @notice Admin functions for StakingRouter contract
 abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     using GammaSwapLibrary for address;
@@ -88,12 +88,12 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     }
 
     /// @inheritdoc IStakingAdmin
-    function setPoolVestingPeriod(uint256 _poolVestingPeriod) external onlyOwner {
+    function setPoolVestingPeriod(uint256 _poolVestingPeriod) external override virtual onlyOwner {
         POOL_VESTING_DURATION = _poolVestingPeriod;
     }
 
     /// @inheritdoc IStakingAdmin
-    function setupGsStaking() external onlyOwner {
+    function setupGsStaking() external override virtual onlyOwner {
         if (coreTracker.rewardTracker != address(0)) revert StakingContractsAlreadySet();
 
         address[] memory _depositTokens = new address[](2);
@@ -140,7 +140,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     }
 
     /// @inheritdoc IStakingAdmin
-    function setupGsStakingForLoan() external onlyOwner {
+    function setupGsStakingForLoan() external override virtual onlyOwner {
         if (coreTracker.loanRewardTracker != address(0)) revert StakingContractsAlreadySet();
 
         address[] memory _depositTokens = new address[](1);
@@ -167,7 +167,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     }
 
     /// @inheritdoc IStakingAdmin
-    function setupPoolStaking(address _gsPool, address _esToken, address _claimableToken) external onlyOwner {
+    function setupPoolStaking(address _gsPool, address _esToken, address _claimableToken) external override virtual onlyOwner {
         if (IRestrictedToken(_esToken).tokenType() != IRestrictedToken.TokenType.ESCROW) revert InvalidRestrictedToken();
 
         if (poolTrackers[_gsPool][_esToken].rewardTracker != address(0)) revert StakingContractsAlreadySet();
@@ -197,7 +197,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     }
 
     /// @inheritdoc IStakingAdmin
-    function setupPoolStakingForLoan(address _gsPool, uint16 _refId) external onlyOwner {
+    function setupPoolStakingForLoan(address _gsPool, uint16 _refId) external override virtual onlyOwner {
         if(poolTrackers[_gsPool][esGsb].loanRewardTracker != address(0)) revert StakingContractsAlreadySet();
 
         address[] memory _depositTokens = new address[](1);
@@ -215,7 +215,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     }
 
     /// @inheritdoc IStakingAdmin
-    function execute(address _stakingContract, bytes calldata _data) external onlyOwner {
+    function execute(address _stakingContract, bytes calldata _data) external override virtual onlyOwner {
         if(
             !_stakingContract.supportsInterface(type(IRewardTracker).interfaceId) &&
             !_stakingContract.supportsInterface(type(ILoanTracker).interfaceId) &&

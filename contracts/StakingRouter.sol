@@ -8,7 +8,7 @@ import "./interfaces/IStakingRouter.sol";
 import "./StakingAdmin.sol";
 
 /// @title StakingRouter contract
-/// @author Simon Mall (small@gammaswap.com)
+/// @author Simon Mall
 /// @notice Single entry for all staking related functions
 contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     constructor(
@@ -26,92 +26,92 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     ) StakingAdmin(_weth, _gs, _esGs, _esGsb, _bnGs, _factory, _manager, _rewardTrackerDeployer, _feeTrackerDeployer, _rewardDistributorDeployer, _vesterDeployer) {}
 
     /// @inheritdoc IStakingRouter
-    function stakeGsForAccount(address _account, uint256 _amount) external nonReentrant {
+    function stakeGsForAccount(address _account, uint256 _amount) external override virtual nonReentrant {
         _validateHandler();
         _stakeGs(msg.sender, _account, gs, _amount);
     }
 
     /// @inheritdoc IStakingRouter
-    function stakeGs(uint256 _amount) external nonReentrant {
+    function stakeGs(uint256 _amount) external override virtual nonReentrant {
         _stakeGs(msg.sender, msg.sender, gs, _amount);
     }
 
     /// @inheritdoc IStakingRouter
-    function stakeEsGs(uint256 _amount) external nonReentrant {
+    function stakeEsGs(uint256 _amount) external override virtual nonReentrant {
         _stakeGs(msg.sender, msg.sender, esGs, _amount);
     }
 
     /// @inheritdoc IStakingRouter
-    function stakeEsGsb(uint256 _amount) external nonReentrant {
+    function stakeEsGsb(uint256 _amount) external override virtual nonReentrant {
         _stakeGs(msg.sender, msg.sender, esGsb, _amount);
     }
 
     /// @inheritdoc IStakingRouter
-    function stakeLpForAccount(address _account, address _gsPool, address _esToken, uint256 _amount) external nonReentrant {
+    function stakeLpForAccount(address _account, address _gsPool, address _esToken, uint256 _amount) external override virtual nonReentrant {
         _validateHandler();
         _stakeLp(address(this), _account, _gsPool, _esToken, _amount);
     }
 
     /// @inheritdoc IStakingRouter
-    function stakeLp(address _gsPool, address _esToken, uint256 _amount) external nonReentrant {
+    function stakeLp(address _gsPool, address _esToken, uint256 _amount) external override virtual nonReentrant {
         _stakeLp(msg.sender, msg.sender, _gsPool, _esToken, _amount);
     }
 
     /// @inheritdoc IStakingRouter
-    function stakeLoanForAccount(address _account, address _gsPool, uint256 _loanId) external nonReentrant {
+    function stakeLoanForAccount(address _account, address _gsPool, uint256 _loanId) external override virtual nonReentrant {
         _validateHandler();
         _stakeLoan(_account, _gsPool, _loanId);
     }
 
     /// @inheritdoc IStakingRouter
-    function stakeLoan(address _gsPool, uint256 _loanId) external nonReentrant {
+    function stakeLoan(address _gsPool, uint256 _loanId) external override virtual nonReentrant {
         _stakeLoan(msg.sender, _gsPool, _loanId);
     }
 
     /// @inheritdoc IStakingRouter
-    function unstakeGs(uint256 _amount) external nonReentrant {
+    function unstakeGs(uint256 _amount) external override virtual nonReentrant {
         _unstakeGs(msg.sender, gs, _amount, true);
     }
 
     /// @inheritdoc IStakingRouter
-    function unstakeEsGs(uint256 _amount) external nonReentrant {
+    function unstakeEsGs(uint256 _amount) external override virtual nonReentrant {
         _unstakeGs(msg.sender, esGs, _amount, true);
     }
 
     /// @inheritdoc IStakingRouter
-    function unstakeEsGsb(uint256 _amount) external nonReentrant {
+    function unstakeEsGsb(uint256 _amount) external override virtual nonReentrant {
         _unstakeGs(msg.sender, esGsb, _amount, true);
     }
 
     /// @inheritdoc IStakingRouter
-    function unstakeLpForAccount(address _account, address _gsPool, address _esToken, uint256 _amount) external nonReentrant {
+    function unstakeLpForAccount(address _account, address _gsPool, address _esToken, uint256 _amount) external override virtual nonReentrant {
         _validateHandler();
         _unstakeLp(_account, _gsPool, _esToken, _amount);
     }
 
     /// @inheritdoc IStakingRouter
-    function unstakeLp(address _gsPool, address _esToken, uint256 _amount) external nonReentrant {
+    function unstakeLp(address _gsPool, address _esToken, uint256 _amount) external override virtual nonReentrant {
         _unstakeLp(msg.sender, _gsPool, _esToken, _amount);
     }
 
     /// @inheritdoc IStakingRouter
-    function unstakeLoanForAccount(address _account, address _gsPool, uint256 _loanId) external nonReentrant {
+    function unstakeLoanForAccount(address _account, address _gsPool, uint256 _loanId) external override virtual nonReentrant {
         _validateHandler();
         _unstakeLoan(_account, _gsPool, _loanId);
     }
 
     /// @inheritdoc IStakingRouter
-    function unstakeLoan(address _gsPool, uint256 _loanId) external nonReentrant {
+    function unstakeLoan(address _gsPool, uint256 _loanId) external override virtual nonReentrant {
         _unstakeLoan(msg.sender, _gsPool, _loanId);
     }
 
     /// @inheritdoc IStakingRouter
-    function vestEsGs(uint256 _amount) external nonReentrant {
+    function vestEsGs(uint256 _amount) external override virtual nonReentrant {
         IVester(coreTracker.vester).depositForAccount(msg.sender, _amount);
     }
 
     /// @inheritdoc IStakingRouter
-    function vestEsTokenForPool(address _gsPool, address _esToken, uint256 _amount) external nonReentrant {
+    function vestEsTokenForPool(address _gsPool, address _esToken, uint256 _amount) external override virtual nonReentrant {
         address _vester = poolTrackers[_gsPool][_esToken].vester;
         require(_vester != address(0), "StakingRouter: pool vester not found");
 
@@ -119,17 +119,17 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     }
 
     /// @inheritdoc IStakingRouter
-    function vestEsGsb(uint256 _amount) external nonReentrant {
+    function vestEsGsb(uint256 _amount) external override virtual nonReentrant {
         IVester(coreTracker.loanVester).depositForAccount(msg.sender, _amount);
     }
 
     /// @inheritdoc IStakingRouter
-    function withdrawEsGs() external nonReentrant {
+    function withdrawEsGs() external override virtual nonReentrant {
         IVester(coreTracker.vester).withdrawForAccount(msg.sender);
     }
 
     /// @inheritdoc IStakingRouter
-    function withdrawEsTokenForPool(address _gsPool, address _esToken) external nonReentrant {
+    function withdrawEsTokenForPool(address _gsPool, address _esToken) external override virtual nonReentrant {
         address _vester = poolTrackers[_gsPool][_esToken].vester;
         require(_vester != address(0), "StakingRouter: pool vester not found");
 
@@ -137,12 +137,12 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     }
 
     /// @inheritdoc IStakingRouter
-    function withdrawEsGsb() external nonReentrant {
+    function withdrawEsGsb() external override virtual nonReentrant {
         IVester(coreTracker.loanVester).withdrawForAccount(msg.sender);
     }
 
     /// @inheritdoc IStakingRouter
-    function claim(bool _shouldClaimRewards, bool _shouldClaimFee, bool _shouldClaimVesting) external nonReentrant {
+    function claim(bool _shouldClaimRewards, bool _shouldClaimFee, bool _shouldClaimVesting) external override virtual nonReentrant {
         address account = msg.sender;
 
         if (_shouldClaimRewards) {
@@ -165,7 +165,7 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     }
 
     /// @inheritdoc IStakingRouter
-    function claimPool(address _gsPool, address _esToken, bool _shouldClaimRewards, bool _shouldClaimVesting) external nonReentrant {
+    function claimPool(address _gsPool, address _esToken, bool _shouldClaimRewards, bool _shouldClaimVesting) external override virtual nonReentrant {
         address account = msg.sender;
 
         if (_shouldClaimRewards) {
@@ -186,18 +186,18 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
     }
 
     /// @inheritdoc IStakingRouter
-    function compound() external nonReentrant {
+    function compound() external override virtual nonReentrant {
         _compound(msg.sender);
     }
 
     /// @inheritdoc IStakingRouter
-    function compoundForAccount(address _account) external nonReentrant {
+    function compoundForAccount(address _account) external override virtual nonReentrant {
         _validateHandler();
         _compound(_account);
     }
 
     /// @inheritdoc IStakingRouter
-    function getAverageStakedAmount(address _gsPool, address _esToken, address _account) public view returns (uint256) {
+    function getAverageStakedAmount(address _gsPool, address _esToken, address _account) public override virtual view returns (uint256) {
         address vester = _gsPool == address(0) ? coreTracker.vester : poolTrackers[_gsPool][_esToken].vester;
         require(vester != address(0), "Vester contract not found");
 

@@ -2,7 +2,7 @@
 pragma solidity >=0.8.13;
 
 /// @title DeployerUtils library
-/// @author Simon Mall (small@gammaswap.com)
+/// @author Simon Mall
 /// @notice Deploy all staking contracts from StakingRouter using proxy calls
 library DeployerUtils {
     error ContractDeployError();

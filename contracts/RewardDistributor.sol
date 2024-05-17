@@ -10,7 +10,7 @@ import "./interfaces/IRewardDistributor.sol";
 import "./interfaces/IRewardTracker.sol";
 
 /// @title RewardDistributor contract
-/// @author Simon Mall (small@gammaswap.com)
+/// @author Simon Mall
 /// @notice Distributes rewards to RewardTracker contracts on demand
 contract RewardDistributor is Ownable2Step, IRewardDistributor {
     using SafeERC20 for IERC20;
@@ -27,7 +27,7 @@ contract RewardDistributor is Ownable2Step, IRewardDistributor {
     }
 
     /// @inheritdoc IRewardDistributor
-    function updateLastDistributionTime() external onlyOwner {
+    function updateLastDistributionTime() external override virtual onlyOwner {
         lastDistributionTime = block.timestamp;
     }
 
@@ -43,7 +43,7 @@ contract RewardDistributor is Ownable2Step, IRewardDistributor {
     }
 
     /// @inheritdoc IRewardDistributor
-    function setPaused(bool _paused) external onlyOwner {
+    function setPaused(bool _paused) external override virtual onlyOwner {
         address _rewardTracker = rewardTracker;
         uint256 timestamp = block.timestamp;
 
@@ -59,7 +59,7 @@ contract RewardDistributor is Ownable2Step, IRewardDistributor {
     }
 
     /// @inheritdoc IRewardDistributor
-    function withdrawToken(address _token, address _recipient, uint256 _amount) external onlyOwner {
+    function withdrawToken(address _token, address _recipient, uint256 _amount) external override virtual onlyOwner {
         if (_token == address(0)) {
             payable(_recipient).transfer(_amount);
         } else {
@@ -73,7 +73,7 @@ contract RewardDistributor is Ownable2Step, IRewardDistributor {
     }
 
     /// @inheritdoc IRewardDistributor
-    function maxWithdrawableAmount() public view returns (uint256) {
+    function maxWithdrawableAmount() public override virtual view returns (uint256) {
         uint256 rewardsBalance = IERC20(rewardToken).balanceOf(address(this));
         uint256 pending = pendingRewards();
 
@@ -82,7 +82,7 @@ contract RewardDistributor is Ownable2Step, IRewardDistributor {
     }
 
     /// @inheritdoc IRewardDistributor
-    function pendingRewards() public view override returns (uint256) {
+    function pendingRewards() public override virtual view returns (uint256) {
         if (paused || block.timestamp == lastDistributionTime) {
             return 0;
         }
@@ -93,7 +93,7 @@ contract RewardDistributor is Ownable2Step, IRewardDistributor {
     }
 
     /// @inheritdoc IRewardDistributor
-    function distribute() external override returns (uint256) {
+    function distribute() external override virtual returns (uint256) {
         address caller = msg.sender;
         require(caller == rewardTracker, "RewardDistributor: invalid msg.sender");
 
@@ -113,7 +113,7 @@ contract RewardDistributor is Ownable2Step, IRewardDistributor {
     }
 
     /// @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public override virtual pure returns (bool) {
         return interfaceId == type(IRewardDistributor).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
 }

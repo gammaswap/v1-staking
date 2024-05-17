@@ -5,7 +5,7 @@ import "./interfaces/IFeeTracker.sol";
 import "./RewardTracker.sol";
 
 /// @title FeeTracker Contract
-/// @author Simon Mall (small@gammaswap.com)
+/// @author Simon Mall
 /// @notice Earns protocol revenue share using actively staked GS/esGS/esGSb/bnGS
 contract FeeTracker is IFeeTracker, RewardTracker {
     address public override bonusTracker;
@@ -24,7 +24,7 @@ contract FeeTracker is IFeeTracker, RewardTracker {
     function initialize(
         address[] memory _depositTokens,
         address _distributor
-    ) external override(IRewardTracker, RewardTracker) onlyOwner {
+    ) external virtual override(IRewardTracker, RewardTracker) onlyOwner {
         require(!isInitialized, "FeeTracker: already initialized");
         isInitialized = true;
 
@@ -41,7 +41,7 @@ contract FeeTracker is IFeeTracker, RewardTracker {
     /// @param _bnRateCap bonus utilization rate
     /// 10000 -> 100%
     /// 100 -> 1%
-    function setBonusLimit(uint256 _bnRateCap) external onlyOwner {
+    function setBonusLimit(uint256 _bnRateCap) external virtual override onlyOwner {
         bnRateCap = _bnRateCap;
     }
 
@@ -63,7 +63,7 @@ contract FeeTracker is IFeeTracker, RewardTracker {
 
     /// @dev Stake tokens to earn rewards
     /// @dev Update inactive MP amounts for the user
-    function _stake(address _fundingAccount, address _account, address _depositToken, uint256 _amount) internal override {
+    function _stake(address _fundingAccount, address _account, address _depositToken, uint256 _amount) internal virtual override {
         super._stake(_fundingAccount, _account, _depositToken, _amount);
 
         _updateInactivePoints(_account);
@@ -71,7 +71,7 @@ contract FeeTracker is IFeeTracker, RewardTracker {
 
     /// @dev Unstake tokens to earn rewards
     /// @dev Update inactive MP amounts for the user
-    function _unstake(address _account, address _depositToken, uint256 _amount, address _receiver) internal override {
+    function _unstake(address _account, address _depositToken, uint256 _amount, address _receiver) internal virtual override {
         super._unstake(_account, _depositToken, _amount, _receiver);
 
         _updateInactivePoints(_account);
@@ -79,7 +79,7 @@ contract FeeTracker is IFeeTracker, RewardTracker {
 
     /// @dev Calculate rewards amount for the user
     /// @param _account User earning rewards
-    function _updateRewards(address _account) internal override {
+    function _updateRewards(address _account) internal virtual override {
         uint256 blockReward = IRewardDistributor(distributor).distribute();
 
         uint256 supply = totalSupply - totalInactivePoints;

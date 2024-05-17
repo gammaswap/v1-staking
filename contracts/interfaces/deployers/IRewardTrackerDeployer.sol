@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0;
 
 /// @title Interface for RewardTrackerDeployer contract
-/// @author Simon Mall (small@gammaswap.com)
+/// @author Simon Mall
 /// @notice Deploy reward tracker contracts from StakingAdmin
 interface IRewardTrackerDeployer {
   /// @dev Deploy RewardTracker contract

@@ -78,8 +78,8 @@ describe("StakingRouter", function () {
   })
 
   it("StakingAdmin", async () => {
-    const IRewardTrackerInterface = "0x4e80bab1";
-    const ILoanTrackerInterface = "0x57222f66";
+    const IRewardTrackerInterface = "0x54665922";
+    const ILoanTrackerInterface = "0x097b06f1";
     const IRewardDistributorInterface = "0xb33cc676";
     const IVesterInterface = "0xfbb1fced";
 

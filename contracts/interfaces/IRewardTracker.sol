@@ -9,9 +9,25 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 /// @notice RewardTrackers are ERC20
 /// @dev Need to implement `supportsInterface` function
 interface IRewardTracker is IERC165 {
-    /// @dev Given in the constructor
+    /// @dev Set through initialize function
     /// @return RewardDistributor contract associated with this RewardTracker
     function distributor() external view returns(address);
+
+    /// @dev Given by distributor
+    /// @return Reward token contract
+    function rewardToken() external view returns (address);
+
+    /// @dev Set to true by default
+    /// @return if true only handlers can transfer
+    function inPrivateTransferMode() external view returns (bool);
+
+    /// @dev Set to true by default
+    /// @return if true only handlers can stake/unstake
+    function inPrivateStakingMode() external view returns (bool);
+
+    /// @dev Set to false by default
+    /// @return if true only handlers can claim for an account
+    function inPrivateClaimingMode() external view returns (bool);
 
     /// @dev Configure contract after deployment
     /// @param _depositTokens Eligible tokens for stake

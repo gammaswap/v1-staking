@@ -14,7 +14,7 @@ import "./interfaces/ILoanTracker.sol";
 import "./interfaces/IRewardDistributor.sol";
 
 /// @title LoanTracker contract
-/// @author Simon Mall (small@gammaswap.com)
+/// @author Simon Mall
 /// @notice Track loan staking and their rewards
 contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILoanObserver {
     using SafeERC20 for IERC20;
@@ -36,9 +36,9 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
     string public name;
     string public symbol;
 
-    address public manager;
-    address public gsPool;
-    address public distributor;
+    address public override manager;
+    address public override gsPool;
+    address public override distributor;
 
     mapping (address => bool) public isHandler;
 
@@ -69,7 +69,7 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
     function initialize(
         address _gsPool,
         address _distributor
-    ) external onlyOwner {
+    ) external override virtual onlyOwner {
         require(!isInitialized, "LoanTracker: already initialized");
         isInitialized = true;
 
@@ -78,75 +78,75 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
     }
 
     /// @inheritdoc ILoanTracker
-    function setHandler(address _handler, bool _isActive) external onlyOwner {
+    function setHandler(address _handler, bool _isActive) external override virtual onlyOwner {
         isHandler[_handler] = _isActive;
     }
 
-    function balanceOf(address _account) external view override returns (uint256) {
+    function balanceOf(address _account) external override virtual view returns (uint256) {
         return balances[_account];
     }
 
     /// @inheritdoc ILoanTracker
-    function stake(uint256 _loanId) external override nonReentrant {
+    function stake(uint256 _loanId) external override virtual nonReentrant {
         _stake(msg.sender, _loanId);
     }
 
     /// @inheritdoc ILoanTracker
-    function stakeForAccount(address _account, uint256 _loanId) external override nonReentrant {
+    function stakeForAccount(address _account, uint256 _loanId) external override virtual nonReentrant {
         _validateHandler();
         _stake(_account, _loanId);
     }
 
     /// @inheritdoc ILoanTracker
-    function unstake(uint256 _loanId) external override nonReentrant {
+    function unstake(uint256 _loanId) external override virtual nonReentrant {
         _unstake(msg.sender, _loanId);
     }
 
     /// @inheritdoc ILoanTracker
-    function unstakeForAccount(address _account, uint256 _loanId) external override nonReentrant {
+    function unstakeForAccount(address _account, uint256 _loanId) external override virtual nonReentrant {
         _validateHandler();
         _unstake(_account, _loanId);
     }
 
-    function transfer(address, uint256) external override pure returns (bool) {
+    function transfer(address, uint256) external override virtual returns (bool) {
         revert("LoanTracker: Forbidden");
     }
 
-    function allowance(address, address) external pure override returns (uint256) {
+    function allowance(address, address) external override virtual pure returns (uint256) {
         return 0;
     }
 
-    function approve(address, uint256) external override pure returns (bool) {
+    function approve(address, uint256) external override virtual returns (bool) {
         revert("LoanTracker: Forbidden");
     }
 
-    function transferFrom(address, address, uint256) external override pure returns (bool) {
+    function transferFrom(address, address, uint256) external override virtual returns (bool) {
         revert("LoanTracker: Forbidden");
     }
 
     /// @inheritdoc ILoanTracker
-    function tokensPerInterval() external override view returns (uint256) {
+    function tokensPerInterval() external override virtual view returns (uint256) {
         return IRewardDistributor(distributor).tokensPerInterval();
     }
 
     /// @inheritdoc ILoanTracker
-    function updateRewards() external override nonReentrant {
+    function updateRewards() external override virtual nonReentrant {
         _updateRewards(address(0));
     }
 
     /// @inheritdoc ILoanTracker
-    function claim(address _receiver) external override nonReentrant returns (uint256) {
+    function claim(address _receiver) external override virtual nonReentrant returns (uint256) {
         return _claim(msg.sender, _receiver);
     }
 
     /// @inheritdoc ILoanTracker
-    function claimForAccount(address _account, address _receiver) external override nonReentrant returns (uint256) {
+    function claimForAccount(address _account, address _receiver) external override virtual nonReentrant returns (uint256) {
         _validateHandler();
         return _claim(_account, _receiver);
     }
 
     /// @inheritdoc ILoanTracker
-    function claimable(address _account) public override view returns (uint256) {
+    function claimable(address _account) public override virtual view returns (uint256) {
         uint256 balance = balances[_account];
         uint256 _claimableReward = claimableReward[_account];
         if (balance == 0) {
@@ -181,12 +181,13 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
         return gsPool == _gsPool;
     }
 
-    function rewardToken() public view returns (address) {
+    /// @inheritdoc ILoanTracker
+    function rewardToken() public override virtual view returns (address) {
         return IRewardDistributor(distributor).rewardToken();
     }
 
     /// @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public override virtual pure returns (bool) {
         return interfaceId == type(ILoanTracker).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
 

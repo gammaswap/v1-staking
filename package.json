@@ -17,11 +17,16 @@
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/@gammaswap"
   },
+  "author": "Simon Mall",
+  "contributors": [
+    "Daniel D. Alcarraz (https://github.com/0xDanr)"
+  ],
   "files": [
     "artifacts",
     "contracts",
     "typechain-types"
   ],
+  "license": "MIT",
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.0",

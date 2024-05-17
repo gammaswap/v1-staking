@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0;
 
 /// @title Interface for VesterDeployer contract
-/// @author Simon Mall (small@gammaswap.com)
+/// @author Simon Mall
 /// @notice Deploy vester contracts from StakingAdmin
 interface IVesterDeployer {
   /// @dev Deploy Vester contract

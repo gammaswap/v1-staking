@@ -4,7 +4,7 @@ pragma solidity >=0.8.0;
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 /// @title RewardDistributor contract
-/// @author Simon Mall (small@gammaswap.com)
+/// @author Simon Mall
 /// @notice Distribute reward tokens to reward trackers
 /// @dev Need to implement `supportsInterface` function
 interface IRewardDistributor is IERC165 {

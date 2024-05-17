@@ -16,7 +16,7 @@ interface IFeeTracker is IRewardTracker {
     /// @return Returns bonus token address
     function bnGs() external view returns(address);
 
-    /// @dev Given in the constructor, can be updated afterwards
+    /// @dev Given in the constructor, can be updated through setBonusLimit
     /// @return Max bonus rate for this fee tracker to increase the fee share
     function bnRateCap() external view returns(uint256);
 
@@ -28,4 +28,8 @@ interface IFeeTracker is IRewardTracker {
     /// @param account - user address to track inactive points
     /// @return Get inactive points by user address
     function inactivePoints(address account) external view returns(uint256);
+
+    /// @dev Update bonus rate cap
+    /// @param _bnRateCap - new bonus rate limit
+    function setBonusLimit(uint256 _bnRateCap) external;
 }
