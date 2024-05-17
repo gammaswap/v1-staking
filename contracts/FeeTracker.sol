@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.21;
 
+import "./interfaces/IFeeTracker.sol";
 import "./RewardTracker.sol";
 
 /// @title FeeTracker Contract
-/// @author Simon Mall (small@gammaswap.com)
+/// @author Simon Mall
 /// @notice Earns protocol revenue share using actively staked GS/esGS/esGSb/bnGS
-contract FeeTracker is RewardTracker {
-    address public bonusTracker;
-    address public bnGs;
-    uint256 public bnRateCap;
-    uint256 public totalInactivePoints;
-    mapping (address => uint256) public inactivePoints;
+contract FeeTracker is IFeeTracker, RewardTracker {
+    address public override bonusTracker;
+    address public override bnGs;
+    uint256 public override bnRateCap;
+    uint256 public override totalInactivePoints;
+    mapping (address => uint256) public override inactivePoints;
 
     constructor(uint256 _bnRateCap) RewardTracker("GammaSwap Revenue Share", "feeGS") {
         bnRateCap = _bnRateCap;
@@ -23,7 +24,7 @@ contract FeeTracker is RewardTracker {
     function initialize(
         address[] memory _depositTokens,
         address _distributor
-    ) external override onlyOwner {
+    ) external virtual override(IRewardTracker, RewardTracker) onlyOwner {
         require(!isInitialized, "FeeTracker: already initialized");
         isInitialized = true;
 
@@ -40,13 +41,13 @@ contract FeeTracker is RewardTracker {
     /// @param _bnRateCap bonus utilization rate
     /// 10000 -> 100%
     /// 100 -> 1%
-    function setBonusLimit(uint256 _bnRateCap) external onlyOwner {
+    function setBonusLimit(uint256 _bnRateCap) external virtual override onlyOwner {
         bnRateCap = _bnRateCap;
     }
 
     /// @inheritdoc RewardTracker
     /// @dev Only active MP tokens contribute to rewards (See `bnRateCap`)
-    function claimable(address _account) public virtual override view returns (uint256) {
+    function claimable(address _account) public virtual override(RewardTracker, IRewardTracker) view returns (uint256) {
         uint256 stakedAmount = stakedAmounts[_account] - inactivePoints[_account];
         uint256 _claimableReward = claimableReward[_account];
         if (stakedAmount == 0) {
@@ -62,7 +63,7 @@ contract FeeTracker is RewardTracker {
 
     /// @dev Stake tokens to earn rewards
     /// @dev Update inactive MP amounts for the user
-    function _stake(address _fundingAccount, address _account, address _depositToken, uint256 _amount) internal override {
+    function _stake(address _fundingAccount, address _account, address _depositToken, uint256 _amount) internal virtual override {
         super._stake(_fundingAccount, _account, _depositToken, _amount);
 
         _updateInactivePoints(_account);
@@ -70,7 +71,7 @@ contract FeeTracker is RewardTracker {
 
     /// @dev Unstake tokens to earn rewards
     /// @dev Update inactive MP amounts for the user
-    function _unstake(address _account, address _depositToken, uint256 _amount, address _receiver) internal override {
+    function _unstake(address _account, address _depositToken, uint256 _amount, address _receiver) internal virtual override {
         super._unstake(_account, _depositToken, _amount, _receiver);
 
         _updateInactivePoints(_account);
@@ -78,7 +79,7 @@ contract FeeTracker is RewardTracker {
 
     /// @dev Calculate rewards amount for the user
     /// @param _account User earning rewards
-    function _updateRewards(address _account) internal override {
+    function _updateRewards(address _account) internal virtual override {
         uint256 blockReward = IRewardDistributor(distributor).distribute();
 
         uint256 supply = totalSupply - totalInactivePoints;

@@ -11,7 +11,7 @@ import "./interfaces/IRewardDistributor.sol";
 import "./interfaces/IRewardTracker.sol";
 
 /// @title RewardTracker contract
-/// @author Simon Mall (small@gammaswap.com)
+/// @author Simon Mall
 /// @notice Earn rewards by staking whitelisted tokens
 contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker {
     using SafeERC20 for IERC20;
@@ -27,9 +27,9 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
 
     address public override distributor;
 
-    bool public inPrivateTransferMode = true;
-    bool public inPrivateStakingMode = true;
-    bool public inPrivateClaimingMode = false;
+    bool public override inPrivateTransferMode = true;
+    bool public override inPrivateStakingMode = true;
+    bool public override inPrivateClaimingMode = false;
 
     mapping (address => bool) public isHandler;
     mapping (address => bool) public isDepositToken;
@@ -56,7 +56,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
     function initialize(
         address[] memory _depositTokens,
         address _distributor
-    ) external virtual onlyOwner {
+    ) external override virtual onlyOwner {
         require(!isInitialized, "RewardTracker: already initialized");
         isInitialized = true;
 
@@ -69,32 +69,32 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
     }
 
     /// @inheritdoc IRewardTracker
-    function setDepositToken(address _depositToken, bool _isDepositToken) external onlyOwner {
+    function setDepositToken(address _depositToken, bool _isDepositToken) external override virtual onlyOwner {
         isDepositToken[_depositToken] = _isDepositToken;
     }
 
     /// @inheritdoc IRewardTracker
-    function setInPrivateTransferMode(bool _inPrivateTransferMode) external onlyOwner {
+    function setInPrivateTransferMode(bool _inPrivateTransferMode) external override virtual onlyOwner {
         inPrivateTransferMode = _inPrivateTransferMode;
     }
 
     /// @inheritdoc IRewardTracker
-    function setInPrivateStakingMode(bool _inPrivateStakingMode) external onlyOwner {
+    function setInPrivateStakingMode(bool _inPrivateStakingMode) external override virtual onlyOwner {
         inPrivateStakingMode = _inPrivateStakingMode;
     }
 
     /// @inheritdoc IRewardTracker
-    function setInPrivateClaimingMode(bool _inPrivateClaimingMode) external onlyOwner {
+    function setInPrivateClaimingMode(bool _inPrivateClaimingMode) external override virtual onlyOwner {
         inPrivateClaimingMode = _inPrivateClaimingMode;
     }
 
     /// @inheritdoc IRewardTracker
-    function setHandler(address _handler, bool _isActive) external onlyOwner {
+    function setHandler(address _handler, bool _isActive) external override virtual onlyOwner {
         isHandler[_handler] = _isActive;
     }
 
     /// @inheritdoc IRewardTracker
-    function withdrawToken(address _token, address _recipient, uint256 _amount) external onlyOwner {
+    function withdrawToken(address _token, address _recipient, uint256 _amount) external override virtual onlyOwner {
         if (_token == address(0)) {
             payable(_recipient).transfer(_amount);
         } else {
@@ -104,53 +104,53 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
     }
 
     /// @inheritdoc IERC20
-    function balanceOf(address _account) external view override returns (uint256) {
+    function balanceOf(address _account) external override virtual view returns (uint256) {
         return balances[_account];
     }
 
     /// @inheritdoc IRewardTracker
-    function stake(address _depositToken, uint256 _amount) external override nonReentrant {
+    function stake(address _depositToken, uint256 _amount) external override virtual nonReentrant {
         if (inPrivateStakingMode) { revert("RewardTracker: action not enabled"); }
         _stake(msg.sender, msg.sender, _depositToken, _amount);
     }
 
     /// @inheritdoc IRewardTracker
-    function stakeForAccount(address _fundingAccount, address _account, address _depositToken, uint256 _amount) external override nonReentrant {
+    function stakeForAccount(address _fundingAccount, address _account, address _depositToken, uint256 _amount) external override virtual nonReentrant {
         _validateHandler();
         _stake(_fundingAccount, _account, _depositToken, _amount);
     }
 
     /// @inheritdoc IRewardTracker
-    function unstake(address _depositToken, uint256 _amount) external override nonReentrant {
+    function unstake(address _depositToken, uint256 _amount) external override virtual nonReentrant {
         if (inPrivateStakingMode) { revert("RewardTracker: action not enabled"); }
         _unstake(msg.sender, _depositToken, _amount, msg.sender);
     }
 
     /// @inheritdoc IRewardTracker
-    function unstakeForAccount(address _account, address _depositToken, uint256 _amount, address _receiver) external override nonReentrant {
+    function unstakeForAccount(address _account, address _depositToken, uint256 _amount, address _receiver) external override virtual nonReentrant {
         _validateHandler();
         _unstake(_account, _depositToken, _amount, _receiver);
     }
 
     /// @inheritdoc IERC20
-    function transfer(address _recipient, uint256 _amount) external override returns (bool) {
+    function transfer(address _recipient, uint256 _amount) external override virtual returns (bool) {
         _transfer(msg.sender, _recipient, _amount);
         return true;
     }
 
     /// @inheritdoc IERC20
-    function allowance(address _owner, address _spender) external view override returns (uint256) {
+    function allowance(address _owner, address _spender) external override virtual view returns (uint256) {
         return allowances[_owner][_spender];
     }
 
     /// @inheritdoc IERC20
-    function approve(address _spender, uint256 _amount) external override returns (bool) {
+    function approve(address _spender, uint256 _amount) external override virtual returns (bool) {
         _approve(msg.sender, _spender, _amount);
         return true;
     }
 
     /// @inheritdoc IERC20
-    function transferFrom(address _sender, address _recipient, uint256 _amount) external override returns (bool) {
+    function transferFrom(address _sender, address _recipient, uint256 _amount) external override virtual returns (bool) {
         if (isHandler[msg.sender]) {
             _transfer(_sender, _recipient, _amount);
             return true;
@@ -163,29 +163,29 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
     }
 
     /// @inheritdoc IRewardTracker
-    function tokensPerInterval() external override view returns (uint256) {
+    function tokensPerInterval() external override virtual view returns (uint256) {
         return IRewardDistributor(distributor).tokensPerInterval();
     }
 
     /// @inheritdoc IRewardTracker
-    function updateRewards() external override nonReentrant {
+    function updateRewards() external override virtual nonReentrant {
         _updateRewards(address(0));
     }
 
     /// @inheritdoc IRewardTracker
-    function claim(address _receiver) external override nonReentrant returns (uint256) {
+    function claim(address _receiver) external override virtual nonReentrant returns (uint256) {
         if (inPrivateClaimingMode) { revert("RewardTracker: action not enabled"); }
         return _claim(msg.sender, _receiver);
     }
 
     /// @inheritdoc IRewardTracker
-    function claimForAccount(address _account, address _receiver) external override nonReentrant returns (uint256) {
+    function claimForAccount(address _account, address _receiver) external override virtual nonReentrant returns (uint256) {
         _validateHandler();
         return _claim(_account, _receiver);
     }
 
     /// @inheritdoc IRewardTracker
-    function claimable(address _account) public virtual override view returns (uint256) {
+    function claimable(address _account) public override virtual view returns (uint256) {
         uint256 stakedAmount = stakedAmounts[_account];
         uint256 _claimableReward = claimableReward[_account];
         if (stakedAmount == 0) {
@@ -199,7 +199,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
     }
 
     /// @dev Returns reward token address
-    function rewardToken() public view returns (address) {
+    function rewardToken() public override virtual view returns (address) {
         return IRewardDistributor(distributor).rewardToken();
     }
 
@@ -355,7 +355,7 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
     }
 
     /// @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public override virtual pure returns (bool) {
         return interfaceId == type(IRewardTracker).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
 }
