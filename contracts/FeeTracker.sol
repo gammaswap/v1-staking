@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.21;
 
+import "./interfaces/IFeeTracker.sol";
 import "./RewardTracker.sol";
 
 /// @title FeeTracker Contract
 /// @author Simon Mall (small@gammaswap.com)
 /// @notice Earns protocol revenue share using actively staked GS/esGS/esGSb/bnGS
-contract FeeTracker is RewardTracker {
-    address public bonusTracker;
-    address public bnGs;
-    uint256 public bnRateCap;
-    uint256 public totalInactivePoints;
-    mapping (address => uint256) public inactivePoints;
+contract FeeTracker is IFeeTracker, RewardTracker {
+    address public override bonusTracker;
+    address public override bnGs;
+    uint256 public override bnRateCap;
+    uint256 public override totalInactivePoints;
+    mapping (address => uint256) public override inactivePoints;
 
     constructor(uint256 _bnRateCap) RewardTracker("GammaSwap Revenue Share", "feeGS") {
         bnRateCap = _bnRateCap;
@@ -23,7 +24,7 @@ contract FeeTracker is RewardTracker {
     function initialize(
         address[] memory _depositTokens,
         address _distributor
-    ) external override onlyOwner {
+    ) external override(IRewardTracker, RewardTracker) onlyOwner {
         require(!isInitialized, "FeeTracker: already initialized");
         isInitialized = true;
 
@@ -46,7 +47,7 @@ contract FeeTracker is RewardTracker {
 
     /// @inheritdoc RewardTracker
     /// @dev Only active MP tokens contribute to rewards (See `bnRateCap`)
-    function claimable(address _account) public virtual override view returns (uint256) {
+    function claimable(address _account) public virtual override(RewardTracker, IRewardTracker) view returns (uint256) {
         uint256 stakedAmount = stakedAmounts[_account] - inactivePoints[_account];
         uint256 _claimableReward = claimableReward[_account];
         if (stakedAmount == 0) {
