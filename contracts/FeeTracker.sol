@@ -14,19 +14,24 @@ contract FeeTracker is IFeeTracker, RewardTracker {
     uint256 public override totalInactivePoints;
     mapping (address => uint256) public override inactivePoints;
 
-    constructor(uint256 _bnRateCap) RewardTracker("GammaSwap Revenue Share", "feeGS") {
-        bnRateCap = _bnRateCap;
+    constructor() RewardTracker() {
     }
 
-    /// @param _depositTokens should be two tokens
-    /// _depositTokens[0] - bonusTracker (GS + esGS + esGSb)
-    /// _depositTokens[1] - bnGS (aka MP)
+    /// @notice _depositTokens should be two tokens
+    /// @dev _depositTokens[0] - bonusTracker (GS + esGS + esGSb)
+    /// @dev _depositTokens[1] - bnGS (aka MP)
+    /// @inheritdoc IRewardTracker
     function initialize(
+        string memory _name,
+        string memory _symbol,
         address[] memory _depositTokens,
         address _distributor
-    ) external virtual override(IRewardTracker, RewardTracker) onlyOwner {
-        require(!isInitialized, "FeeTracker: already initialized");
-        isInitialized = true;
+    ) external virtual override(IRewardTracker, RewardTracker) initializer {
+        _transferOwnership(msg.sender);
+
+        name = "GammaSwap Revenue Share";
+        symbol = "feeGS";
+        bnRateCap = 10000;
 
         require(_depositTokens.length == 2, "FeeTracker: invalid token setup");
 

@@ -8,6 +8,17 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 /// @notice Normal ERC20 token operations are not allowed
 /// @dev Need to implement `supportsInterface` function
 interface IVester is IERC165 {
+    /// @dev Initialize Vester contract
+    /// @param _name ERC20 name implementation
+    /// @param _symbol ERC20 symbol implementation
+    /// @param _vestingDuration how many seconds to vest the escrow token
+    /// @param _esToken address of escrow token to vest
+    /// @param _pairToken address of token that must be staked to determine how many tokens can be vested (optional)
+    /// @param _claimableToken address of token that is given as reward for vesting escrow token
+    /// @param _rewardTracker address of contract to track staked pairTokens to determine max vesting amount
+    function initialize(string memory _name, string memory _symbol, uint256 _vestingDuration, address _esToken,
+        address _pairToken, address _claimableToken, address _rewardTracker) external;
+
     /// @dev Updated with every vesting update
     /// @return Total amounts of claimableToken that has already vested
     function totalClaimable() external view returns(uint256);

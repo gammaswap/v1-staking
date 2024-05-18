@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 import "./interfaces/IRestrictedToken.sol";
 import "./interfaces/IRewardTracker.sol";
@@ -15,12 +16,12 @@ import "./interfaces/IVester.sol";
 /// @notice Vest esGSb tokens to claim GS tokens
 /// @notice Vesting is done linearly over an year
 /// @dev No need for pair tokens
-contract VesterNoReserve is IERC20, ReentrancyGuard, Ownable2Step, IVester {
+contract VesterNoReserve is IERC20, ReentrancyGuard, Ownable2Step, Initializable, IVester {
     using SafeERC20 for IERC20;
 
     string public name;
     string public symbol;
-    uint8 public decimals = 18;
+    uint8 public constant decimals = 18;
 
     uint256 public override vestingDuration;
 
@@ -48,14 +49,19 @@ contract VesterNoReserve is IERC20, ReentrancyGuard, Ownable2Step, IVester {
     event Deposit(address account, uint256 amount);
     event Withdraw(address account, uint256 claimedAmount, uint256 balance);
 
-    constructor (
+    constructor () {
+    }
+
+    /// @inheritdoc IVester
+    function initialize(
         string memory _name,
         string memory _symbol,
         uint256 _vestingDuration,
         address _esToken,
+        address _pairToken,
         address _claimableToken,
-        address _rewardTracker
-    ) {
+        address _rewardTracker) external override virtual initializer {
+        _transferOwnership(msg.sender);
         name = _name;
         symbol = _symbol;
 

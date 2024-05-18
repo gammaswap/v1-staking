@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 import "./interfaces/IRewardDistributor.sol";
 import "./interfaces/IRewardTracker.sol";
@@ -13,23 +14,21 @@ import "./interfaces/IRewardTracker.sol";
 /// @title RewardTracker contract
 /// @author Simon Mall
 /// @notice Earn rewards by staking whitelisted tokens
-contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker {
+contract RewardTracker is IERC20, Initializable, ReentrancyGuard, Ownable2Step, IRewardTracker {
     using SafeERC20 for IERC20;
 
     uint256 public constant PRECISION = 1e30;
 
     uint8 public constant decimals = 18;
 
-    bool public isInitialized;
-
     string public name;
     string public symbol;
 
     address public override distributor;
 
-    bool public override inPrivateTransferMode = true;
-    bool public override inPrivateStakingMode = true;
-    bool public override inPrivateClaimingMode = false;
+    bool public override inPrivateTransferMode;
+    bool public override inPrivateStakingMode;
+    bool public override inPrivateClaimingMode;
 
     mapping (address => bool) public isHandler;
     mapping (address => bool) public isDepositToken;
@@ -47,18 +46,23 @@ contract RewardTracker is IERC20, ReentrancyGuard, Ownable2Step, IRewardTracker 
     mapping (address => uint256) public override cumulativeRewards;
     mapping (address => uint256) public override averageStakedAmounts;
 
-    constructor(string memory _name, string memory _symbol) {
-        name = _name;
-        symbol = _symbol;
+    constructor() {
     }
 
     /// @inheritdoc IRewardTracker
     function initialize(
+        string memory _name,
+        string memory _symbol,
         address[] memory _depositTokens,
         address _distributor
-    ) external override virtual onlyOwner {
-        require(!isInitialized, "RewardTracker: already initialized");
-        isInitialized = true;
+    ) external override virtual initializer {
+        _transferOwnership(msg.sender);
+
+        name = _name;
+        symbol = _symbol;
+        inPrivateTransferMode = true;
+        inPrivateStakingMode = true;
+        inPrivateClaimingMode = false;
 
         for (uint256 i = 0; i < _depositTokens.length; i++) {
             address depositToken = _depositTokens[i];

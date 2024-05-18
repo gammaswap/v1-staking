@@ -4,6 +4,7 @@ pragma solidity >=0.8.13;
 import "@gammaswap/v1-core/contracts/libraries/GammaSwapLibrary.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 import "./interfaces/IRewardTracker.sol";
 import "./interfaces/ILoanTracker.sol";
@@ -11,19 +12,14 @@ import "./interfaces/IRewardDistributor.sol";
 import "./interfaces/IVester.sol";
 import "./interfaces/IStakingAdmin.sol";
 import "./interfaces/IRestrictedToken.sol";
-import "./interfaces/deployers/IFeeTrackerDeployer.sol";
-import "./interfaces/deployers/IRewardDistributorDeployer.sol";
-import "./interfaces/deployers/IRewardTrackerDeployer.sol";
-import "./interfaces/deployers/IVesterDeployer.sol";
-import "./deployers/DeployerUtils.sol";
+import "./interfaces/IBeaconProxyFactory.sol";
 
 /// @title StakingAdmin abstract contract
 /// @author Simon Mall
 /// @notice Admin functions for StakingRouter contract
-abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
+abstract contract StakingAdmin is Ownable2Step, IStakingAdmin, Initializable {
     using GammaSwapLibrary for address;
     using ERC165Checker for address;
-    using DeployerUtils for address;
 
     address public immutable gs;
     address public immutable esGs;
@@ -34,10 +30,13 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     address public immutable manager;
 
     // Deployers
-    address private immutable rewardTrackerDeployer;
-    address private immutable feeTrackerDeployer;
-    address private immutable rewardDistributorDeployer;
-    address private immutable vesterDeployer;
+    address private loanTrackerFactory;
+    address private rewardTrackerFactory;
+    address private feeTrackerFactory;
+    address private rewardDistributorFactory;
+    address private bonusDistributorFactory;
+    address private vesterFactory;
+    address private vesterNoReserveFactory;
 
     uint256 public constant VESTING_DURATION = 365 * 24 * 60 * 60;
     uint256 public POOL_VESTING_DURATION = 365 * 24 * 60 * 60;
@@ -52,24 +51,15 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         address _esGsb,
         address _bnGs,
         address _factory,
-        address _manager,
-        address _rewardTrackerDeployer,
-        address _feeTrackerDeployer,
-        address _rewardDistributorDeployer,
-        address _vesterDeployer
-    ) {
-        if (
-            _feeRewardToken == address(0) || _gs == address(0) || _esGs == address(0) || _esGsb == address(0) || _bnGs == address(0) || _manager == address(0) ||
-            _rewardTrackerDeployer == address(0) || _feeTrackerDeployer == address(0) || _rewardDistributorDeployer == address(0) || _vesterDeployer == address(0)
-        ) {
+        address _manager) {
+        if (_feeRewardToken == address(0) || _gs == address(0) || _esGs == address(0) || _esGsb == address(0) ||
+            _bnGs == address(0) || _manager == address(0)) {
             revert InvalidConstructor();
         }
 
-        if (
-            IRestrictedToken(_esGs).tokenType() != IRestrictedToken.TokenType.ESCROW ||
+        if (IRestrictedToken(_esGs).tokenType() != IRestrictedToken.TokenType.ESCROW ||
             IRestrictedToken(_esGsb).tokenType() != IRestrictedToken.TokenType.ESCROW ||
-            IRestrictedToken(_bnGs).tokenType() != IRestrictedToken.TokenType.BONUS
-        ) {
+            IRestrictedToken(_bnGs).tokenType() != IRestrictedToken.TokenType.BONUS) {
             revert InvalidRestrictedToken();
         }
 
@@ -80,11 +70,30 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         bnGs = _bnGs;
         factory = _factory;
         manager = _manager;
+    }
 
-        rewardTrackerDeployer = _rewardTrackerDeployer;
-        feeTrackerDeployer = _feeTrackerDeployer;
-        rewardDistributorDeployer = _rewardDistributorDeployer;
-        vesterDeployer = _vesterDeployer;
+    /// @inheritdoc IStakingAdmin
+    function initialize(
+        address _loanTrackerFactory,
+        address _rewardTrackerFactory,
+        address _feeTrackerFactory,
+        address _rewardDistributorFactory,
+        address _bonusDistributorFactory,
+        address _vesterFactory,
+        address _vesterNoReserveFactory) external override virtual initializer onlyOwner {
+        if (_loanTrackerFactory == address(0) || _rewardTrackerFactory == address(0) || _feeTrackerFactory == address(0) ||
+            _rewardDistributorFactory == address(0) || _bonusDistributorFactory == address(0) || _vesterFactory == address(0) ||
+            _vesterNoReserveFactory == address(0)) {
+            revert MissingBeaconProxyFactory();
+        }
+
+        loanTrackerFactory = _loanTrackerFactory;
+        rewardTrackerFactory = _rewardTrackerFactory;
+        feeTrackerFactory = _feeTrackerFactory;
+        rewardDistributorFactory = _rewardDistributorFactory;
+        bonusDistributorFactory = _bonusDistributorFactory;
+        vesterFactory = _vesterFactory;
+        vesterNoReserveFactory = _vesterNoReserveFactory;
     }
 
     /// @inheritdoc IStakingAdmin
@@ -112,9 +121,8 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         _depositTokens[1] = bnGs;
         (address _feeTracker, address _feeDistributor) = _combineTrackerDistributor("Staked + Bonus + Fee GS", "sbfGS", feeRewardToken, _depositTokens, 0, true, false);
 
-        address _vester = vesterDeployer.deployContract(
-            abi.encodeCall(IVesterDeployer.deploy, ("Vested GS", "vGS", VESTING_DURATION, esGs, _feeTracker, gs, _rewardTracker))
-        );
+        address _vester = IBeaconProxyFactory(vesterFactory).deploy();
+        IVester(_vester).initialize("Vested GS", "vGS", VESTING_DURATION, esGs, _feeTracker, gs, _rewardTracker);
 
         IRewardTracker(_rewardTracker).setHandler(_bonusTracker, true);
         IRewardTracker(_bonusTracker).setHandler(_feeTracker, true);
@@ -150,9 +158,8 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         IRewardTracker(coreTracker.bonusTracker).setDepositToken(_loanRewardTracker, true);
         IRewardTracker(_loanRewardTracker).setHandler(coreTracker.bonusTracker, true);
 
-        address _loanVester = vesterDeployer.deployContract(
-            abi.encodeCall(IVesterDeployer.deployVesterNoReserve, ("Vested GS Borrowed", "vGSB", VESTING_DURATION, esGsb, gs, _loanRewardTracker))
-        );
+        address _loanVester = IBeaconProxyFactory(vesterNoReserveFactory).deploy();
+        IVester(_loanVester).initialize("Vested GS Borrowed", "vGSB", VESTING_DURATION, esGsb, address(0), gs, _loanRewardTracker);
 
         IVester(_loanVester).setHandler(address(this), true);
         IRestrictedToken(esGsb).setHandler(_loanRewardTracker, true);
@@ -175,11 +182,9 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         address[] memory _depositTokens = new address[](1);
         _depositTokens[0] = _gsPool;
         (address _rewardTracker, address _rewardDistributor) = _combineTrackerDistributor("Staked GS LP", "sGSlp", _esToken, _depositTokens, 0, false, false);
-        
 
-        address _vester = vesterDeployer.deployContract(
-            abi.encodeCall(IVesterDeployer.deploy, ("Vested Pool GS", "vpGS", POOL_VESTING_DURATION, _esToken, _rewardTracker, _claimableToken, _rewardTracker))
-        );
+        address _vester = IBeaconProxyFactory(vesterFactory).deploy();
+        IVester(_vester).initialize("Vested Pool GS", "vpGS", POOL_VESTING_DURATION, _esToken, _rewardTracker, _claimableToken, _rewardTracker);
 
         IRewardTracker(_rewardTracker).setHandler(_vester, true);
         IVester(_vester).setHandler(address(this), true);
@@ -201,10 +206,9 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
         if(poolTrackers[_gsPool][esGsb].loanRewardTracker != address(0)) revert StakingContractsAlreadySet();
 
         address[] memory _depositTokens = new address[](1);
-        _depositTokens[0] = esGsb;
+        _depositTokens[0] = _gsPool;
         (address _loanRewardTracker, address _loanRewardDistributor) = _combineTrackerDistributor("Staked GS Loan", "sGSb", esGsb, _depositTokens, _refId, false, false);
 
-        ILoanTracker(_loanRewardTracker).initialize(_gsPool, _loanRewardDistributor);
         IRestrictedToken(esGsb).setHandler(_loanRewardTracker, true);
         IRestrictedToken(esGsb).setHandler(_loanRewardDistributor, true);
 
@@ -255,34 +259,27 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin {
     ) private returns (address, address) {
         address tracker;
         if (_refId > 0) {
-            tracker = rewardTrackerDeployer.deployContract(
-                abi.encodeCall(IRewardTrackerDeployer.deployLoanTracker, (factory, _refId, manager, _name, _symbol))
-            );
+            tracker = IBeaconProxyFactory(loanTrackerFactory).deploy();
         } else if (_isFeeTracker) {
-            tracker = feeTrackerDeployer.deployContract(
-                abi.encodeCall(IFeeTrackerDeployer.deploy, (10000)) // bnRateCap: 100%
-            );
+            tracker = IBeaconProxyFactory(feeTrackerFactory).deploy();
         } else {
-            tracker = rewardTrackerDeployer.deployContract(
-                abi.encodeCall(IRewardTrackerDeployer.deploy, (_name, _symbol))
-            );
+            tracker = IBeaconProxyFactory(rewardTrackerFactory).deploy();
         }
 
         address distributor;
         if (_isBonusDistributor) {
-            distributor = rewardDistributorDeployer.deployContract(
-                abi.encodeCall(IRewardDistributorDeployer.deployBonusDistributor, (_rewardToken, tracker))
-            );
+            distributor = IBeaconProxyFactory(bonusDistributorFactory).deploy();
+            IRewardDistributor(distributor).initialize(_rewardToken, tracker);
         } else {
-            distributor = rewardDistributorDeployer.deployContract(
-                abi.encodeCall(IRewardDistributorDeployer.deploy, (_rewardToken, tracker))
-            );
+            distributor = IBeaconProxyFactory(rewardDistributorFactory).deploy();
+            IRewardDistributor(distributor).initialize(_rewardToken, tracker);
         }
 
         if (_refId > 0) {
+            ILoanTracker(tracker).initialize(factory, _refId, manager, _name, _symbol,_depositTokens[0], distributor);
             ILoanTracker(tracker).setHandler(address(this), true);
         } else {
-            IRewardTracker(tracker).initialize(_depositTokens, distributor);
+            IRewardTracker(tracker).initialize(_name, _symbol, _depositTokens, distributor);
             IRewardTracker(tracker).setHandler(address(this), true);
         }
         IRewardDistributor(distributor).updateLastDistributionTime();

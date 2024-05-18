@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 import "./interfaces/IBonusDistributor.sol";
 import "./interfaces/IRewardTracker.sol";
@@ -13,7 +14,7 @@ import "./interfaces/IRewardTracker.sol";
 /// @author Simon Mall
 /// @notice Multiplier Points reward contract for protocol revenue share
 /// @dev Rewards(bnGs) are distributed linearly for a year
-contract BonusDistributor is Ownable2Step, IBonusDistributor {
+contract BonusDistributor is Ownable2Step, Initializable, IBonusDistributor {
     using SafeERC20 for IERC20;
 
     /// @notice Max basis points for distribution
@@ -28,14 +29,17 @@ contract BonusDistributor is Ownable2Step, IBonusDistributor {
     address public override rewardToken;
     uint256 public override lastDistributionTime;
     address public override rewardTracker;
-    bool public override paused = true;
+    bool public override paused;
 
-    /// @dev Constructor function
-    /// @param _rewardToken Address of the ERC20 token used for rewards
-    /// @param _rewardTracker Address of the reward tracker contract
-    constructor(address _rewardToken, address _rewardTracker) {
+    constructor() {
+    }
+
+    /// @inheritdoc IRewardDistributor
+    function initialize(address _rewardToken, address _rewardTracker) external override virtual initializer {
+        _transferOwnership(msg.sender);
         rewardToken = _rewardToken;
         rewardTracker = _rewardTracker;
+        paused = true;
     }
 
     /// @inheritdoc IRewardDistributor

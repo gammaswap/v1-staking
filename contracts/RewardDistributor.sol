@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 import "./interfaces/IRewardDistributor.sol";
 import "./interfaces/IRewardTracker.sol";
@@ -12,18 +13,24 @@ import "./interfaces/IRewardTracker.sol";
 /// @title RewardDistributor contract
 /// @author Simon Mall
 /// @notice Distributes rewards to RewardTracker contracts on demand
-contract RewardDistributor is Ownable2Step, IRewardDistributor {
+contract RewardDistributor is Ownable2Step, Initializable, IRewardDistributor {
     using SafeERC20 for IERC20;
 
     address public override rewardToken;
     uint256 public override tokensPerInterval;
     uint256 public override lastDistributionTime;
     address public override rewardTracker;
-    bool public override paused = true;
+    bool public override paused;
 
-    constructor(address _rewardToken, address _rewardTracker) {
+    constructor() {
+    }
+
+    /// @inheritdoc IRewardDistributor
+    function initialize(address _rewardToken, address _rewardTracker) external override virtual initializer {
+        _transferOwnership(msg.sender);
         rewardToken = _rewardToken;
         rewardTracker = _rewardTracker;
+        paused = true;
     }
 
     /// @inheritdoc IRewardDistributor

@@ -39,14 +39,13 @@ describe('FeeTracker', function() {
   });
 
   it('inits', async () => {
-    expect(await feeTracker.isInitialized()).eq(true)
     expect(await feeTracker.isDepositToken(bonusTracker.target)).eq(true)
     expect(await feeTracker.isDepositToken(bnGs.target)).eq(true)
     expect(await feeTracker.distributor()).eq(feeDistributor.target)
     expect(await feeTracker.rewardToken()).eq(weth.target)
 
-    await expect(feeTracker.connect(routerAsSigner).initialize([gs.target, esGs.target], feeDistributor.target))
-      .to.be.revertedWith('FeeTracker: already initialized')
+    await expect(feeTracker.connect(routerAsSigner).initialize("GammaSwap Revenue Share", "feeGS", [gs.target, esGs.target], feeDistributor.target))
+        .to.be.revertedWith('Initializable: contract is already initialized')
   })
 
   it('setBonusLimit', async () => {

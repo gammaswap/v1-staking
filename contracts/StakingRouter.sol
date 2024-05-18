@@ -18,12 +18,8 @@ contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
         address _esGsb,
         address _bnGs,
         address _factory,
-        address _manager,
-        address _rewardTrackerDeployer,
-        address _feeTrackerDeployer,
-        address _rewardDistributorDeployer,
-        address _vesterDeployer
-    ) StakingAdmin(_weth, _gs, _esGs, _esGsb, _bnGs, _factory, _manager, _rewardTrackerDeployer, _feeTrackerDeployer, _rewardDistributorDeployer, _vesterDeployer) {}
+        address _manager
+    ) StakingAdmin(_weth, _gs, _esGs, _esGsb, _bnGs, _factory, _manager) {}
 
     /// @inheritdoc IStakingRouter
     function stakeGsForAccount(address _account, uint256 _amount) external override virtual nonReentrant {

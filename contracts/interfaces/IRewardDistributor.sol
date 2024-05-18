@@ -8,6 +8,11 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 /// @notice Distribute reward tokens to reward trackers
 /// @dev Need to implement `supportsInterface` function
 interface IRewardDistributor is IERC165 {
+    /// @dev Configure contract after deployment
+    /// @param _rewardToken Reward token this distributor distributes
+    /// @param _rewardTracker Reward tracker associated with this distributor
+    function initialize(address _rewardToken, address _rewardTracker) external;
+
     /// @dev used to pause distributions. Must be turned on to start rewarding stakers
     /// @return True when distributor is paused
     function paused() external view returns(bool);
