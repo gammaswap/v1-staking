@@ -21,6 +21,9 @@ interface IStakingAdmin {
   /// @dev Thrown when creating staking contracts that have already been created for that deposit token
   error StakingContractsAlreadySet();
 
+  /// @dev Thrown when a initializing the StakingAdmin with a zero address
+  error MissingBeaconProxyFactory();
+
   /// @dev Contracts for global staking
   struct AssetCoreTracker {
     address rewardTracker;  // Track GS + esGS
@@ -43,6 +46,44 @@ interface IStakingAdmin {
     address loanRewardDistributor;  // Reward esGSb
     address vester; // Vest esGS -> GS (reserve GS_LP)
   }
+
+  /// @dev Get contracts for global staking
+  /// @return rewardTracker Track GS + esGS
+  /// @return rewardDistributor Reward esGS
+  /// @return loanRewardTracker Track esGSb
+  /// @return loanRewardDistributor Reward esGSb
+  /// @return bonusTracker Track GS + esGS + esGSb
+  /// @return bonusDistributor Reward bnGS
+  /// @return feeTracker Track GS + esGS + esGSb + bnGS(aka MP)
+  /// @return feeDistributor Reward WETH
+  /// @return vester Vest esGS -> GS (reserve GS or esGS or bnGS)
+  /// @return loanVester Vest esGSb -> GS (without reserved tokens)
+  function coreTracker() external view returns(address rewardTracker, address rewardDistributor, address loanRewardTracker,
+    address loanRewardDistributor, address bonusTracker, address bonusDistributor, address feeTracker, address feeDistributor,
+    address vester, address loanVester);
+
+  /// @dev Get contracts for pool staking
+  /// @param pool address of GS pool that staking contract is for
+  /// @param esToken address of escrow token staking contract rewards
+  /// @return rewardTracker Track GS_LP
+  /// @return rewardDistributor Reward esGS
+  /// @return loanRewardTracker Track tokenId(loan)
+  /// @return loanRewardDistributor Reward esGSb
+  /// @return vester Vest esGS -> GS (reserve GS_LP)
+  function poolTrackers(address pool, address esToken) external view returns(address rewardTracker,
+    address rewardDistributor, address loanRewardTracker, address loanRewardDistributor, address vester);
+
+  /// @dev Initialize StakingAdmin contract
+  /// @param _loanTrackerFactory address of BeaconProxyFactory with LoanTracker implementation
+  /// @param _rewardTrackerFactory address of BeaconProxyFactory with RewardTracker implementation
+  /// @param _feeTrackerFactory address of BeaconProxyFactory with FeeTracker implementation
+  /// @param _rewardDistributorFactory address of BeaconProxyFactory with RewardDistributor implementation
+  /// @param _bonusDistributorFactory address of BeaconProxyFactory with BonusDistributor implementation
+  /// @param _vesterFactory address of BeaconProxyFactory with Vester implementation
+  /// @param _vesterNoReserveFactory address of BeaconProxyFactory with VesterNoReserve implementation
+  function initialize(address _loanTrackerFactory, address _rewardTrackerFactory, address _feeTrackerFactory,
+    address _rewardDistributorFactory, address _bonusDistributorFactory, address _vesterFactory,
+    address _vesterNoReserveFactory) external;
 
   /// @dev Set vesting period for staking contract reward token
   function setPoolVestingPeriod(uint256 _poolVestingPeriod) external;

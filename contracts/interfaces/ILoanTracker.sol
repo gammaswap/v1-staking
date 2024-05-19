@@ -9,9 +9,14 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 /// @dev Need to implement `supportsInterface` function
 interface ILoanTracker is IERC165 {
     /// @dev Initializes loan tracker
+    /// @param _factory address of GammaPool factory contract
+    /// @param _refId reference Id for loans that can be staked
+    /// @param _manager address that has admin privileges in LoanTracker
+    /// @param _name ERC20 name implementation
+    /// @param _symbol ERC20 symbol implementation
     /// @param _gsPool GammaPool address
     /// @param _distributor Reward distributor
-    function initialize(address _gsPool, address _distributor) external;
+    function initialize(address _factory, uint16 _refId, address _manager, string memory _name, string memory _symbol, address _gsPool, address _distributor) external;
 
     /// @dev Set action handlers for this contract
     /// @param _handler Address to grant handler permissions to

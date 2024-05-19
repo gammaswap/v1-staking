@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@gammaswap/v1-core/contracts/interfaces/IGammaPool.sol";
 import "@gammaswap/v1-core/contracts/interfaces/observer/ILoanObserver.sol";
 
@@ -16,7 +17,7 @@ import "./interfaces/IRewardDistributor.sol";
 /// @title LoanTracker contract
 /// @author Simon Mall
 /// @notice Track loan staking and their rewards
-contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILoanObserver {
+contract LoanTracker is IERC20, Initializable, ReentrancyGuard, Ownable2Step, ILoanTracker, ILoanObserver {
     using SafeERC20 for IERC20;
 
     /// @inheritdoc ILoanObserver
@@ -29,8 +30,6 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
     uint16 public immutable override refType = 2;
 
     uint256 public constant PRECISION = 1e30;
-
-    bool public isInitialized;
 
     uint8 public constant decimals = 18;
     string public name;
@@ -51,28 +50,26 @@ contract LoanTracker is IERC20, ReentrancyGuard, Ownable2Step, ILoanTracker, ILo
     mapping (address => uint256) public previousCumulatedRewardPerToken;
     mapping (address => uint256) public override cumulativeRewards;
 
-    constructor(
+    constructor(){
+    }
+
+    /// @inheritdoc ILoanTracker
+    function initialize(
         address _factory,
         uint16 _refId,
         address _manager,
         string memory _name,
-        string memory _symbol
-    ) {
+        string memory _symbol,
+        address _gsPool,
+        address _distributor
+    ) external override virtual initializer {
+        _transferOwnership(msg.sender);
+
         factory = _factory;
         refId = _refId;
         manager = _manager;
         name = _name;
         symbol = _symbol;
-    }
-
-    /// @inheritdoc ILoanTracker
-    function initialize(
-        address _gsPool,
-        address _distributor
-    ) external override virtual onlyOwner {
-        require(!isInitialized, "LoanTracker: already initialized");
-        isInitialized = true;
-
         gsPool = _gsPool;
         distributor = _distributor;
     }

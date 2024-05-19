@@ -18,17 +18,29 @@ export async function setup() {
   const bnGs = await RestrictedToken.deploy('Bonus GS', 'bnGS', 1);
   const gsPool = await ERC20.deploy('GammaPool', 'GSPool');
 
-  const RewardTrackerDeployer = await ethers.getContractFactory('RewardTrackerDeployer');
-  const rewardTrackerDeployer = await RewardTrackerDeployer.deploy();
+  const RewardTracker = await ethers.getContractFactory('RewardTracker');
+  const rewardTracker = await RewardTracker.deploy();
+  const LoanTracker = await ethers.getContractFactory('LoanTracker');
+  const loanTracker = await LoanTracker.deploy();
+  const FeeTracker = await ethers.getContractFactory('FeeTracker');
+  const feeTracker = await FeeTracker.deploy();
+  const RewardDistributor = await ethers.getContractFactory('RewardDistributor');
+  const rewardDistributor = await RewardDistributor.deploy();
+  const BonusDistributor = await ethers.getContractFactory('BonusDistributor');
+  const bonusDistributor = await BonusDistributor.deploy();
+  const Vester = await ethers.getContractFactory('Vester');
+  const vester = await Vester.deploy();
+  const VesterNoReserve = await ethers.getContractFactory('VesterNoReserve');
+  const vesterNoReserve = await VesterNoReserve.deploy();
 
-  const FeeTrackerDeployer = await ethers.getContractFactory('FeeTrackerDeployer');
-  const feeTrackerDeployer = await FeeTrackerDeployer.deploy();
-
-  const RewardDistributorDeployer = await ethers.getContractFactory('RewardDistributorDeployer');
-  const rewardDistributorDeployer = await RewardDistributorDeployer.deploy();
-
-  const VesterDeployer = await ethers.getContractFactory('VesterDeployer');
-  const vesterDeployer = await VesterDeployer.deploy();
+  const BeaconProxyFactory = await ethers.getContractFactory('BeaconProxyFactory');
+  const rewardTrackerDeployer = await BeaconProxyFactory.deploy(rewardTracker.target);
+  const loanTrackerDeployer = await BeaconProxyFactory.deploy(loanTracker.target);
+  const feeTrackerDeployer = await BeaconProxyFactory.deploy(feeTracker.target);
+  const rewardDistributorDeployer = await BeaconProxyFactory.deploy(rewardDistributor.target);
+  const bonusDistributorDeployer = await BeaconProxyFactory.deploy(bonusDistributor.target);
+  const vesterDeployer = await BeaconProxyFactory.deploy(vester.target);
+  const vesterNoReserveDeployer = await BeaconProxyFactory.deploy(vesterNoReserve.target);
 
   const StakingRouter = await ethers.getContractFactory('StakingRouter');
   const stakingRouter = await StakingRouter.deploy(
@@ -38,12 +50,16 @@ export async function setup() {
     esGsb.target,
     bnGs.target,
     factory.address,
-    manager.address,
-    rewardTrackerDeployer.target,
-    feeTrackerDeployer.target,
-    rewardDistributorDeployer.target,
-    vesterDeployer.target,
+    manager.address
   );
+
+  await (await stakingRouter.initialize(loanTrackerDeployer.target,
+      rewardTrackerDeployer.target,
+      feeTrackerDeployer.target,
+      rewardDistributorDeployer.target,
+      bonusDistributorDeployer.target,
+      vesterDeployer.target,
+      vesterNoReserveDeployer.target)).wait();
 
   await esGs.setManager(stakingRouter.target, true);
   await esGsb.setManager(stakingRouter.target, true);

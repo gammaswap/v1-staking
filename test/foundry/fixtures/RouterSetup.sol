@@ -3,10 +3,12 @@ pragma solidity >=0.8.4;
 
 import "@gammaswap/v1-core/contracts/base/GammaPoolERC20.sol";
 import "../../../contracts/StakingRouter.sol";
-import "../../../contracts/deployers/RewardTrackerDeployer.sol";
-import "../../../contracts/deployers/FeeTrackerDeployer.sol";
-import "../../../contracts/deployers/RewardDistributorDeployer.sol";
-import "../../../contracts/deployers/VesterDeployer.sol";
+import "../../../contracts/FeeTracker.sol";
+import "../../../contracts/LoanTracker.sol";
+import "../../../contracts/RewardTracker.sol";
+import "../../../contracts/Vester.sol";
+import "../../../contracts/VesterNoReserve.sol";
+import "../../../contracts/BeaconProxyFactory.sol";
 import "../../../contracts/RewardDistributor.sol";
 import "../../../contracts/BonusDistributor.sol";
 import "./TokensSetup.sol";
@@ -28,10 +30,13 @@ contract RouterSetup is TokensSetup {
     }
 
     function initRouter(address factory, address manager) public {
-        RewardTrackerDeployer rewardTrackerDeployer = new RewardTrackerDeployer();
-        FeeTrackerDeployer feeTrackerDeployer = new FeeTrackerDeployer();
-        RewardDistributorDeployer rewardDistributorDeployer = new RewardDistributorDeployer();
-        VesterDeployer vesterDeployer = new VesterDeployer();
+        address loanTrackerFactory = address(new BeaconProxyFactory(address(new LoanTracker())));
+        address rewardTrackerFactory = address(new BeaconProxyFactory(address(new RewardTracker())));
+        address feeTrackerFactory = address(new BeaconProxyFactory(address(new FeeTracker())));
+        address rewardDistributorFactory = address(new BeaconProxyFactory(address(new RewardDistributor())));
+        address bonusDistributorFactory = address(new BeaconProxyFactory(address(new BonusDistributor())));
+        address vesterFactory = address(new BeaconProxyFactory(address(new Vester())));
+        address vesterNoReserveFactory = address(new BeaconProxyFactory(address(new VesterNoReserve())));
 
         stakingRouter = new StakingRouter(
             address(weth),
@@ -40,12 +45,17 @@ contract RouterSetup is TokensSetup {
             address(esGsb),
             address(bnGs),
             factory,
-            manager,
-            address(rewardTrackerDeployer),
-            address(feeTrackerDeployer),
-            address(rewardDistributorDeployer),
-            address(vesterDeployer)
+            manager
         );
+
+        stakingRouter.initialize(
+            loanTrackerFactory,
+            rewardTrackerFactory,
+            feeTrackerFactory,
+            rewardDistributorFactory,
+            bonusDistributorFactory,
+            vesterFactory,
+            vesterNoReserveFactory);
     }
 
     function wireUp() public {

@@ -31,14 +31,13 @@ describe('RewardTracker', function() {
   });
 
   it('inits', async () => {
-    expect(await rewardTracker.isInitialized()).eq(true)
     expect(await rewardTracker.isDepositToken(gs.target)).eq(true)
     expect(await rewardTracker.isDepositToken(esGs.target)).eq(true)
     expect(await rewardTracker.distributor()).eq(rewardDistributor.target)
     expect(await rewardTracker.rewardToken()).eq(esGs.target)
 
-    await expect(rewardTracker.connect(routerAsSigner).initialize([gs.target, esGs.target], rewardDistributor.target))
-      .to.be.revertedWith('RewardTracker: already initialized')
+    await expect(rewardTracker.connect(routerAsSigner).initialize("", "", [gs.target, esGs.target], rewardDistributor.target))
+      .to.be.revertedWith('Initializable: contract is already initialized')
   })
 
   it("setDepositToken", async () => {

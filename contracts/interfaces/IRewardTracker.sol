@@ -30,9 +30,11 @@ interface IRewardTracker is IERC165 {
     function inPrivateClaimingMode() external view returns (bool);
 
     /// @dev Configure contract after deployment
+    /// @param _name ERC20 name of reward tracker token
+    /// @param _symbol ERC20 symbol of reward tracker token
     /// @param _depositTokens Eligible tokens for stake
     /// @param _distributor Reward distributor
-    function initialize(address[] memory _depositTokens, address _distributor) external;
+    function initialize(string memory _name, string memory _symbol, address[] memory _depositTokens, address _distributor) external;
 
     /// @dev Set/Unset staking for token
     /// @param _depositToken Token address for query
