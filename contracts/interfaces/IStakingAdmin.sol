@@ -47,6 +47,32 @@ interface IStakingAdmin {
     address vester; // Vest esGS -> GS (reserve GS_LP)
   }
 
+  /// @dev Get contracts for global staking
+  /// @return rewardTracker Track GS + esGS
+  /// @return rewardDistributor Reward esGS
+  /// @return loanRewardTracker Track esGSb
+  /// @return loanRewardDistributor Reward esGSb
+  /// @return bonusTracker Track GS + esGS + esGSb
+  /// @return bonusDistributor Reward bnGS
+  /// @return feeTracker Track GS + esGS + esGSb + bnGS(aka MP)
+  /// @return feeDistributor Reward WETH
+  /// @return vester Vest esGS -> GS (reserve GS or esGS or bnGS)
+  /// @return loanVester Vest esGSb -> GS (without reserved tokens)
+  function coreTracker() external view returns(address rewardTracker, address rewardDistributor, address loanRewardTracker,
+    address loanRewardDistributor, address bonusTracker, address bonusDistributor, address feeTracker, address feeDistributor,
+    address vester, address loanVester);
+
+  /// @dev Get contracts for pool staking
+  /// @param pool address of GS pool that staking contract is for
+  /// @param esToken address of escrow token staking contract rewards
+  /// @return rewardTracker Track GS_LP
+  /// @return rewardDistributor Reward esGS
+  /// @return loanRewardTracker Track tokenId(loan)
+  /// @return loanRewardDistributor Reward esGSb
+  /// @return vester Vest esGS -> GS (reserve GS_LP)
+  function poolTrackers(address pool, address esToken) external view returns(address rewardTracker,
+    address rewardDistributor, address loanRewardTracker, address loanRewardDistributor, address vester);
+
   /// @dev Initialize StakingAdmin contract
   /// @param _loanTrackerFactory address of BeaconProxyFactory with LoanTracker implementation
   /// @param _rewardTrackerFactory address of BeaconProxyFactory with RewardTracker implementation

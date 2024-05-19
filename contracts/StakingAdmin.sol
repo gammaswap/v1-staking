@@ -29,7 +29,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin, Initializable {
     address public immutable factory;
     address public immutable manager;
 
-    // Deployers
+    // Factories
     address private loanTrackerFactory;
     address private rewardTrackerFactory;
     address private feeTrackerFactory;
@@ -41,8 +41,8 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin, Initializable {
     uint256 public constant VESTING_DURATION = 365 * 24 * 60 * 60;
     uint256 public POOL_VESTING_DURATION = 365 * 24 * 60 * 60;
 
-    AssetCoreTracker public coreTracker;
-    mapping(address => mapping(address => AssetPoolTracker)) public poolTrackers;
+    AssetCoreTracker internal _coreTracker;
+    mapping(address => mapping(address => AssetPoolTracker)) internal _poolTrackers;
 
     constructor(
         address _feeRewardToken,
@@ -97,13 +97,39 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin, Initializable {
     }
 
     /// @inheritdoc IStakingAdmin
+    function coreTracker() external override virtual view returns(address rewardTracker, address rewardDistributor,
+        address loanRewardTracker, address loanRewardDistributor, address bonusTracker, address bonusDistributor,
+        address feeTracker, address feeDistributor, address vester, address loanVester) {
+        rewardTracker = _coreTracker.rewardTracker;  // Track GS + esGS
+        rewardDistributor = _coreTracker.rewardDistributor;  // Reward esGS
+        loanRewardTracker = _coreTracker.loanRewardTracker;  // Track esGSb
+        loanRewardDistributor = _coreTracker.loanRewardDistributor;  // Reward esGSb
+        bonusTracker = _coreTracker.bonusTracker; // Track GS + esGS + esGSb
+        bonusDistributor = _coreTracker.bonusDistributor; // Reward bnGS
+        feeTracker = _coreTracker.feeTracker; // Track GS + esGS + esGSb + bnGS(aka MP)
+        feeDistributor = _coreTracker.feeDistributor; // Reward WETH
+        vester = _coreTracker.vester; // Vest esGS -> GS (reserve GS or esGS or bnGS)
+        loanVester = _coreTracker.loanVester; // Vest esGSb -> GS (without reserved tokens)
+    }
+
+    /// @inheritdoc IStakingAdmin
+    function poolTrackers(address pool, address esToken) external override virtual view returns(address rewardTracker,
+        address rewardDistributor, address loanRewardTracker, address loanRewardDistributor, address vester) {
+        rewardTracker = _poolTrackers[pool][esToken].rewardTracker;
+        rewardDistributor = _poolTrackers[pool][esToken].rewardDistributor;
+        loanRewardTracker = _poolTrackers[pool][esToken].loanRewardTracker;
+        loanRewardDistributor = _poolTrackers[pool][esToken].loanRewardDistributor;
+        vester = _poolTrackers[pool][esToken].vester;
+    }
+
+    /// @inheritdoc IStakingAdmin
     function setPoolVestingPeriod(uint256 _poolVestingPeriod) external override virtual onlyOwner {
         POOL_VESTING_DURATION = _poolVestingPeriod;
     }
 
     /// @inheritdoc IStakingAdmin
     function setupGsStaking() external override virtual onlyOwner {
-        if (coreTracker.rewardTracker != address(0)) revert StakingContractsAlreadySet();
+        if (_coreTracker.rewardTracker != address(0)) revert StakingContractsAlreadySet();
 
         address[] memory _depositTokens = new address[](2);
         _depositTokens[0] = gs;
@@ -136,27 +162,27 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin, Initializable {
         IRestrictedToken(bnGs).setHandler(_bonusTracker, true);
         IRestrictedToken(bnGs).setHandler(_bonusDistributor, true);
 
-        coreTracker.rewardTracker = _rewardTracker;
-        coreTracker.rewardDistributor = _rewardDistributor;
-        coreTracker.bonusTracker = _bonusTracker;
-        coreTracker.bonusDistributor = _bonusDistributor;
-        coreTracker.feeTracker = _feeTracker;
-        coreTracker.feeDistributor = _feeDistributor;
-        coreTracker.vester = _vester;
+        _coreTracker.rewardTracker = _rewardTracker;
+        _coreTracker.rewardDistributor = _rewardDistributor;
+        _coreTracker.bonusTracker = _bonusTracker;
+        _coreTracker.bonusDistributor = _bonusDistributor;
+        _coreTracker.feeTracker = _feeTracker;
+        _coreTracker.feeDistributor = _feeDistributor;
+        _coreTracker.vester = _vester;
 
         emit CoreTrackerCreated(_rewardTracker, _rewardDistributor, _bonusTracker, _bonusDistributor, _feeTracker, _feeDistributor, _vester);
     }
 
     /// @inheritdoc IStakingAdmin
     function setupGsStakingForLoan() external override virtual onlyOwner {
-        if (coreTracker.loanRewardTracker != address(0)) revert StakingContractsAlreadySet();
+        if (_coreTracker.loanRewardTracker != address(0)) revert StakingContractsAlreadySet();
 
         address[] memory _depositTokens = new address[](1);
         _depositTokens[0] = esGsb;
         (address _loanRewardTracker, address _loanRewardDistributor) = _combineTrackerDistributor("Staked GS Loan", "sGSb", esGsb, _depositTokens, 0, false, false);
 
-        IRewardTracker(coreTracker.bonusTracker).setDepositToken(_loanRewardTracker, true);
-        IRewardTracker(_loanRewardTracker).setHandler(coreTracker.bonusTracker, true);
+        IRewardTracker(_coreTracker.bonusTracker).setDepositToken(_loanRewardTracker, true);
+        IRewardTracker(_loanRewardTracker).setHandler(_coreTracker.bonusTracker, true);
 
         address _loanVester = IBeaconProxyFactory(vesterNoReserveFactory).deploy();
         IVester(_loanVester).initialize("Vested GS Borrowed", "vGSB", VESTING_DURATION, esGsb, address(0), gs, _loanRewardTracker);
@@ -166,9 +192,9 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin, Initializable {
         IRestrictedToken(esGsb).setHandler(_loanRewardDistributor, true);
         IRestrictedToken(esGsb).setHandler(_loanVester, true);
 
-        coreTracker.loanRewardTracker = _loanRewardTracker;
-        coreTracker.loanRewardDistributor = _loanRewardDistributor;
-        coreTracker.loanVester = _loanVester;
+        _coreTracker.loanRewardTracker = _loanRewardTracker;
+        _coreTracker.loanRewardDistributor = _loanRewardDistributor;
+        _coreTracker.loanVester = _loanVester;
 
         emit CoreTrackerUpdated(_loanRewardTracker, _loanRewardDistributor, _loanVester);
     }
@@ -177,7 +203,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin, Initializable {
     function setupPoolStaking(address _gsPool, address _esToken, address _claimableToken) external override virtual onlyOwner {
         if (IRestrictedToken(_esToken).tokenType() != IRestrictedToken.TokenType.ESCROW) revert InvalidRestrictedToken();
 
-        if (poolTrackers[_gsPool][_esToken].rewardTracker != address(0)) revert StakingContractsAlreadySet();
+        if (_poolTrackers[_gsPool][_esToken].rewardTracker != address(0)) revert StakingContractsAlreadySet();
 
         address[] memory _depositTokens = new address[](1);
         _depositTokens[0] = _gsPool;
@@ -192,9 +218,9 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin, Initializable {
         IRestrictedToken(_esToken).setHandler(_rewardDistributor, true);
         IRestrictedToken(_esToken).setHandler(_vester, true);
 
-        poolTrackers[_gsPool][_esToken].rewardTracker = _rewardTracker;
-        poolTrackers[_gsPool][_esToken].rewardDistributor = _rewardDistributor;
-        poolTrackers[_gsPool][_esToken].vester = _vester;
+        _poolTrackers[_gsPool][_esToken].rewardTracker = _rewardTracker;
+        _poolTrackers[_gsPool][_esToken].rewardDistributor = _rewardDistributor;
+        _poolTrackers[_gsPool][_esToken].vester = _vester;
 
         _gsPool.safeApprove(_rewardTracker, type(uint256).max);
 
@@ -203,7 +229,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin, Initializable {
 
     /// @inheritdoc IStakingAdmin
     function setupPoolStakingForLoan(address _gsPool, uint16 _refId) external override virtual onlyOwner {
-        if(poolTrackers[_gsPool][esGsb].loanRewardTracker != address(0)) revert StakingContractsAlreadySet();
+        if(_poolTrackers[_gsPool][esGsb].loanRewardTracker != address(0)) revert StakingContractsAlreadySet();
 
         address[] memory _depositTokens = new address[](1);
         _depositTokens[0] = _gsPool;
@@ -212,8 +238,8 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin, Initializable {
         IRestrictedToken(esGsb).setHandler(_loanRewardTracker, true);
         IRestrictedToken(esGsb).setHandler(_loanRewardDistributor, true);
 
-        poolTrackers[_gsPool][esGsb].loanRewardTracker = _loanRewardTracker;
-        poolTrackers[_gsPool][esGsb].loanRewardDistributor = _loanRewardDistributor;
+        _poolTrackers[_gsPool][esGsb].loanRewardTracker = _loanRewardTracker;
+        _poolTrackers[_gsPool][esGsb].loanRewardDistributor = _loanRewardDistributor;
 
         emit PoolTrackerUpdated(_gsPool, _loanRewardTracker, _loanRewardDistributor);
     }
