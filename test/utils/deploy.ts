@@ -44,11 +44,6 @@ export async function setup() {
 
   const StakingRouter = await ethers.getContractFactory('StakingRouter');
   const stakingRouter = await StakingRouter.deploy(
-    weth.target,
-    gs.target,
-    esGs.target,
-    esGsb.target,
-    bnGs.target,
     factory.address,
     manager.address
   );
@@ -61,6 +56,7 @@ export async function setup() {
       vesterDeployer.target,
       vesterNoReserveDeployer.target)).wait();
 
+  await (await stakingRouter.initializeGSTokens(gs.target, esGs.target, esGsb.target, bnGs.target, weth.target)).wait();
   await esGs.setManager(stakingRouter.target, true);
   await esGsb.setManager(stakingRouter.target, true);
   await bnGs.setManager(stakingRouter.target, true);

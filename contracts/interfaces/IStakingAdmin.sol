@@ -24,6 +24,12 @@ interface IStakingAdmin {
   /// @dev Thrown when a initializing the StakingAdmin with a zero address
   error MissingBeaconProxyFactory();
 
+  /// @dev Thrown when a zero address is passed as one of the GS token parameters
+  error MissingGSTokenParameter();
+
+  /// @dev Thrown when setting GS token parameters when they have already been set
+  error GSTokensAlreadySet();
+
   /// @dev Contracts for global staking
   struct AssetCoreTracker {
     address rewardTracker;  // Track GS + esGS
@@ -46,6 +52,35 @@ interface IStakingAdmin {
     address loanRewardDistributor;  // Reward esGSb
     address vester; // Vest esGS -> GS (reserve GS_LP)
   }
+
+  /// @dev Setting up GS token parameters so that we can initialize the GS staking contracts (coreTrackers)
+  /// @notice This can only be set once
+  /// @param _gs - address of GS token
+  /// @param _esGs - address of escrow GS token
+  /// @param _esGsb - address of escrow GS token for loans
+  /// @param _bnGs - address of bonus GS token
+  /// @param _feeRewardToken - address of fee reward token
+  function initializeGSTokens(address _gs, address _esGs, address _esGsb, address _bnGs, address _feeRewardToken) external;
+
+  /// @dev GS token entitles stakers to a share of protocol revenue
+  /// @return address of GS token
+  function gs() external view returns(address);
+
+  /// @dev Escrow GS tokens convert to GS token when vested
+  /// @return address of escrow GS token
+  function esGs() external view returns(address);
+
+  /// @dev Escrow GS token for loans convert to GS token when vested
+  /// @return address of escrow GS token for loans
+  function esGsb() external view returns(address);
+
+  /// @dev Bonus GS tokens increases share of protocol fees when staking GS tokens
+  /// @return address of Bonus GS token
+  function bnGs() external view returns(address);
+
+  /// @dev Fee reward token is given as protocol revenue to stakers of GS token
+  /// @return address of fee reward token
+  function feeRewardToken() external view returns(address);
 
   /// @dev Get contracts for global staking
   /// @return rewardTracker Track GS + esGS

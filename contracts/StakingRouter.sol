@@ -11,15 +11,8 @@ import "./StakingAdmin.sol";
 /// @author Simon Mall
 /// @notice Single entry for all staking related functions
 contract StakingRouter is ReentrancyGuard, StakingAdmin, IStakingRouter {
-    constructor(
-        address _weth,
-        address _gs,
-        address _esGs,
-        address _esGsb,
-        address _bnGs,
-        address _factory,
-        address _manager
-    ) StakingAdmin(_weth, _gs, _esGs, _esGsb, _bnGs, _factory, _manager) {}
+    constructor(address _factory, address _manager) StakingAdmin(_factory, _manager) {
+    }
 
     /// @inheritdoc IStakingRouter
     function stakeGsForAccount(address _account, uint256 _amount) external override virtual nonReentrant {

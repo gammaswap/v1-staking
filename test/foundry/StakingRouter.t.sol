@@ -28,6 +28,9 @@ contract StakingRouterTest is CPMMGammaSwapSetup {
     }
 
     function testStakingContractsAlreadySet() public {
+        vm.expectRevert(bytes4(keccak256("GSTokensAlreadySet()")));
+        stakingRouter.initializeGSTokens(address(gs), address(esGs), address(esGsb), address(bnGs), address(weth));
+
         vm.expectRevert(bytes4(keccak256("StakingContractsAlreadySet()")));
         stakingRouter.setupGsStaking();
 
