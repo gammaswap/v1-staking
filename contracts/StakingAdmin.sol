@@ -80,12 +80,14 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin, Initializable {
         address _rewardDistributorFactory,
         address _bonusDistributorFactory,
         address _vesterFactory,
-        address _vesterNoReserveFactory) external override virtual initializer onlyOwner {
+        address _vesterNoReserveFactory) external override virtual initializer {
         if (_loanTrackerFactory == address(0) || _rewardTrackerFactory == address(0) || _feeTrackerFactory == address(0) ||
             _rewardDistributorFactory == address(0) || _bonusDistributorFactory == address(0) || _vesterFactory == address(0) ||
             _vesterNoReserveFactory == address(0)) {
             revert MissingBeaconProxyFactory();
         }
+
+        _transferOwnership(msg.sender);
 
         loanTrackerFactory = _loanTrackerFactory;
         rewardTrackerFactory = _rewardTrackerFactory;
