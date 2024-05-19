@@ -38,15 +38,7 @@ contract RouterSetup is TokensSetup {
         address vesterFactory = address(new BeaconProxyFactory(address(new Vester())));
         address vesterNoReserveFactory = address(new BeaconProxyFactory(address(new VesterNoReserve())));
 
-        stakingRouter = new StakingRouter(
-            address(weth),
-            address(gs),
-            address(esGs),
-            address(esGsb),
-            address(bnGs),
-            factory,
-            manager
-        );
+        stakingRouter = new StakingRouter(factory, manager);
 
         stakingRouter.initialize(
             loanTrackerFactory,
@@ -56,6 +48,8 @@ contract RouterSetup is TokensSetup {
             bonusDistributorFactory,
             vesterFactory,
             vesterNoReserveFactory);
+
+        stakingRouter.initializeGSTokens(address(gs), address(esGs), address(esGsb), address(bnGs), address(weth));
     }
 
     function wireUp() public {

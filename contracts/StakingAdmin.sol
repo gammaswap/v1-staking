@@ -21,13 +21,16 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin, Initializable {
     using GammaSwapLibrary for address;
     using ERC165Checker for address;
 
-    address public immutable gs;
-    address public immutable esGs;
-    address public immutable esGsb;
-    address public immutable bnGs;
-    address public immutable feeRewardToken;
     address public immutable factory;
     address public immutable manager;
+
+    address public override gs;
+    address public override esGs;
+    address public override esGsb;
+    address public override bnGs;
+    address public override feeRewardToken;
+
+    bool public gsTokensInitialized;
 
     // Factories
     address private loanTrackerFactory;
@@ -44,30 +47,9 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin, Initializable {
     AssetCoreTracker internal _coreTracker;
     mapping(address => mapping(address => AssetPoolTracker)) internal _poolTrackers;
 
-    constructor(
-        address _feeRewardToken,
-        address _gs,
-        address _esGs,
-        address _esGsb,
-        address _bnGs,
-        address _factory,
-        address _manager) {
-        if (_feeRewardToken == address(0) || _gs == address(0) || _esGs == address(0) || _esGsb == address(0) ||
-            _bnGs == address(0) || _manager == address(0)) {
-            revert InvalidConstructor();
-        }
+    constructor(address _factory, address _manager) {
+        if (_factory == address(0) || _manager == address(0)) revert InvalidConstructor();
 
-        if (IRestrictedToken(_esGs).tokenType() != IRestrictedToken.TokenType.ESCROW ||
-            IRestrictedToken(_esGsb).tokenType() != IRestrictedToken.TokenType.ESCROW ||
-            IRestrictedToken(_bnGs).tokenType() != IRestrictedToken.TokenType.BONUS) {
-            revert InvalidRestrictedToken();
-        }
-
-        feeRewardToken = _feeRewardToken;
-        gs = _gs;
-        esGsb = _esGsb;
-        esGs = _esGs;
-        bnGs = _bnGs;
         factory = _factory;
         manager = _manager;
     }
@@ -98,6 +80,41 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin, Initializable {
         vesterFactory = _vesterFactory;
         vesterNoReserveFactory = _vesterNoReserveFactory;
     }
+
+    /// @inheritdoc IStakingAdmin
+    function initializeGSTokens(address _gs, address _esGs, address _esGsb, address _bnGs, address _feeRewardToken) external override virtual onlyOwner {
+        if(gsTokensInitialized) revert GSTokensAlreadySet();
+
+        if (_gs == address(0) || _esGs == address(0) || _esGsb == address(0) || _bnGs == address(0) || _feeRewardToken == address(0)) {
+            revert MissingGSTokenParameter();
+        }
+
+        if (IRestrictedToken(_esGs).tokenType() != IRestrictedToken.TokenType.ESCROW ||
+            IRestrictedToken(_esGsb).tokenType() != IRestrictedToken.TokenType.ESCROW ||
+            IRestrictedToken(_bnGs).tokenType() != IRestrictedToken.TokenType.BONUS) {
+            revert InvalidRestrictedToken();
+        }
+
+        gsTokensInitialized = true;
+
+        gs = _gs;
+        esGsb = _esGsb;
+        esGs = _esGs;
+        bnGs = _bnGs;
+        feeRewardToken = _feeRewardToken;
+
+        _coreTracker.rewardTracker = address(0);
+        _coreTracker.rewardDistributor = address(0);
+        _coreTracker.loanRewardTracker = address(0);
+        _coreTracker.loanRewardDistributor = address(0);
+        _coreTracker.bonusTracker = address(0);
+        _coreTracker.bonusDistributor = address(0);
+        _coreTracker.feeTracker = address(0);
+        _coreTracker.feeDistributor = address(0);
+        _coreTracker.vester = address(0);
+        _coreTracker.loanVester = address(0);
+    }
+
 
     /// @inheritdoc IStakingAdmin
     function coreTracker() external override virtual view returns(address rewardTracker, address rewardDistributor,
