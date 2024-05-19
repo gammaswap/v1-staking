@@ -88,6 +88,7 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin, Initializable {
         }
 
         _transferOwnership(msg.sender);
+        POOL_VESTING_DURATION = 365 * 24 * 60 * 60;
 
         loanTrackerFactory = _loanTrackerFactory;
         rewardTrackerFactory = _rewardTrackerFactory;
