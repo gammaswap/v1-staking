@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.21;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -17,7 +16,7 @@ import "./interfaces/IVester.sol";
 /// @notice Vest esGS tokens to claim GS tokens
 /// @notice Vesting is done linearly over an year
 /// @dev Requires averaged amount of pair tokens to be reserved
-contract Vester is IERC20, ReentrancyGuard, Ownable2Step, Initializable, IVester {
+contract Vester is ReentrancyGuard, Ownable2Step, Initializable, IVester {
     using SafeERC20 for IERC20;
 
     string public name;
@@ -26,14 +25,14 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, Initializable, IVester
 
     uint256 public override vestingDuration;
 
-    address public pairToken;
+    address public override pairToken;
     address public override esToken;
     address public override claimableToken;
 
     address public override rewardTracker;
 
     uint256 public override totalSupply;
-    uint256 public pairSupply;
+    uint256 public override pairSupply;
     uint256 public override totalClaimable;
 
     bool public override hasMaxVestableAmount;
@@ -42,7 +41,7 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, Initializable, IVester
     mapping (address => uint256) public override pairAmounts;
     mapping (address => uint256) public override cumulativeClaimAmounts;
     mapping (address => uint256) public override claimedAmounts;
-    mapping (address => uint256) public lastVestingTimes;
+    mapping (address => uint256) public override lastVestingTimes;
 
     mapping (address => uint256) public override cumulativeRewardDeductions;
     mapping (address => uint256) public override bonusRewards;
@@ -195,10 +194,8 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, Initializable, IVester
         return IRewardTracker(rewardTracker).averageStakedAmounts(_account);
     }
 
-    /// @dev Returns required pair token amount for vesting
-    /// @param _account Vesting account
-    /// @param _esAmount Vesting amount
-    function getPairAmount(address _account, uint256 _esAmount) public view returns (uint256) {
+    /// @inheritdoc IVester
+    function getPairAmount(address _account, uint256 _esAmount) public override virtual view returns (uint256) {
         if (!hasRewardTracker()) { return 0; }
 
         uint256 averageStakedAmount = getAverageStakedAmount(_account);
@@ -224,9 +221,8 @@ contract Vester is IERC20, ReentrancyGuard, Ownable2Step, Initializable, IVester
         return pairToken != address(0);
     }
 
-    /// @dev Returns total vested esGS amounts
-    /// @param _account Vesting account
-    function getTotalVested(address _account) public view returns (uint256) {
+    /// @inheritdoc IVester
+    function getTotalVested(address _account) public override virtual view returns (uint256) {
         return balances[_account] + cumulativeClaimAmounts[_account];
     }
 

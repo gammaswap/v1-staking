@@ -7,7 +7,7 @@ import "./IRewardDistributor.sol";
 /// @author Daniel D. Alcarraz (https://github.com/0xDanr)
 /// @notice Track bonus rewards for staked GS/esGS tokens
 /// @dev Interface of type IRewardDistributor, which is of type ERC20
-interface IBonusDistributor is IRewardDistributor{
+interface IBonusDistributor is IRewardDistributor {
 
     /// @dev Set through setBonusMultiplier
     /// @return Basis points for distribution
