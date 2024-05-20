@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 /// @title Interface for Loan Tracker
 /// @author Simon Mall
 /// @notice Reward tracker specifically for staking loans
 /// @dev Need to implement `supportsInterface` function
-interface ILoanTracker is IERC165 {
+interface ILoanTracker is IERC20, IERC165 {
     /// @dev Initializes loan tracker
     /// @param _factory address of GammaPool factory contract
     /// @param _refId reference Id for loans that can be staked

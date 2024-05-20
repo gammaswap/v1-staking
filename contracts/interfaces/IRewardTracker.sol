@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 /// @title Interface for RewardTracker contract
@@ -8,7 +9,7 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 /// @notice Track staked/unstaked tokens along with their rewards
 /// @notice RewardTrackers are ERC20
 /// @dev Need to implement `supportsInterface` function
-interface IRewardTracker is IERC165 {
+interface IRewardTracker is IERC20, IERC165 {
     /// @dev Set through initialize function
     /// @return RewardDistributor contract associated with this RewardTracker
     function distributor() external view returns(address);
@@ -68,6 +69,10 @@ interface IRewardTracker is IERC165 {
     /// @param _depositToken Token address for query
     /// @return Amount of staked tokens for user
     function depositBalances(address _account, address _depositToken) external view returns (uint256);
+
+    /// @param _depositToken Token address of total deposit tokens to check
+    /// @return Amount of all deposit tokens staked
+    function totalDepositSupply(address _depositToken) external view returns (uint256);
 
     /// @param _account Address for query
     /// @return Total staked amounts for all deposit tokens

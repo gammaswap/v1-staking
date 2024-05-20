@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 /// @title Interface for Vester contract
 /// @author Simon Mall
 /// @notice Normal ERC20 token operations are not allowed
 /// @dev Need to implement `supportsInterface` function
-interface IVester is IERC165 {
+interface IVester is IERC20, IERC165 {
     /// @dev Initialize Vester contract
     /// @param _name ERC20 name implementation
     /// @param _symbol ERC20 symbol implementation
@@ -18,6 +19,18 @@ interface IVester is IERC165 {
     /// @param _rewardTracker address of contract to track staked pairTokens to determine max vesting amount
     function initialize(string memory _name, string memory _symbol, uint256 _vestingDuration, address _esToken,
         address _pairToken, address _claimableToken, address _rewardTracker) external;
+
+    /// @dev Only used in Vester for rewards from staked LP tokens
+    /// @return Address of LP token accepted as staked to be allowed to vest
+    function pairToken() external view returns (address);
+
+    /// @dev Only used in Vester for rewards from staked LP tokens
+    /// @return Total GS LP tokens staked in RewardTracker
+    function pairSupply() external view returns (uint256);
+
+    /// @dev Get total vested amount of user
+    /// @param _account User address for query
+    function getTotalVested(address _account) external view returns (uint256);
 
     /// @dev Updated with every vesting update
     /// @return Total amounts of claimableToken that has already vested

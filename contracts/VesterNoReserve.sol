@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.21;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
@@ -16,7 +15,7 @@ import "./interfaces/IVester.sol";
 /// @notice Vest esGSb tokens to claim GS tokens
 /// @notice Vesting is done linearly over an year
 /// @dev No need for pair tokens
-contract VesterNoReserve is IERC20, ReentrancyGuard, Ownable2Step, Initializable, IVester {
+contract VesterNoReserve is ReentrancyGuard, Ownable2Step, Initializable, IVester {
     using SafeERC20 for IERC20;
 
     string public name;
@@ -93,6 +92,16 @@ contract VesterNoReserve is IERC20, ReentrancyGuard, Ownable2Step, Initializable
                 IERC20(_token).safeTransfer(_recipient, _amount);
             }
         }
+    }
+
+    /// @inheritdoc IVester
+    function pairToken() public override virtual view returns(address) {
+        return address(0);
+    }
+
+    /// @inheritdoc IVester
+    function pairSupply() public override virtual view returns (uint256) {
+        return 0;
     }
 
     /// @inheritdoc IVester
@@ -198,7 +207,7 @@ contract VesterNoReserve is IERC20, ReentrancyGuard, Ownable2Step, Initializable
 
     /// @dev Returns total vested esGS amounts
     /// @param _account Vesting account
-    function getTotalVested(address _account) public view returns (uint256) {
+    function getTotalVested(address _account) public override virtual view returns (uint256) {
         return balances[_account] + cumulativeClaimAmounts[_account];
     }
 

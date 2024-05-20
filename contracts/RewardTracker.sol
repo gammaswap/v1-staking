@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.21;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -14,7 +13,7 @@ import "./interfaces/IRewardTracker.sol";
 /// @title RewardTracker contract
 /// @author Simon Mall
 /// @notice Earn rewards by staking whitelisted tokens
-contract RewardTracker is IERC20, Initializable, ReentrancyGuard, Ownable2Step, IRewardTracker {
+contract RewardTracker is Initializable, ReentrancyGuard, Ownable2Step, IRewardTracker {
     using SafeERC20 for IERC20;
 
     uint256 public constant PRECISION = 1e30;
@@ -33,7 +32,7 @@ contract RewardTracker is IERC20, Initializable, ReentrancyGuard, Ownable2Step, 
     mapping (address => bool) public isHandler;
     mapping (address => bool) public isDepositToken;
     mapping (address => mapping (address => uint256)) public override depositBalances;
-    mapping (address => uint256) public totalDepositSupply;
+    mapping (address => uint256) public override totalDepositSupply;
 
     uint256 public override totalSupply;
     mapping (address => uint256) public balances;
