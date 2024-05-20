@@ -105,6 +105,11 @@ contract VesterNoReserve is ReentrancyGuard, Ownable2Step, Initializable, IVeste
     }
 
     /// @inheritdoc IVester
+    function getPairAmount(address _account, uint256 _esAmount) public override virtual view returns (uint256) {
+        return 0;
+    }
+
+    /// @inheritdoc IVester
     function maxWithdrawableAmount() public override virtual view returns (uint256) {
         uint256 rewardsSupply = IERC20(claimableToken).balanceOf(address(this));
         uint256 rewardsRequired = totalSupply + totalClaimable;
@@ -205,8 +210,7 @@ contract VesterNoReserve is ReentrancyGuard, Ownable2Step, Initializable, IVeste
         return rewardTracker != address(0);
     }
 
-    /// @dev Returns total vested esGS amounts
-    /// @param _account Vesting account
+    /// @inheritdoc IVester
     function getTotalVested(address _account) public override virtual view returns (uint256) {
         return balances[_account] + cumulativeClaimAmounts[_account];
     }

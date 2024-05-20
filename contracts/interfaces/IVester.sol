@@ -32,9 +32,14 @@ interface IVester is IERC20, IERC165 {
     /// @return Total GS LP tokens staked in RewardTracker
     function pairSupply() external view returns (uint256);
 
-    /// @dev Get total vested amount of user
-    /// @param _account User address for query
+    /// @dev Returns total vested esGS amounts
+    /// @param _account Vesting account
     function getTotalVested(address _account) external view returns (uint256);
+
+    /// @dev Returns required pair token amount for vesting
+    /// @param _account Vesting account
+    /// @param _esAmount Vesting amount
+    function getPairAmount(address _account, uint256 _esAmount) external view returns (uint256);
 
     /// @dev Updated with every vesting update
     /// @return Total amounts of claimableToken that has already vested

@@ -194,10 +194,8 @@ contract Vester is ReentrancyGuard, Ownable2Step, Initializable, IVester {
         return IRewardTracker(rewardTracker).averageStakedAmounts(_account);
     }
 
-    /// @dev Returns required pair token amount for vesting
-    /// @param _account Vesting account
-    /// @param _esAmount Vesting amount
-    function getPairAmount(address _account, uint256 _esAmount) public view returns (uint256) {
+    /// @inheritdoc IVester
+    function getPairAmount(address _account, uint256 _esAmount) public override virtual view returns (uint256) {
         if (!hasRewardTracker()) { return 0; }
 
         uint256 averageStakedAmount = getAverageStakedAmount(_account);
@@ -223,8 +221,7 @@ contract Vester is ReentrancyGuard, Ownable2Step, Initializable, IVester {
         return pairToken != address(0);
     }
 
-    /// @dev Returns total vested esGS amounts
-    /// @param _account Vesting account
+    /// @inheritdoc IVester
     function getTotalVested(address _account) public override virtual view returns (uint256) {
         return balances[_account] + cumulativeClaimAmounts[_account];
     }
