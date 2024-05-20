@@ -41,7 +41,7 @@ contract Vester is ReentrancyGuard, Ownable2Step, Initializable, IVester {
     mapping (address => uint256) public override pairAmounts;
     mapping (address => uint256) public override cumulativeClaimAmounts;
     mapping (address => uint256) public override claimedAmounts;
-    mapping (address => uint256) public lastVestingTimes;
+    mapping (address => uint256) public override lastVestingTimes;
 
     mapping (address => uint256) public override cumulativeRewardDeductions;
     mapping (address => uint256) public override bonusRewards;

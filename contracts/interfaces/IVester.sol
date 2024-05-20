@@ -20,6 +20,10 @@ interface IVester is IERC20, IERC165 {
     function initialize(string memory _name, string memory _symbol, uint256 _vestingDuration, address _esToken,
         address _pairToken, address _claimableToken, address _rewardTracker) external;
 
+    /// @dev Get last vesting time of user
+    /// @param _account User address for query
+    function lastVestingTimes(address _account) external view returns(uint256);
+
     /// @dev Only used in Vester for rewards from staked LP tokens
     /// @return Address of LP token accepted as staked to be allowed to vest
     function pairToken() external view returns (address);

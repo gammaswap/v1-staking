@@ -37,7 +37,7 @@ contract VesterNoReserve is ReentrancyGuard, Ownable2Step, Initializable, IVeste
     mapping (address => uint256) public balances;
     mapping (address => uint256) public override cumulativeClaimAmounts;
     mapping (address => uint256) public override claimedAmounts;
-    mapping (address => uint256) public lastVestingTimes;
+    mapping (address => uint256) public override lastVestingTimes;
 
     mapping (address => uint256) public override cumulativeRewardDeductions;
     mapping (address => uint256) public override bonusRewards;
