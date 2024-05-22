@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.13;
 
-import "@gammaswap/v1-core/contracts/libraries/GammaSwapLibrary.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
-import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+
+import "@gammaswap/v1-core/contracts/libraries/GammaSwapLibrary.sol";
 
 import "./interfaces/IRewardTracker.sol";
 import "./interfaces/ILoanTracker.sol";
@@ -17,7 +19,7 @@ import "./interfaces/IBeaconProxyFactory.sol";
 /// @title StakingAdmin abstract contract
 /// @author Simon Mall
 /// @notice Admin functions for StakingRouter contract
-abstract contract StakingAdmin is Ownable2Step, IStakingAdmin, Initializable {
+abstract contract StakingAdmin is IStakingAdmin, Ownable2Step, Initializable, UUPSUpgradeable {
     using GammaSwapLibrary for address;
     using ERC165Checker for address;
 
@@ -332,4 +334,6 @@ abstract contract StakingAdmin is Ownable2Step, IStakingAdmin, Initializable {
 
         return (tracker, distributor);
     }
+
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 }
