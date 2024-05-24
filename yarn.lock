@@ -483,10 +483,10 @@
     "@gammaswap/v1-staking" "^0.3.9"
     "@openzeppelin/contracts" "^4.7.0"
 
-"@gammaswap/v1-periphery@^1.2.13":
-  version "1.2.13"
-  resolved "https://npm.pkg.github.com/download/@gammaswap/v1-periphery/1.2.13/29b8c0d8e50f6ed8abda7c83fed7afe0313c961a#29b8c0d8e50f6ed8abda7c83fed7afe0313c961a"
-  integrity sha512-54B45kkFOqjjdlkbWegjP7yXqhTPhjWZojMepL9F9frHfpuKwI3oa14S5E2O3HpvHEgn7nXD7A3q2CvTFEPUSg==
+"@gammaswap/v1-periphery@^1.2.14":
+  version "1.2.14"
+  resolved "https://npm.pkg.github.com/download/@gammaswap/v1-periphery/1.2.14/892ccb723d4bcb2b577cba2b5c1c70198957ba73#892ccb723d4bcb2b577cba2b5c1c70198957ba73"
+  integrity sha512-qoA1ExTaXh+5ua3i443Rt44kuypfpKSXorx/0U9fDv3wc5IeAzoQXLzfe7rKScgQdbSTH0e8ezudjqIqPvnLOg==
   dependencies:
     "@gammaswap/v1-core" "^1.2.9"
     "@gammaswap/v1-staking" "^0.9.0"
