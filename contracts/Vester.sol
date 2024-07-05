@@ -112,7 +112,7 @@ contract Vester is ReentrancyGuard, Ownable2Step, Initializable, IVester {
 
     /// @dev Restrict max cap of vestable token amounts
     /// @param _hasMaxVestableAmount True if applied
-    function setHasMaxVestableAmount(bool _hasMaxVestableAmount) external onlyOwner {
+    function setHasMaxVestableAmount(bool _hasMaxVestableAmount) external virtual onlyOwner {
         hasMaxVestableAmount = _hasMaxVestableAmount;
     }
 
@@ -212,12 +212,12 @@ contract Vester is ReentrancyGuard, Ownable2Step, Initializable, IVester {
     }
 
     /// @dev Returns if reward tracker is set
-    function hasRewardTracker() public view returns (bool) {
+    function hasRewardTracker() public virtual view returns (bool) {
         return rewardTracker != address(0);
     }
 
     /// @dev Returns if pair token is set
-    function hasPairToken() public view returns (bool) {
+    function hasPairToken() public virtual view returns (bool) {
         return pairToken != address(0);
     }
 

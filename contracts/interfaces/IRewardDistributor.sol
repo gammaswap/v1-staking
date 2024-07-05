@@ -45,6 +45,9 @@ interface IRewardDistributor is IERC165 {
     /// @dev Can only be called by the contract owner.
     function updateLastDistributionTime() external;
 
+    /// @dev Updates the tokens reward per interval the distributor distributes
+    function updateTokensPerInterval() external;
+
     /// @dev Pause or resume reward emission
     /// @param _paused Indicates if the reward emission is paused
     function setPaused(bool _paused) external;

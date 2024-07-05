@@ -7,6 +7,7 @@ import "@gammaswap/v1-core/contracts/base/GammaPoolERC20.sol";
 import "../../contracts/interfaces/IRewardTracker.sol";
 import "./fixtures/CPMMGammaSwapSetup.sol";
 
+import "forge-std/console.sol";
 contract StakingRouterTest is CPMMGammaSwapSetup {
     function setUp() public {
         super.initCPMMGammaSwap();
@@ -48,6 +49,19 @@ contract StakingRouterTest is CPMMGammaSwapSetup {
 
         vm.expectRevert(bytes4(keccak256("StakingContractsAlreadySet()")));
         stakingRouter.setupPoolStakingForLoan(address(pool2), 1);
+    }
+
+    function testInterfaceIds() public {
+        assertEq(type(IBeaconProxyFactory).interfaceId, hex'775c300c');
+        assertEq(type(IBonusDistributor).interfaceId, hex'd2330c9f');
+        assertEq(type(IFeeTracker).interfaceId, hex'95394ba2');
+        assertEq(type(ILoanTracker).interfaceId, hex'3c68ad7c');
+        assertEq(type(IRestrictedToken).interfaceId, hex'61e39026');
+        assertEq(type(IRewardDistributor).interfaceId, hex'ddd97191');
+        assertEq(type(IRewardTracker).interfaceId, hex'0f7dfb3c');
+        assertEq(type(IStakingAdmin).interfaceId, hex'c7799f36');
+        assertEq(type(IStakingRouter).interfaceId, hex'f31ccce9');
+        assertEq(type(IVester).interfaceId, hex'ef5e114c');
     }
 
     function testProtocolAssets() public {

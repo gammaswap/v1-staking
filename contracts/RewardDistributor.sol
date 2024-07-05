@@ -38,9 +38,13 @@ contract RewardDistributor is Ownable2Step, Initializable, IRewardDistributor {
         lastDistributionTime = block.timestamp;
     }
 
+    /// @inheritdoc IRewardDistributor
+    function updateTokensPerInterval() external override virtual {
+    }
+
     /// @dev Set reward token emission rate
     /// @param _amount Amount of reward tokens per second
-    function setTokensPerInterval(uint256 _amount) external onlyOwner {
+    function setTokensPerInterval(uint256 _amount) external virtual onlyOwner {
         require(lastDistributionTime != 0, "RewardDistributor: invalid lastDistributionTime");
 
         IRewardTracker(rewardTracker).updateRewards();

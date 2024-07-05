@@ -80,7 +80,7 @@ describe("StakingRouter", function () {
   it("StakingAdmin", async () => {
     const IRewardTrackerInterface = "0x0f7dfb3c";
     const ILoanTrackerInterface = "0x3c68ad7c";
-    const IRewardDistributorInterface = "0xfb600f23";
+    const IRewardDistributorInterface = "0xddd97191";
     const IVesterInterface = "0xef5e114c";
 
     const [deployer] = await ethers.getSigners();
@@ -289,7 +289,7 @@ describe("StakingRouter", function () {
     expect(await feeTracker.depositBalances(user1.address, bnGs.target)).lt("2740000000000000000") // 2.74
 
     await expect(stakingRouter.connect(user1).unstakeEsGs(expandDecimals(1, 18)))
-      .to.be.revertedWith("RewardTracker: _amount exceeds depositBalance")/**/
+      .to.be.revertedWith("RewardTracker: _amount exceeds depositBalance")
   })
 
   it("stakeLpForAccount, stakeLp, unstakeLpForAccount, unstakeLp, claimPool", async () => {
