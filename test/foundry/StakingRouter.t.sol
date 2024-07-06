@@ -61,7 +61,7 @@ contract StakingRouterTest is CPMMGammaSwapSetup {
         assertEq(type(IRewardTracker).interfaceId, hex'0f7dfb3c');
         assertEq(type(IStakingAdmin).interfaceId, hex'c7799f36');
         assertEq(type(IStakingRouter).interfaceId, hex'f31ccce9');
-        assertEq(type(IVester).interfaceId, hex'ef5e114c');
+        assertEq(type(IVester).interfaceId, hex'e0a5cde6');
     }
 
     function testProtocolAssets() public {

@@ -83,6 +83,11 @@ contract Vester is ReentrancyGuard, Ownable2Step, Initializable, IVester {
     }
 
     /// @inheritdoc IVester
+    function setVestingDuration(uint256 _vestingDuration) external override virtual onlyOwner {
+        vestingDuration = _vestingDuration;
+    }
+
+    /// @inheritdoc IVester
     function setHandler(address _handler, bool _isActive) external override virtual onlyOwner {
         isHandler[_handler] = _isActive;
     }

@@ -50,8 +50,12 @@ interface IVester is IERC20, IERC165 {
     function hasMaxVestableAmount() external view returns(bool);
 
     /// @dev Set in constructor
-    /// @return Time in seconds it will take to vest  the esToken into the claimableToken
+    /// @return Time in seconds it will take to vest the esToken into the claimableToken
     function vestingDuration() external view returns(uint256);
+
+    /// @dev Update vesting duration
+    /// @param _vestingDuration Time in seconds it will take to vest the esToken into the claimableToken
+    function setVestingDuration(uint256 _vestingDuration) external;
 
     /// @dev Set in constructor
     /// @return Address of token that will be claimed when esToken is vested.

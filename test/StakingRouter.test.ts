@@ -81,7 +81,7 @@ describe("StakingRouter", function () {
     const IRewardTrackerInterface = "0x0f7dfb3c";
     const ILoanTrackerInterface = "0x3c68ad7c";
     const IRewardDistributorInterface = "0xddd97191";
-    const IVesterInterface = "0xef5e114c";
+    const IVesterInterface = "0xe0a5cde6";
 
     const [deployer] = await ethers.getSigners();
     expect(await rewardTracker.supportsInterface(IRewardTrackerInterface)).equals(true)
@@ -380,12 +380,15 @@ describe("StakingRouter", function () {
   })
 
   it("vestEsGs, vestEsTokenForPool, withdrawEsGs, withdrawEsTokenForPool", async () => {
-    const [,,, user0, user1] = await ethers.getSigners();
+    const [deployer,,, user0, user1] = await ethers.getSigners();
     const {
       vester: poolVester
     } = await poolTrackers(stakingRouter, gsPool.target.toString(), esGs.target.toString(), (await stakingRouter.esGsb()).toString())
     await gs.mint(vester, expandDecimals(1000, 18))
     await gs.mint(poolVester, expandDecimals(1000, 18))
+
+    const functionData = poolVester.interface.encodeFunctionData('setVestingDuration', [30 * 24 * 60 * 60])
+    await (await stakingRouter.connect(deployer).execute(poolVester, functionData)).wait()
 
     await esGs.mint(user0, expandDecimals(1000, 18));
     await esGs.mint(user1, expandDecimals(1000, 18));
@@ -404,7 +407,7 @@ describe("StakingRouter", function () {
     await poolVester.connect(routerAsSigner).setBonusRewards(user1, expandDecimals(1000, 18));
     await stakingRouter.connect(user1).vestEsTokenForPool(gsPool, esGs.target, expandDecimals(1000, 18));
 
-    await increase(30 * 24 * 60 * 60)
+    await increase(Math.floor((30 * 24 * 60 * 60) * 30 / 365))
 
     await stakingRouter.connect(user0).withdrawEsGs();
     await expect(stakingRouter.connect(user1).withdrawEsTokenForPool(ethers.ZeroAddress, ethers.ZeroAddress))

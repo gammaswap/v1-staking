@@ -43,7 +43,7 @@ abstract contract StakingAdmin is IStakingAdmin, Ownable2Step, Initializable, UU
     address private vesterFactory;
     address private vesterNoReserveFactory;
 
-    uint256 public constant VESTING_DURATION = 365 * 24 * 60 * 60;
+    uint256 public constant VESTING_DURATION = 30 * 24 * 60 * 60;
     uint256 public POOL_VESTING_DURATION = 365 * 24 * 60 * 60;
 
     AssetCoreTracker internal _coreTracker;
