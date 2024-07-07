@@ -444,6 +444,13 @@
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/strings" "^5.7.0"
 
+"@gammaswap/v1-core@^1.2.11":
+  version "1.2.11"
+  resolved "https://npm.pkg.github.com/download/@gammaswap/v1-core/1.2.11/354d4cd420d1bab50ae41711da757a7de563911e#354d4cd420d1bab50ae41711da757a7de563911e"
+  integrity sha512-BqEeNJb80xG0E7lfy/4ZUfeP0Q1bEoEQnmv58rJp98wtQ/FBQIXDEDKsjzUJdDDE6oa7p/ZJzo+zkFhbInuoKg==
+  dependencies:
+    "@openzeppelin/contracts" "^4.7.0"
+
 "@gammaswap/v1-core@^1.2.7":
   version "1.2.7"
   resolved "https://npm.pkg.github.com/download/@gammaswap/v1-core/1.2.7/02a1c46dc6d2df88196c3d23b312d37378d7ae54#02a1c46dc6d2df88196c3d23b312d37378d7ae54"
@@ -458,12 +465,12 @@
   dependencies:
     "@openzeppelin/contracts" "^4.7.0"
 
-"@gammaswap/v1-implementations@^1.2.10":
-  version "1.2.10"
-  resolved "https://npm.pkg.github.com/download/@gammaswap/v1-implementations/1.2.10/d1de1f9a583d6025c17d26bd62d7ad39608e379b#d1de1f9a583d6025c17d26bd62d7ad39608e379b"
-  integrity sha512-yLM1qNTQlcdmqSd+r06Sr9J2crYNvJ6XJmD8KBOv866D5kvXKT1OA0W74p9qCVjjy4iF1Z5ew7Ct1ALFkwgo0A==
+"@gammaswap/v1-implementations@^1.2.11":
+  version "1.2.11"
+  resolved "https://npm.pkg.github.com/download/@gammaswap/v1-implementations/1.2.11/edbb7952f59feb67b665090d1347742e85aa49d3#edbb7952f59feb67b665090d1347742e85aa49d3"
+  integrity sha512-NFk6avKZ/oKf5XjDyFkygxYSAiPyMsngdybV8Mv5NIJH0bxWN3zQ++1p7B+bzaFBkGP3aGgOjudsGYC12QobJA==
   dependencies:
-    "@gammaswap/v1-core" "^1.2.9"
+    "@gammaswap/v1-core" "^1.2.11"
     "@openzeppelin/contracts" "^4.7.0"
 
 "@gammaswap/v1-implementations@^1.2.8":

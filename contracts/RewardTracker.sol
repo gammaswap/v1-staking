@@ -229,6 +229,8 @@ contract RewardTracker is Initializable, ReentrancyGuard, Ownable2Step, IRewardT
         totalSupply = totalSupply + _amount;
         balances[_account] = balances[_account] + _amount;
 
+        IRewardDistributor(distributor).updateTokensPerInterval();
+
         emit Transfer(address(0), _account, _amount);
     }
 
@@ -237,6 +239,8 @@ contract RewardTracker is Initializable, ReentrancyGuard, Ownable2Step, IRewardT
 
         balances[_account] = balances[_account] - _amount;
         totalSupply = totalSupply - _amount;
+
+        IRewardDistributor(distributor).updateTokensPerInterval();
 
         emit Transfer(_account, address(0), _amount);
     }

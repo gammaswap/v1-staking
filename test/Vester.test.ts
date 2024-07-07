@@ -10,6 +10,7 @@ import { impersonateAndFund } from './utils/misc';
 import { BonusDistributor, FeeTracker, GS, ERC20Mock, RestrictedToken, RewardDistributor, RewardTracker, StakingRouter, Vester, Token } from '../typechain-types';
 
 const secondsPerYear = 365 * 24 * 60 * 60
+const secondsPerMonth = 30 * 24 * 60 * 60
 const AddressZero = ethers.ZeroAddress
 
 describe('Vester', function() {
@@ -48,7 +49,7 @@ describe('Vester', function() {
   it("inits", async () => {
     expect(await vester.name()).eq("Vested GS")
     expect(await vester.symbol()).eq("vGS")
-    expect(await vester.vestingDuration()).eq(secondsPerYear)
+    expect(await vester.vestingDuration()).eq(secondsPerMonth)
     expect(await vester.esToken()).eq(esGs.target)
     expect(await vester.pairToken()).eq(feeTracker.target)
     expect(await vester.claimableToken()).eq(gs.target)
@@ -85,6 +86,9 @@ describe('Vester', function() {
 
   it("deposit, claim, withdraw", async () => {
     const [deployer, user0] = await ethers.getSigners()
+
+    const functionData = vester.interface.encodeFunctionData('setVestingDuration', [secondsPerYear])
+    await (await stakingRouter.connect(deployer).execute(vester, functionData)).wait()
 
     await expect(vester.connect(user0).deposit(0))
       .to.be.revertedWith("Vester: invalid _amount")
@@ -270,6 +274,10 @@ describe('Vester', function() {
 
   it("depositForAccount, claimForAccount", async () => {
     const [deployer, user0, user1, user2, user3, user4] = await ethers.getSigners()
+
+    const functionData = vester.interface.encodeFunctionData('setVestingDuration', [secondsPerYear])
+    await (await stakingRouter.connect(deployer).execute(vester, functionData)).wait()
+
     await vester.connect(routerAsSigner).setHandler(deployer.address, true)
 
     await esGs.connect(user0).approve(vester.target, expandDecimals(1000, 18))
@@ -347,6 +355,9 @@ describe('Vester', function() {
 
   it("handles multiple deposits", async () => {
     const [deployer, user0] = await ethers.getSigners()
+
+    const functionData = vester.interface.encodeFunctionData('setVestingDuration', [secondsPerYear])
+    await (await stakingRouter.connect(deployer).execute(vester, functionData)).wait()
 
     await esGs.connect(user0).approve(vester.target, expandDecimals(1000, 18))
 
@@ -436,7 +447,7 @@ describe('Vester', function() {
 
     expect(await vester.name()).eq("Vested GS")
     expect(await vester.symbol()).eq("vGS")
-    expect(await vester.vestingDuration()).eq(secondsPerYear)
+    expect(await vester.vestingDuration()).eq(secondsPerMonth)
     expect(await vester.esToken()).eq(esGs.target)
     expect(await vester.pairToken()).eq(feeTracker.target)
     expect(await vester.claimableToken()).eq(gs.target)
@@ -445,7 +456,7 @@ describe('Vester', function() {
     expect(await vester.hasRewardTracker()).eq(true)
     expect(await vester.hasMaxVestableAmount()).eq(true)
 
-    await gs.mint(vester.target, expandDecimals(2000, 18))
+    await gs.mint(vester.target, expandDecimals(2380, 18))
 
     await gs.mint(user0.address, expandDecimals(1000, 18))
     await gs.mint(user1.address, expandDecimals(500, 18))
@@ -558,8 +569,8 @@ describe('Vester', function() {
     expect(await vester.getPairAmount(user1.address, expandDecimals(1, 18))).gt("410000000000000000") // 0.41, 1000 / 2380 => ~0.42
     expect(await vester.getPairAmount(user1.address, expandDecimals(1, 18))).lt("430000000000000000") // 0.43
 
-    await increase(30 * 24 * 60 * 60)
-
+    // converting from 31 days out of 365 to equivalent in 30 day vesting period. Subtract 1 past day from line 554
+    await increase(Math.floor((secondsPerMonth) * 31 / 365) - 24 * 60 * 60)
     await vester.connect(user0).withdraw()
 
     expect(await feeTracker.balanceOf(user0.address)).eq(expandDecimals(1500, 18))
@@ -579,7 +590,7 @@ describe('Vester', function() {
 
     expect(await vester.name()).eq("Vested GS")
     expect(await vester.symbol()).eq("vGS")
-    expect(await vester.vestingDuration()).eq(secondsPerYear)
+    expect(await vester.vestingDuration()).eq(secondsPerMonth)
     expect(await vester.esToken()).eq(esGs.target)
     expect(await vester.pairToken()).eq(feeTracker.target)
     expect(await vester.claimableToken()).eq(gs.target)
