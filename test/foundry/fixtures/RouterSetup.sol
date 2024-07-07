@@ -22,7 +22,7 @@ contract RouterSetup is TokensSetup {
         wireUp();
         setEmissions();
 
-        wireUpPool(gsPool, 365 days);
+        wireUpPool(gsPool, 360 days);
         setPoolEmissions(gsPool);
 
         wireUpPool(gsPool2, 180 days);
