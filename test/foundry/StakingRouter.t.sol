@@ -7,7 +7,6 @@ import "@gammaswap/v1-core/contracts/base/GammaPoolERC20.sol";
 import "../../contracts/interfaces/IRewardTracker.sol";
 import "./fixtures/CPMMGammaSwapSetup.sol";
 
-import "forge-std/console.sol";
 contract StakingRouterTest is CPMMGammaSwapSetup {
     function setUp() public {
         super.initCPMMGammaSwap();

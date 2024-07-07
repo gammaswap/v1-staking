@@ -47,7 +47,7 @@ contract VesterNoReserve is ReentrancyGuard, Ownable2Step, Initializable, Vester
         }
     }
 
-    /// @dev Returns if pair token is set
+    /// @inheritdoc Vester
     function hasPairToken() public override virtual view returns (bool) {
         return false;
     }
