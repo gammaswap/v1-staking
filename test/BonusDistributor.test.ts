@@ -56,8 +56,14 @@ describe("BonusDistributor", function () {
   })
 
   it("Max basis points", async () => {
-    await expect(bonusDistributor.connect(routerAsSigner).setBonusMultiplier(10001))
+    expect(await bonusDistributor.bonusMultiplierBasisPoints()).equals(10000)
+
+    await expect(bonusDistributor.connect(routerAsSigner).setBonusMultiplier(240001))
       .to.revertedWith("BonusDistributor: invalid multiplier points")
+
+    await (await bonusDistributor.connect(routerAsSigner).setBonusMultiplier(240000)).wait()
+
+    expect(await bonusDistributor.bonusMultiplierBasisPoints()).equals(240000)
   })
 
   it("distributes bonus", async () => {
