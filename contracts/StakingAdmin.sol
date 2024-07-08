@@ -146,6 +146,7 @@ abstract contract StakingAdmin is IStakingAdmin, Ownable2Step, Initializable, UU
 
     /// @inheritdoc IStakingAdmin
     function setPoolVestingPeriod(uint256 _poolVestingPeriod) external override virtual onlyOwner {
+        require(_poolVestingPeriod > 0 && _poolVestingPeriod <= 365 days, "StakingAdmin: Invalid duration");
         POOL_VESTING_DURATION = _poolVestingPeriod;
     }
 
