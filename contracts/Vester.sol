@@ -84,6 +84,7 @@ contract Vester is ReentrancyGuard, Ownable2Step, Initializable, IVester {
 
     /// @inheritdoc IVester
     function setVestingDuration(uint256 _vestingDuration) external override virtual onlyOwner {
+        require(_vestingDuration > 0 && _vestingDuration <= 365 days, "Vester: Invalid duration");
         vestingDuration = _vestingDuration;
     }
 
