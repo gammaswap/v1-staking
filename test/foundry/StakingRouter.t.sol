@@ -250,7 +250,8 @@ contract StakingRouterTest is CPMMGammaSwapSetup {
         vm.warp(block.timestamp + 90 days);
 
         assertLt(esGsRewards2/8 + IVester(vester).claimable(user2), esGsRewards2/2);
-        assertApproxEqAbs(esGsRewards2/4 + IVester(vester2).claimable(user2), esGsRewards2/2,10);
+        assertApproxEqAbs(esGsRewards2/4 + IVester(vester2).claimable(user2), esGsRewards2/4
+            + (esGsRewards2/4) * 90 / 180,10); // remaining amount is vesting over 180 days
 
         vm.stopPrank();
 
@@ -259,14 +260,170 @@ contract StakingRouterTest is CPMMGammaSwapSetup {
         vm.prank(address(stakingRouter));
         IVester(vester2).setVestingDuration(360 days); // 180 to 360 days
 
-        assertEq(esGsRewards2/8+ IVester(vester).claimable(user2), esGsRewards2/2);
+        assertEq(esGsRewards2/8 + IVester(vester).claimable(user2), esGsRewards2/2);
         assertLt(esGsRewards2/4 + IVester(vester2).claimable(user2), esGsRewards2/2);
 
         vm.startPrank(user2);
         stakingRouter.claimPool(address(pool2), address(esGs), true, true);
-        assertEq(gs.balanceOf(user2), esGsRewards2/8 + esGsRewards2/4 + esGsRewards2/8);
+        assertApproxEqAbs(gs.balanceOf(user2), esGsRewards2/8 + esGsRewards2/4 + (esGsRewards2/4)*90/360,10);
         stakingRouter.claimPool(address(pool), address(esGs), true, true);
-        assertEq(gs.balanceOf(user2), esGsRewards2/2 + esGsRewards2/4 + esGsRewards2/8);
+        assertApproxEqAbs(gs.balanceOf(user2), esGsRewards2/2 + esGsRewards2/4 +(esGsRewards2/4)*90/360,10);
+
+        vm.stopPrank();
+    }
+
+    /// @notice stake lp in pool -> claim -> vest -> claim
+    function testVestingDuration(uint256 lpAmount1) public {
+        lpAmount1 = bound(lpAmount1, 1e18, 10000e18);
+        (address poolRewardTracker,,,,address vester) = stakingRouter.poolTrackers(address(pool), address(esGs));
+
+        uint256 lpBalanceBeforeUser1 = GammaPoolERC20(pool).balanceOf(user1);
+
+        ////////// STAKING //////////
+        vm.startPrank(user1);
+        stakingRouter.stakeLp(address(pool), address(esGs), lpAmount1);
+
+        assertApproxEqRel(GammaPoolERC20(pool).balanceOf(user1), lpBalanceBeforeUser1 - lpAmount1, 1e4);
+
+        vm.warp(block.timestamp + 1 days + 1);
+
+        uint256 esGsRewards1 = 86400 * 1e16;
+        assertApproxEqRel(IRewardTracker(poolRewardTracker).claimable(user1), esGsRewards1, 1e14);
+
+        ////////// CLAIMING //////////
+        stakingRouter.claimPool(address(pool), address(esGs), true, true);
+        assertApproxEqRel(esGs.balanceOf(user1), esGsRewards1, 1e14);
+        assertEq(gs.balanceOf(user1), 0);
+
+        ////////// VESTING //////////);
+        // pool is 365 days
+        stakingRouter.stakeLp(address(pool), address(esGs), lpAmount1);    // Stake Lp tokens again to satisfy average staked amounts
+
+        uint256 esGSDeposit1 = esGsRewards1 / 2;
+        stakingRouter.vestEsTokenForPool(address(pool), address(esGs), esGSDeposit1);
+
+        vm.warp(block.timestamp + 365 days);
+
+        stakingRouter.claimPool(address(pool), address(esGs), true, true);
+        assertEq(IVester(vester).balanceOf(user1), 0);
+
+        uint256 vestedAmountBeforeClaim = IVester(vester).getVestedAmount(user1);
+        assertGt(vestedAmountBeforeClaim, 0);
+
+        stakingRouter.vestEsTokenForPool(address(pool), address(esGs), esGSDeposit1);
+        assertEq(IVester(vester).balanceOf(user1), esGSDeposit1);
+
+        uint256 vestedAmountAfterClaim = IVester(vester).getVestedAmount(user1);
+        assertEq(vestedAmountAfterClaim, vestedAmountBeforeClaim*2);
+
+        vm.warp(block.timestamp + ((365 days)/1));
+
+        stakingRouter.claimPool(address(pool), address(esGs), true, true);
+        assertEq(IVester(vester).balanceOf(user1), 0);
+
+        vm.stopPrank();
+    }
+
+    /// @notice stake lp in pool -> claim -> vest -> claim
+    function testVestingDurationPartialVestDeposit(uint256 lpAmount) public {
+        lpAmount = bound(lpAmount, 1e18, 10000e18);
+        (address poolRewardTracker,,,,address vester) = stakingRouter.poolTrackers(address(pool), address(esGs));
+
+        uint256 lpBalanceBeforeUser1 = GammaPoolERC20(pool).balanceOf(user1);
+
+        ////////// STAKING //////////
+        vm.startPrank(user1);
+        stakingRouter.stakeLp(address(pool), address(esGs), lpAmount);
+
+        assertApproxEqRel(GammaPoolERC20(pool).balanceOf(user1), lpBalanceBeforeUser1 - lpAmount, 1e4);
+
+        vm.warp(block.timestamp + 1 days + 1);
+
+        uint256 esGsRewards1 = 86400 * 1e16;
+        assertApproxEqRel(IRewardTracker(poolRewardTracker).claimable(user1), esGsRewards1, 1e14);
+
+        ////////// CLAIMING //////////
+        stakingRouter.claimPool(address(pool), address(esGs), true, true);
+        assertApproxEqRel(esGs.balanceOf(user1), esGsRewards1, 1e14);
+        assertEq(gs.balanceOf(user1), 0);
+
+        ////////// VESTING //////////);
+        // pool is 365 days
+        stakingRouter.stakeLp(address(pool), address(esGs), lpAmount); // Stake Lp tokens again to satisfy average staked amounts
+
+        uint256 esGSDeposit1 = esGsRewards1 / 2;
+        stakingRouter.vestEsTokenForPool(address(pool), address(esGs), esGSDeposit1);
+
+        vm.warp(block.timestamp + 180 days);
+
+        uint256 vestedAmountBeforeClaim = IVester(vester).getVestedAmount(user1);
+        assertGt(vestedAmountBeforeClaim, 0);
+
+        stakingRouter.vestEsTokenForPool(address(pool), address(esGs), esGSDeposit1);
+        assertEq(IVester(vester).balanceOf(user1), esGSDeposit1 + esGSDeposit1/2);
+
+        uint256 vestedAmountAfterClaim = IVester(vester).getVestedAmount(user1);
+        assertEq(vestedAmountAfterClaim, vestedAmountBeforeClaim*2);
+
+        vm.warp(block.timestamp + ((270 days)/1)); // the total vesting should take longer because you doubled the deposit.
+        stakingRouter.claimPool(address(pool), address(esGs), true, true);
+        assertGt(IVester(vester).balanceOf(user1), 0); // period restarted so it has to vest in a total of 360 days
+
+        vm.warp(block.timestamp + ((180 days)/1));
+        stakingRouter.claimPool(address(pool), address(esGs), true, true);
+        assertGt(IVester(vester).balanceOf(user1), 0);
+
+        vm.warp(block.timestamp + ((360 days)/1));
+        stakingRouter.claimPool(address(pool), address(esGs), true, true);
+        assertEq(IVester(vester).balanceOf(user1), 0);
+
+        vm.stopPrank();
+    }
+
+    /// @notice stake lp in pool -> claim -> vest -> claim
+    function testVestingDurationFullVestDeposit(uint256 lpAmount) public {
+        lpAmount = bound(lpAmount, 1e18, 10000e18);
+        (address poolRewardTracker,,,,address vester) = stakingRouter.poolTrackers(address(pool), address(esGs));
+
+        uint256 lpBalanceBeforeUser1 = GammaPoolERC20(pool).balanceOf(user1);
+
+        ////////// STAKING //////////
+        vm.startPrank(user1);
+        stakingRouter.stakeLp(address(pool), address(esGs), lpAmount);
+
+        assertApproxEqRel(GammaPoolERC20(pool).balanceOf(user1), lpBalanceBeforeUser1 - lpAmount, 1e4);
+
+        vm.warp(block.timestamp + 1 days + 1);
+
+        uint256 esGsRewards1 = 86400 * 1e16;
+        assertApproxEqRel(IRewardTracker(poolRewardTracker).claimable(user1), esGsRewards1, 1e14);
+
+        ////////// CLAIMING //////////
+        stakingRouter.claimPool(address(pool), address(esGs), true, true);
+        assertApproxEqRel(esGs.balanceOf(user1), esGsRewards1, 1e14);
+        assertEq(gs.balanceOf(user1), 0);
+
+        ////////// VESTING //////////);
+        // pool is 365 days
+        stakingRouter.stakeLp(address(pool), address(esGs), lpAmount); // Stake Lp tokens again to satisfy average staked amounts
+
+        uint256 esGSDeposit1 = esGsRewards1 / 2;
+        stakingRouter.vestEsTokenForPool(address(pool), address(esGs), esGSDeposit1);
+        vm.warp(block.timestamp + 360 days);
+
+        uint256 vestedAmountBeforeClaim = IVester(vester).getVestedAmount(user1);
+        assertGt(vestedAmountBeforeClaim, 0);
+
+        stakingRouter.vestEsTokenForPool(address(pool), address(esGs), esGSDeposit1);
+        assertEq(IVester(vester).balanceOf(user1), esGSDeposit1);
+
+        uint256 vestedAmountAfterClaim = IVester(vester).getVestedAmount(user1);
+        assertEq(vestedAmountAfterClaim, vestedAmountBeforeClaim*2);
+
+        vm.warp(block.timestamp + ((360 days)/1));
+
+        stakingRouter.claimPool(address(pool), address(esGs), true, true);
+        assertEq(IVester(vester).balanceOf(user1), 0);
 
         vm.stopPrank();
     }

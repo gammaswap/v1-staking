@@ -85,6 +85,7 @@ describe('RewardTracker', function() {
   it("stake, unstake, claim", async () => {
     const [deployer, user0, user1, user2, user3] = await ethers.getSigners()
 
+    await rewardTracker.connect(routerAsSigner).setInPrivateClaimingMode(false);
     await esGs.mint(rewardDistributor.target, expandDecimals(50000, 18))
     await rewardDistributor.connect(routerAsSigner).setTokensPerInterval("20667989410000000") // 0.02066798941 esGs per second
     await rewardDistributor.connect(routerAsSigner).setPaused(false)

@@ -349,8 +349,7 @@ contract Vester is ReentrancyGuard, Ownable2Step, Initializable, IVester {
         uint256 balance = balances[_account];
         if (balance == 0) { return 0; }
 
-        uint256 vestedAmount = getVestedAmount(_account);
-        uint256 claimableAmount = vestedAmount * timeDiff / vestingDuration;
+        uint256 claimableAmount = balance * timeDiff / vestingDuration;
 
         if (claimableAmount < balance) {
             return claimableAmount;
