@@ -167,23 +167,23 @@ describe('Vester', function() {
 
     expect(await vester.cumulativeClaimAmounts(user0.address)).eq(gsAmount)
     expect(await vester.claimedAmounts(user0.address)).eq(gsAmount)
-    expect(await vester.claimable(user0.address)).gt("5478000000000000000") // 1000 / 365 * 2 => ~5.479
-    expect(await vester.claimable(user0.address)).lt("5480000000000000000")
+    expect(await vester.claimable(user0.address)).gt("5464000000000000000") // [(1000 - ~2.739)/ 365] * 2 => ~5.479
+    expect(await vester.claimable(user0.address)).lt("5465000000000000000")
 
     await increase(Math.floor(Number(365 / 2 - 1)) * 24 * 60 * 60)
 
     expect(await vester.cumulativeClaimAmounts(user0.address)).eq(gsAmount)
     expect(await vester.claimedAmounts(user0.address)).eq(gsAmount)
-    expect(await vester.claimable(user0.address)).gt(expandDecimals(500, 18)) // 1000 / 2 => 500
-    expect(await vester.claimable(user0.address)).lt(expandDecimals(502, 18))
+    expect(await vester.claimable(user0.address)).gt(expandDecimals(499, 18)) // (1000 - ~2.739) / 2 => ~499
+    expect(await vester.claimable(user0.address)).lt(expandDecimals(500, 18))
 
     await vester.connect(user0).claim()
     expect(await vester.maxWithdrawableAmount()).eq(expandDecimals(1000, 18))
     blockTime = await latest()
 
     expect(await esGs.balanceOf(user0.address)).eq(0)
-    expect(await gs.balanceOf(user0.address)).gt(expandDecimals(503, 18))
-    expect(await gs.balanceOf(user0.address)).lt(expandDecimals(505, 18))
+    expect(await gs.balanceOf(user0.address)).gt(expandDecimals(502, 18))
+    expect(await gs.balanceOf(user0.address)).lt(expandDecimals(503, 18))
 
     gsAmount = await gs.balanceOf(user0.address)
     expect(await vester.balanceOf(user0.address)).eq(expandDecimals(1000, 18) - gsAmount)
@@ -197,9 +197,9 @@ describe('Vester', function() {
 
     await increase(24 * 60 * 60)
 
-    // vesting rate should be the same even after claiming
-    expect(await vester.claimable(user0.address)).gt("2730000000000000000") // 1000 / 365 => ~2.739
-    expect(await vester.claimable(user0.address)).lt("2750000000000000000")
+    // vesting rate should be less after claiming because it resets
+    expect(await vester.claimable(user0.address)).gt("1362000000000000000") // ~499.99 / 365 => ~1.362
+    expect(await vester.claimable(user0.address)).lt("1363000000000000000")
 
     await esGs.mint(user0.address, expandDecimals(500, 18))
     await esGs.connect(user0).approve(vester.target, expandDecimals(500, 18))
@@ -208,8 +208,8 @@ describe('Vester', function() {
 
     await increase(24 * 60 * 60)
 
-    expect(await vester.claimable(user0.address)).gt("6840000000000000000") // 1000 / 365 + 1500 / 365 => 6.849
-    expect(await vester.claimable(user0.address)).lt("6860000000000000000")
+    expect(await vester.claimable(user0.address)).gt("4090000000000000000") // ~400/365 (earned before) + ~1000 / 365 (earned from now on) => ~4.1
+    expect(await vester.claimable(user0.address)).lt("4091000000000000000")
     expect(await vester.maxWithdrawableAmount()).eq(expandDecimals(500, 18))
 
     expect(await esGs.balanceOf(user0.address)).eq(0)
@@ -217,12 +217,12 @@ describe('Vester', function() {
 
     await vester.connect(user0).withdraw()
 
-    expect(await esGs.balanceOf(user0.address)).gt(expandDecimals(989, 18))
-    expect(await esGs.balanceOf(user0.address)).lt(expandDecimals(990, 18))
-    expect(await gs.balanceOf(user0.address)).gt(expandDecimals(510, 18))
-    expect(await gs.balanceOf(user0.address)).lt(expandDecimals(512, 18))
-    expect(await vester.maxWithdrawableAmount()).gt(expandDecimals(500 + 989, 18))
-    expect(await vester.maxWithdrawableAmount()).lt(expandDecimals(500 + 990, 18))
+    expect(await esGs.balanceOf(user0.address)).gt(expandDecimals(993, 18))
+    expect(await esGs.balanceOf(user0.address)).lt(expandDecimals(994, 18))
+    expect(await gs.balanceOf(user0.address)).gt(expandDecimals(506, 18))
+    expect(await gs.balanceOf(user0.address)).lt(expandDecimals(507, 18))
+    expect(await vester.maxWithdrawableAmount()).gt(expandDecimals(500 + 993, 18))
+    expect(await vester.maxWithdrawableAmount()).lt(expandDecimals(500 + 994, 18))
 
     expect(await vester.balanceOf(user0.address)).eq(0)
     expect(await vester.getTotalVested(user0.address)).eq(0)
@@ -235,8 +235,8 @@ describe('Vester', function() {
     await esGs.connect(user0).approve(vester.target, expandDecimals(1000, 18))
     await esGs.mint(user0.address, expandDecimals(1000, 18))
     await vester.connect(user0).deposit(expandDecimals(1000, 18))
-    expect(await vester.maxWithdrawableAmount()).gt(expandDecimals(500 + 989 - 1000, 18))
-    expect(await vester.maxWithdrawableAmount()).lt(expandDecimals(500 + 990 - 1000, 18))
+    expect(await vester.maxWithdrawableAmount()).gt(expandDecimals(500 + 993 - 1000, 18))
+    expect(await vester.maxWithdrawableAmount()).lt(expandDecimals(500 + 994 - 1000, 18))
 
     blockTime = await latest()
 
@@ -261,8 +261,8 @@ describe('Vester', function() {
     await vester.connect(routerAsSigner).withdrawToken(gs.target, deployer, 0)
 
     expect(await vester.maxWithdrawableAmount()).eq(0)
-    expect(await gs.balanceOf(deployer)).gt(expandDecimals(489, 18))  // 500 + 989 - 1000
-    expect(await gs.balanceOf(deployer)).lt(expandDecimals(490, 18))
+    expect(await gs.balanceOf(deployer)).gt(expandDecimals(493, 18))  // 500 + 993 - 1000
+    expect(await gs.balanceOf(deployer)).lt(expandDecimals(494, 18))
 
     await gs.connect(deployer).mint(vester.target, expandDecimals(100, 18))
     expect(await vester.maxWithdrawableAmount()).eq(expandDecimals(100, 18))
