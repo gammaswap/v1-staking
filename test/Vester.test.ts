@@ -438,6 +438,7 @@ describe('Vester', function() {
 
   it("handles pairing", async () => {
     const [deployer, user0, user1, user2, user3] = await ethers.getSigners()
+    await rewardTracker.connect(routerAsSigner).setInPrivateClaimingMode(false);
 
     // await esGs.setHandler(wallet.address, true)
     await esGs.mint(rewardDistributor.target, expandDecimals(50000 * 12, 18))
@@ -582,6 +583,7 @@ describe('Vester', function() {
 
   it("handles existing pair tokens", async () => {
     const [deployer, user0, user1, user2, user3] = await ethers.getSigners()
+    await rewardTracker.connect(routerAsSigner).setInPrivateClaimingMode(false);
 
     await esGs.mint(rewardDistributor.target, expandDecimals(50000 * 12, 18))
     await rewardDistributor.connect(routerAsSigner).setTokensPerInterval("20667989410000000") // 0.02066798941 esGs per second

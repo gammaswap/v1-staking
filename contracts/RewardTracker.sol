@@ -61,7 +61,7 @@ contract RewardTracker is Initializable, ReentrancyGuard, Ownable2Step, IRewardT
         symbol = _symbol;
         inPrivateTransferMode = true;
         inPrivateStakingMode = true;
-        inPrivateClaimingMode = false;
+        inPrivateClaimingMode = true;
 
         for (uint256 i = 0; i < _depositTokens.length; i++) {
             address depositToken = _depositTokens[i];
