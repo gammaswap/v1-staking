@@ -326,6 +326,7 @@ contract Vester is ReentrancyGuard, Ownable2Step, Initializable, IVester {
         if (hasPairToken()) {
             uint256 pairAmount = pairAmounts[_account];
             uint256 nextPairAmount = getPairAmount(_account, balances[_account]);
+            require(hasMaxVestableAmount || nextPairAmount > 0, "Vester: no staking history");
             if (nextPairAmount > pairAmount) {
                 uint256 pairAmountDiff = nextPairAmount - pairAmount;
                 IERC20(pairToken).safeTransferFrom(_account, address(this), pairAmountDiff);

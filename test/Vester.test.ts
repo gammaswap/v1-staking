@@ -353,6 +353,52 @@ describe('Vester', function() {
     expect(await vester.lastVestingTimes(user0.address)).eq(blockTime)
   })
 
+  it("no staking history", async () => {
+    const [deployer, user0] = await ethers.getSigners()
+
+    const functionData = vester.interface.encodeFunctionData('setHasMaxVestableAmount', [false])
+    await (await stakingRouter.connect(deployer).execute(vester, functionData)).wait()
+
+    await esGs.mint(rewardDistributor.target, expandDecimals(50000 * 12, 18))
+    await rewardDistributor.connect(routerAsSigner).setTokensPerInterval("20667989410000000") // 0.02066798941 esGs per second
+    await rewardDistributor.connect(routerAsSigner).setPaused(false)
+    await bonusDistributor.connect(routerAsSigner).setBonusMultiplier(10000)
+
+    await esGs.connect(user0).approve(vester.target, expandDecimals(1000, 18))
+
+    expect(await vester.balanceOf(user0.address)).eq(0)
+    expect(await vester.getTotalVested(user0.address)).eq(0)
+    expect(await vester.cumulativeClaimAmounts(user0.address)).eq(0)
+    expect(await vester.claimedAmounts(user0.address)).eq(0)
+    expect(await vester.claimable(user0.address)).eq(0)
+    expect(await vester.pairAmounts(user0.address)).eq(0)
+    expect(await vester.lastVestingTimes(user0.address)).eq(0)
+
+    await gs.mint(vester.target, expandDecimals(2000, 18))
+    await esGs.mint(user0.address, expandDecimals(1000, 18))
+    await vester.connect(routerAsSigner).setBonusRewards(user0.address, expandDecimals(2000, 18));
+
+    await expect(vester.connect(user0).deposit(expandDecimals(1000, 18)))
+        .to.be.revertedWith("Vester: no staking history")
+
+    await gs.mint(user0.address, expandDecimals(1000, 18))
+    await gs.connect(user0).approve(rewardTracker.target, expandDecimals(1000, 18))
+    await stakingRouter.connect(user0).stakeGs(expandDecimals(1000, 18))
+
+    await increase(24 * 60 * 60)
+
+    await rewardTracker.connect(routerAsSigner).setInPrivateClaimingMode(false)
+    await rewardTracker.connect(user0).claim(user0.address)
+
+    await vester.connect(user0).deposit(expandDecimals(1000, 18))
+    expect(await vester.balanceOf(user0.address)).eq(expandDecimals(1000, 18))
+    expect(await vester.getTotalVested(user0.address)).eq(expandDecimals(1000, 18))
+    expect(await vester.cumulativeClaimAmounts(user0.address)).eq(0)
+    expect(await vester.claimedAmounts(user0.address)).eq(0)
+    expect(await vester.claimable(user0.address)).eq(0)
+    expect(await vester.pairAmounts(user0.address)).eq("264148059228161970804");
+  })
+
   it("handles multiple deposits", async () => {
     const [deployer, user0] = await ethers.getSigners()
 
