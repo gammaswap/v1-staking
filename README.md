@@ -15,4 +15,5 @@
 ### Testing
 
 For hardhat tests run `yarn test`
+
 For foundry tests run `yarn fuzz`
