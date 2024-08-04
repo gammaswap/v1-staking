@@ -12,7 +12,7 @@
 
 <h1 align="center">V1-Staking</h1>
 
-### Testing
+### How to run tests
 
 For hardhat tests run `yarn test`
 
