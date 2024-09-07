@@ -32,6 +32,9 @@ contract FeeTracker is IFeeTracker, RewardTracker {
         name = "GammaSwap Revenue Share";
         symbol = "feeGS";
         bnRateCap = 10000;
+        inPrivateTransferMode = true;
+        inPrivateStakingMode = true;
+        inPrivateClaimingMode = true;
 
         require(_depositTokens.length == 2, "FeeTracker: invalid token setup");
 
@@ -98,6 +101,8 @@ contract FeeTracker is IFeeTracker, RewardTracker {
             return;
         }
 
+        emit RewardsUpdate(_cumulativeRewardPerToken);
+
         if (_account != address(0)) {
             uint256 stakedAmount = stakedAmounts[_account] - inactivePoints[_account];
             uint256 accountReward = stakedAmount * (_cumulativeRewardPerToken - previousCumulatedRewardPerToken[_account]) / PRECISION;
@@ -109,10 +114,13 @@ contract FeeTracker is IFeeTracker, RewardTracker {
             if (_claimableReward > 0 && stakedAmount > 0) {
                 uint256 cumulativeReward = cumulativeRewards[_account];
                 uint256 nextCumulativeReward = cumulativeReward + accountReward;
-
-                averageStakedAmounts[_account] = averageStakedAmounts[_account] * cumulativeReward / nextCumulativeReward + stakedAmount * accountReward / nextCumulativeReward;
+                uint256 _averageStakedAmount = averageStakedAmounts[_account] * cumulativeReward / nextCumulativeReward + stakedAmount * accountReward / nextCumulativeReward;
+                averageStakedAmounts[_account] = _averageStakedAmount;
 
                 cumulativeRewards[_account] = nextCumulativeReward;
+                emit UserRewardsUpdate(_account, claimableReward[_account], _cumulativeRewardPerToken, _averageStakedAmount, nextCumulativeReward);
+            } else {
+                emit UserRewardsUpdate(_account, claimableReward[_account], _cumulativeRewardPerToken, averageStakedAmounts[_account], cumulativeRewards[_account]);
             }
         }
     }
