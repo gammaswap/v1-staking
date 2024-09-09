@@ -137,6 +137,6 @@ contract FeeTracker is IFeeTracker, RewardTracker {
         totalInactivePoints = totalInactivePoints + _inactivePoint - inactivePoints[_account];
         inactivePoints[_account] = _inactivePoint;
 
-        require(totalSupply > totalInactivePoints, "FeeTracker: Something quite wrong");
+        require(totalSupply >= totalInactivePoints, "FeeTracker: Something quite wrong");
     }
 }
