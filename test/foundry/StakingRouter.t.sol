@@ -67,8 +67,9 @@ contract StakingRouterTest is CPMMGammaSwapSetup {
         assertGt(pool.totalSupply(), 0);
     }
 
-    function testFailStakeInvalidAssetInPool() public {
+    function testStakeInvalidAssetInPoolError() public {
         vm.startPrank(user1);
+        vm.expectRevert();
         stakingRouter.stakeLp(address(weth), address(esGs), 1000e18);
         vm.stopPrank();
     }
