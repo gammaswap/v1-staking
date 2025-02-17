@@ -6,6 +6,7 @@ import "@gammaswap/v1-core/contracts/base/PoolViewer.sol";
 import "@gammaswap/v1-implementations/contracts/pools/CPMMGammaPool.sol";
 import "@gammaswap/v1-implementations/contracts/strategies/cpmm/lending/CPMMBorrowStrategy.sol";
 import "@gammaswap/v1-implementations/contracts/strategies/cpmm/lending/CPMMRepayStrategy.sol";
+import "@gammaswap/v1-implementations/contracts/strategies/cpmm/rebalance/CPMMRebalanceStrategy.sol";
 import "@gammaswap/v1-implementations/contracts/strategies/cpmm/liquidation/CPMMLiquidationStrategy.sol";
 import "@gammaswap/v1-implementations/contracts/strategies/cpmm/liquidation/CPMMBatchLiquidationStrategy.sol";
 import "@gammaswap/v1-implementations/contracts/strategies/cpmm/CPMMShortStrategy.sol";
@@ -21,6 +22,7 @@ contract CPMMGammaSwapSetup is UniswapSetup, RouterSetup {
 
     CPMMBorrowStrategy public longStrategy;
     CPMMRepayStrategy public repayStrategy;
+    CPMMRebalanceStrategy public rebalanceStrategy;
     CPMMShortStrategy public shortStrategy;
     CPMMLiquidationStrategy public liquidationStrategy;
     CPMMBatchLiquidationStrategy public batchLiquidationStrategy;
@@ -64,13 +66,28 @@ contract CPMMGammaSwapSetup is UniswapSetup, RouterSetup {
         viewer = new PoolViewer();
         longStrategy = new CPMMBorrowStrategy(address(mathLib), maxTotalApy, 2252571, 997, 1000, address(0), baseRate, optimalUtilRate, slope1, slope2);
         repayStrategy = new CPMMRepayStrategy(address(mathLib), maxTotalApy, 2252571, 997, 1000, address(0), baseRate, optimalUtilRate, slope1, slope2);
+        rebalanceStrategy = new CPMMRebalanceStrategy(address(mathLib), maxTotalApy, 2252571, 997, 1000, address(0), baseRate, optimalUtilRate, slope1, slope2);
         shortStrategy = new CPMMShortStrategy(maxTotalApy, 2252571, baseRate, optimalUtilRate, slope1, slope2);
         liquidationStrategy = new CPMMLiquidationStrategy(address(0), address(mathLib), maxTotalApy, 2252571, 997, 1000, address(0), baseRate, optimalUtilRate, slope1, slope2);
         batchLiquidationStrategy = new CPMMBatchLiquidationStrategy(address(0), address(mathLib), maxTotalApy, 2252571, 997, 1000, address(0), baseRate, optimalUtilRate, slope1, slope2);
 
         bytes32 cfmmHash = hex'96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f'; // UniV2Pair init_code_hash
-        protocol = new CPMMGammaPool(PROTOCOL_ID, address(factory), address(longStrategy), address(repayStrategy), address(shortStrategy),
-            address(liquidationStrategy), address(batchLiquidationStrategy), address(viewer), address(0), address(0), address(uniFactory), cfmmHash);
+        ICPMMGammaPool.InitializationParams memory params = ICPMMGammaPool.InitializationParams({
+            protocolId: PROTOCOL_ID,
+            factory: address(factory),
+            borrowStrategy: address(longStrategy),
+            repayStrategy: address(repayStrategy),
+            rebalanceStrategy: address(rebalanceStrategy),
+            shortStrategy: address(shortStrategy),
+            liquidationStrategy: address(liquidationStrategy),
+            batchLiquidationStrategy: address(batchLiquidationStrategy),
+            viewer: address(viewer),
+            externalRebalanceStrategy: address(0),
+            externalLiquidationStrategy: address(0),
+            cfmmFactory: address(uniFactory),
+            cfmmInitCodeHash: cfmmHash
+        });
+        protocol = new CPMMGammaPool(params);
 
         factory.addProtocol(address(protocol));
 
