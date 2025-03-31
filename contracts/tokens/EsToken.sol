@@ -10,6 +10,7 @@ contract EsToken is RestrictedToken, IEsToken {
 
     constructor(string memory _name, string memory _symbol, address _claimableToken) RestrictedToken(_name, _symbol,
         TokenType.ESCROW) {
+        require(_claimableToken != address(0), "ZERO_ADDRESS");
         claimableToken = _claimableToken;
     }
 }
