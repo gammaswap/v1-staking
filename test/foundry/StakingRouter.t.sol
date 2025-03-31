@@ -6,6 +6,7 @@ import "@gammaswap/v1-core/contracts/base/GammaPoolERC20.sol";
 
 import "../../contracts/interfaces/IRewardTracker.sol";
 import "./fixtures/CPMMGammaSwapSetup.sol";
+import "../../contracts/tokens/EsToken.sol";
 
 contract StakingRouterTest is CPMMGammaSwapSetup {
     function setUp() public {
@@ -25,6 +26,14 @@ contract StakingRouterTest is CPMMGammaSwapSetup {
 
         approveUserForStaking(user1, address(pool2));
         approveUserForStaking(user2, address(pool2));
+    }
+
+    function testEscrowToken() public {
+        EsToken esToken = new EsToken("test token", "TOK1", address(0x123));
+        assertEq(esToken.claimableToken(), address(0x123));
+
+        vm.expectRevert("ZERO_ADDRESS");
+        EsToken esTokenTest = new EsToken("test token", "TOK1", address(0));
     }
 
     function testStakingContractsAlreadySet() public {
